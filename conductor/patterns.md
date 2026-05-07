@@ -25,6 +25,11 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Session defaults:** Raw `session.execute(text("INSERT ..."))` bypasses Python-level ORM defaults — use ORM objects for seeding FK-parent rows in tests (from: data-layer_20260507, 2026-05-07)
 - **DB Session Manager:** `get_db_session(engine)` follows commit-on-success / rollback-on-exception / always-close pattern (from: data-layer_20260507, 2026-05-07)
 - **Ruff SIM117:** Ruff SIM117 flags nested `with` statements — flatten to `with pytest.raises(...), ctx_mgr as x:` pattern or split using a named variable (from: data-layer_20260507, 2026-05-07)
+- **Test module collection:** Naming source modules `test_*.py` in `src/` causes pytest to collect them — rename to avoid (e.g. `connectivity.py`) (from: llm-tools_20260507, 2026-05-08)
+- **Test class collection:** Classes named `Test*` in production code get collected by pytest — use prefixes like `ConnectionTestResult` (from: llm-tools_20260507, 2026-05-08)
+- **Lazy importing:** Use `TYPE_CHECKING` + lazy import for heavy deps (e.g. `langchain_openai.ChatOpenAI`) to keep module load fast (from: llm-tools_20260507, 2026-05-08)
+- **httpx mocking:** Use `respx.mock` decorator for httpx tests; use `with respx.mock:` context manager for CliRunner tests (from: llm-tools_20260507, 2026-05-08)
+- **ChatOpenAI kwargs:** `ChatOpenAI` kwargs mapping: `openai_api_base`, `model_name`, `temperature`, `max_tokens`, `request_timeout`, `default_headers` (from: llm-tools_20260507, 2026-05-08)
 
 ---
-Last refreshed: 2026-05-07T23:44:00+07:00
+Last refreshed: 2026-05-08T00:32:00+07:00

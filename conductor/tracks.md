@@ -8,5 +8,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: LLM Client & Tools (Phase 2)
-*Link: [./conductor/tracks/llm-tools_20260507/](./conductor/tracks/llm-tools_20260507/)*
+<!-- archived: llm-tools_20260507 — Phase 2 LLM Client & Tools completed 2026-05-08 → conductor/archive/llm-tools_20260507/ -->
