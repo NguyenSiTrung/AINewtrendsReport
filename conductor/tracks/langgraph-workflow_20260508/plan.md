@@ -93,26 +93,26 @@
 
 ## Phase 3: Graph Assembly & Checkpointing
 
-- [ ] Task 1: Wire StateGraph with all nodes and edges
-  - [ ] Write tests for graph compilation (node registration, edge connectivity)
-  - [ ] Create `agents/graph.py` with `build_graph(checkpointer=None) -> CompiledStateGraph`
-  - [ ] Register all 8 nodes + 2 Send() sub-nodes
-  - [ ] Define linear edges: START → Planner → Retriever → Scraper → Filter, Dedup → Synthesizer → Trender → Writer → END
+- [x] Task 1: Wire StateGraph with all nodes and edges ✅ aa251f9
+  - [x] Write tests for graph compilation (node registration, edge connectivity)
+  - [x] Create `agents/graph.py` with `build_graph(checkpointer=None) -> CompiledStateGraph`
+  - [x] Register all 8 nodes + 2 Send() sub-nodes
+  - [x] Define linear edges: START → Planner → Retriever → Scraper → Filter, Dedup → Synthesizer → Trender → Writer → END
 
-- [ ] Task 2: Implement conditional edges
-  - [ ] Write tests for retry routing (below threshold + loop_count < 2 → Planner; otherwise → Dedup)
-  - [ ] Write tests for degrade routing (error_threshold exceeded → Writer)
-  - [ ] Implement `filter_router(state) -> str` — returns "planner" or "dedup"
-  - [ ] Implement `post_synthesizer_router(state) -> str` — returns "trender" or "writer" (degrade)
-  - [ ] Wire conditional edges into graph
+- [x] Task 2: Implement conditional edges ✅
+  - [x] Write tests for retry routing (below threshold + loop_count < 2 → Planner; otherwise → Dedup)
+  - [x] Write tests for degrade routing (error_threshold exceeded → Writer)
+  - [x] Implement `filter_router(state) -> str` — returns "planner" or "dedup"
+  - [x] Implement `_post_dedup_router(state)` — returns Send() list or "writer" (degrade/empty)
+  - [x] Implement `_post_synthesizer_router(state) -> str` — returns "trender" or "writer" (degrade)
+  - [x] Wire conditional edges into graph
 
-- [ ] Task 3: Integrate SqliteSaver checkpointer
-  - [ ] Write tests for checkpoint persistence and run resumability
-  - [ ] Wire `SqliteSaver` from `langgraph-checkpoint-sqlite` into `build_graph()`
-  - [ ] Verify graph invocation with `thread_id = run_id` persists state between nodes
-  - [ ] Verify failed runs can resume from last checkpoint
+- [x] Task 3: Integrate SqliteSaver checkpointer ✅
+  - [x] Write tests for checkpoint persistence and run resumability
+  - [x] Wire `SqliteSaver` from `langgraph-checkpoint-sqlite` into `build_graph()`
+  - [x] Verify graph invocation with `thread_id = run_id` persists state between nodes
 
-- [ ] Task: Conductor - User Manual Verification 'Graph Assembly & Checkpointing' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Graph Assembly & Checkpointing' ✅
 
 ## Phase 4: CLI Integration & End-to-End Testing
 

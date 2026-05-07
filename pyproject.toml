@@ -70,6 +70,9 @@ select = [
 [tool.ruff.lint.isort]
 known-first-party = ["ainews"]
 
+[tool.ruff.lint.per-file-ignores]
+"src/ainews/cli.py" = ["B008"]  # typer.Option() in defaults is standard
+
 # ---------- mypy ----------
 [tool.mypy]
 strict = true

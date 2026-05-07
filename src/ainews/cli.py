@@ -35,6 +35,118 @@ app.add_typer(run_app, name="run")
 app.add_typer(seed_app, name="seed")
 
 
+# ── Run commands ──────────────────────────────────────────
+@run_app.command(name="start")
+def run_start(
+    topic: list[str] = typer.Option(
+        ...,
+        "--topic",
+        "-t",
+        help="Topics to search (can specify multiple).",
+    ),
+    days: int = typer.Option(
+        7,
+        "--days",
+        "-d",
+        help="Timeframe window in days.",
+    ),
+    limit: int = typer.Option(
+        20,
+        "--limit",
+        "-l",
+        help="Max articles to process.",
+    ),
+    site: list[str] | None = typer.Option(
+        None,
+        "--site",
+        "-s",
+        help="Restrict search to specific sites.",
+    ),
+    output_dir: str = typer.Option(
+        "var/reports",
+        "--output",
+        "-o",
+        help="Output directory for reports.",
+    ),
+) -> None:
+    """Execute the LangGraph pipeline and generate a report.
+
+    Example::
+
+        ainews run start --topic "AI" --topic "LLM" --days 7
+    """
+    import uuid
+    from pathlib import Path
+
+    from langgraph.checkpoint.sqlite import SqliteSaver
+
+    from ainews.agents.graph import build_graph
+    from ainews.agents.state import GraphState, RunParams
+
+    run_id = str(uuid.uuid4())[:8]
+    params = RunParams(
+        timeframe_days=days,
+        topics=list(topic),
+        sites=list(site) if site else [],
+    )
+
+    typer.echo(f"🚀 Starting pipeline run: {run_id}")
+    typer.echo(f"   Topics: {', '.join(topic)} | Window: {days}d | Limit: {limit}")
+
+    initial_state: GraphState = {
+        "run_id": run_id,
+        "params": params,
+        "queries": [],
+        "raw_results": [],
+        "fetched_articles": [],
+        "filtered_articles": [],
+        "clusters": [],
+        "summaries": [],
+        "trends": [],
+        "report_md": "",
+        "errors": [],
+        "metrics": {},
+        "loop_count": 0,
+    }
+
+    # Run with checkpointing
+    checkpoint_dir = Path(output_dir) / run_id
+    checkpoint_dir.mkdir(parents=True, exist_ok=True)
+    checkpoint_db = str(checkpoint_dir / "checkpoint.db")
+
+    try:
+        with SqliteSaver.from_conn_string(checkpoint_db) as cp:
+            graph = build_graph(checkpointer=cp)
+            config = {"configurable": {"thread_id": run_id}}
+            result = graph.invoke(initial_state, config)
+
+        # Persist report
+        report_path = checkpoint_dir / "report.md"
+        report_path.write_text(result.get("report_md", ""))
+
+        typer.echo("")
+        typer.echo(typer.style("✓ Report generated", fg=typer.colors.GREEN))
+        typer.echo(f"  Path: {report_path}")
+        typer.echo(
+            f"  Queries: {len(result.get('queries', []))} | "
+            f"Summaries: {len(result.get('summaries', []))} | "
+            f"Trends: {len(result.get('trends', []))}"
+        )
+
+        errors = result.get("errors", [])
+        if errors:
+            typer.echo(
+                typer.style(
+                    f"  ⚠ {len(errors)} errors during execution",
+                    fg=typer.colors.YELLOW,
+                )
+            )
+
+    except Exception as exc:
+        typer.echo(typer.style(f"✗ Pipeline failed: {exc}", fg=typer.colors.RED))
+        raise typer.Exit(code=1) from exc
+
+
 # ── Commands ──────────────────────────────────────────────
 @app.command()
 def version() -> None:
