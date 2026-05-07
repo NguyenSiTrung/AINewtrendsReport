@@ -12,8 +12,13 @@ The factory follows a two-layer design:
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ainews.core.config import Settings
 from ainews.llm.config import LLMConfig
+
+if TYPE_CHECKING:
+    from langchain_openai import ChatOpenAI
 
 # Fields that can be overridden via ``db_overrides`` dict.
 _OVERRIDABLE_FIELDS: frozenset[str] = frozenset(
@@ -69,3 +74,34 @@ def get_llm_config(
         merged["model"] = model_override
 
     return LLMConfig.model_validate(merged)
+
+
+def get_llm(config: LLMConfig) -> ChatOpenAI:
+    """Construct a :class:`ChatOpenAI` from a resolved config.
+
+    This is a pure construction function — no network calls, no side effects.
+
+    Parameters
+    ----------
+    config
+        An immutable :class:`LLMConfig` (typically from :func:`get_llm_config`).
+
+    Returns
+    -------
+    ChatOpenAI
+        Ready-to-use LangChain chat model.
+    """
+    from langchain_openai import ChatOpenAI
+
+    kwargs: dict[str, object] = {
+        "base_url": config.base_url,
+        "api_key": config.api_key,
+        "model": config.model,
+        "temperature": config.temperature,
+        "max_tokens": config.max_tokens,
+        "timeout": config.timeout,
+    }
+    if config.extra_headers is not None:
+        kwargs["default_headers"] = config.extra_headers
+
+    return ChatOpenAI(**kwargs)  # type: ignore[arg-type]

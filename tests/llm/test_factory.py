@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ainews.core.config import Settings
 from ainews.llm.config import LLMConfig
-from ainews.llm.factory import get_llm_config
+from ainews.llm.factory import get_llm, get_llm_config
 
 
 class TestGetLLMConfigEnvOnly:
@@ -155,3 +155,94 @@ class TestGetLLMConfigFullChain:
             model_override=None,
         )
         assert config.model == "env-model"
+
+
+class TestGetLLM:
+    """Test ChatOpenAI construction from LLMConfig."""
+
+    def test_returns_chat_openai(self) -> None:
+        """get_llm should return a ChatOpenAI instance."""
+        from langchain_openai import ChatOpenAI
+
+        config = LLMConfig(
+            base_url="http://localhost:8080/v1",
+            api_key="test-key",
+            model="test-model",
+        )
+        llm = get_llm(config)
+        assert isinstance(llm, ChatOpenAI)
+
+    def test_model_matches(self) -> None:
+        """ChatOpenAI model_name should match config model."""
+        config = LLMConfig(
+            base_url="http://localhost:8080/v1",
+            api_key="k",
+            model="gpt-4o",
+        )
+        llm = get_llm(config)
+        assert llm.model_name == "gpt-4o"
+
+    def test_base_url_matches(self) -> None:
+        """ChatOpenAI base_url should match config."""
+        config = LLMConfig(
+            base_url="http://custom:9090/v1",
+            api_key="k",
+            model="m",
+        )
+        llm = get_llm(config)
+        assert llm.openai_api_base == "http://custom:9090/v1"
+
+    def test_temperature_matches(self) -> None:
+        """ChatOpenAI temperature should match config."""
+        config = LLMConfig(
+            base_url="http://x/v1",
+            api_key="k",
+            model="m",
+            temperature=0.7,
+        )
+        llm = get_llm(config)
+        assert llm.temperature == 0.7
+
+    def test_max_tokens_matches(self) -> None:
+        """ChatOpenAI max_tokens should match config."""
+        config = LLMConfig(
+            base_url="http://x/v1",
+            api_key="k",
+            model="m",
+            max_tokens=512,
+        )
+        llm = get_llm(config)
+        assert llm.max_tokens == 512
+
+    def test_timeout_matches(self) -> None:
+        """ChatOpenAI timeout should match config."""
+        config = LLMConfig(
+            base_url="http://x/v1",
+            api_key="k",
+            model="m",
+            timeout=45,
+        )
+        llm = get_llm(config)
+        assert llm.request_timeout == 45.0
+
+    def test_extra_headers_matches(self) -> None:
+        """ChatOpenAI default_headers should match config extra_headers."""
+        config = LLMConfig(
+            base_url="http://x/v1",
+            api_key="k",
+            model="m",
+            extra_headers={"X-Custom": "value"},
+        )
+        llm = get_llm(config)
+        assert llm.default_headers == {"X-Custom": "value"}
+
+    def test_no_extra_headers(self) -> None:
+        """When extra_headers is None, default_headers should not be set."""
+        config = LLMConfig(
+            base_url="http://x/v1",
+            api_key="k",
+            model="m",
+            extra_headers=None,
+        )
+        llm = get_llm(config)
+        assert llm.default_headers is None
