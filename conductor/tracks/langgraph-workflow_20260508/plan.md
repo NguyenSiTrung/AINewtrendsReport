@@ -9,14 +9,14 @@
   - [x] Create supporting types: `SearchHit`, `Article`, `Cluster`, `Summary`, `Trend` as TypedDicts
   - [x] Verify types pass mypy strict
 
-- [ ] Task 2: Create prompt template loader and Jinja2 templates
-  - [ ] Write tests for template loading (file not found, variable rendering, missing vars)
-  - [ ] Create `agents/prompts/loader.py` with `load_prompt(template_name, **context) -> str`
-  - [ ] Create `planner.j2` — query generation prompt with topics, sites, timeframe vars
-  - [ ] Create `filter.j2` — relevance scoring prompt with article content, topics vars
-  - [ ] Create `synthesizer.j2` — cluster summarization prompt with articles, source refs
-  - [ ] Create `trender.j2` — trend extraction prompt with all summaries
-  - [ ] Create `writer_executive.j2` — executive summary polish prompt
+- [x] Task 2: Create prompt template loader and Jinja2 templates ✅
+  - [x] Write tests for template loading (file not found, variable rendering, missing vars)
+  - [x] Create `agents/prompts/loader.py` with `load_prompt(template_name, **context) -> str`
+  - [x] Create `planner.j2` — query generation prompt with topics, sites, timeframe vars
+  - [x] Create `filter.j2` — relevance scoring prompt with article content, topics vars
+  - [x] Create `synthesizer.j2` — cluster summarization prompt with articles, source refs
+  - [x] Create `trender.j2` — trend extraction prompt with all summaries
+  - [x] Create `writer_executive.j2` — executive summary polish prompt
 
 - [ ] Task 3: Create error resilience utilities
   - [ ] Write tests for retry decorator, metrics accumulator, degrade checker
