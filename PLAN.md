@@ -507,11 +507,15 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - 27 tests, 100% coverage on implemented modules, all lints pass (ruff + mypy strict).
 - **Exit:** `ainews --help` runs ✅ | `make lint && make typecheck && make test` all green ✅
 
-### Phase 1 — Data layer (1 day)
-- SQLAlchemy models (§2.3), SQLite pragmas in connection event listener.
-- Alembic baseline migration. FTS5 virtual tables + triggers.
-- Seed: 10 starter sites (TechCrunch AI, The Verge, MIT Tech Review, Hugging Face Blog, OpenAI Blog, Anthropic News, Google AI Blog, ArXiv-sanity, Stratechery, Ben's Bites) and one weekly schedule.
-- **Exit:** `alembic upgrade head` + `ainews seed` work end-to-end.
+### Phase 1 — Data layer ✅ (completed 2026-05-07)
+- SQLAlchemy 2.0 ORM models for all 8 tables (Site, Schedule, Run, Article, Report, RunLog, User, SettingsKV) with JSON columns, indexes, and FK constraints. Shared `DeclarativeBase` in `ainews.models.base`.
+- SQLite pragma event listener: WAL, synchronous=NORMAL, foreign_keys=ON, busy_timeout=5000, temp_store=MEMORY, mmap_size=256 MiB applied on every new DBAPI connection.
+- `get_db_session()` context manager with commit/rollback/close lifecycle; `StaticPool` for in-memory SQLite.
+- Alembic `env.py` configured with `Base.metadata` and pragma-aware engine factory; `render_as_batch=True` for SQLite ALTER TABLE compatibility.
+- Baseline migration (`dc09fc4f2f6d`): all 8 tables + indexes + `reports_fts` FTS5 virtual table + INSERT/UPDATE/DELETE sync triggers.
+- Idempotent `ainews seed` command: 10 starter sites + 1 weekly schedule (`weekly-ai-news`, cron `0 7 * * 1`); upserts by URL/name.
+- 124 tests, 99% line coverage on all new modules.
+- **Exit:** `alembic upgrade head` + `ainews seed` work end-to-end ✅ | `make lint && make typecheck && make test` all green ✅
 
 ### Phase 2 — LLM client & tools (1–2 days)
 - `llm/factory.py`: build `ChatOpenAI(base_url, api_key, model, default_headers, temperature, max_tokens, timeout)` from env + `settings_kv` overrides + optional per-run `model_override`.

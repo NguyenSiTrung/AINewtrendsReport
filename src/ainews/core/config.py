@@ -47,3 +47,8 @@ class Settings(BaseSettings):
     @classmethod
     def _normalise_log_level(cls, v: str) -> str:
         return v.upper()
+
+    @property
+    def database_url(self) -> str:
+        """SQLAlchemy-compatible URL derived from db_path."""
+        return f"sqlite+pysqlite:///{self.db_path.resolve()}"
