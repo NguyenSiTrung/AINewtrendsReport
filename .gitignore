@@ -43,6 +43,7 @@ Thumbs.db
 
 # Project runtime
 var/
+!var/.gitkeep
 data/
 logs/
 *.log
