@@ -18,3 +18,18 @@ Patterns, gotchas, and context discovered during implementation.
 ---
 
 <!-- Learnings from implementation will be appended below -->
+
+## [2026-05-08 00:14] - Phase 1: LLM Client Foundation
+
+- **Implemented:** LLMConfig frozen model, get_llm_config 3-layer resolver, get_llm ChatOpenAI factory, check_llm_connection httpx probe, `ainews llm test` CLI command
+- **Files changed:** `src/ainews/llm/config.py`, `src/ainews/llm/factory.py`, `src/ainews/llm/connectivity.py`, `src/ainews/cli.py`, `tests/llm/test_config.py`, `tests/llm/test_factory.py`, `tests/llm/test_connection.py`, `tests/test_cli.py`, `pyproject.toml`, `.pre-commit-config.yaml`
+- **Commits:** d1153e1, b6cfb0b, 10a1b00, c70524b, dc1589c, 5a94ca7
+- **Learnings:**
+  - Patterns: Naming source modules `test_*.py` in `src/` causes pytest to collect them — rename to avoid (e.g. `connectivity.py` instead of `test_connection.py`)
+  - Patterns: Similarly, classes named `Test*` in production code (like `TestResult`) get collected by pytest — use `ConnectionTestResult` to avoid collision
+  - Patterns: Use `TYPE_CHECKING` + lazy import for heavy deps like `langchain_openai.ChatOpenAI` — keeps module load fast and allows mypy type checking
+  - Patterns: `respx.mock` decorator works cleanly for httpx-based connection tests; for CliRunner tests use `with respx.mock:` context manager
+  - Gotchas: ruff format auto-fixes on commit can cause first commit to fail — always re-add and retry
+  - Context: `ChatOpenAI` attributes: `openai_api_base`, `model_name`, `temperature`, `max_tokens`, `request_timeout`, `default_headers`
+---
+
