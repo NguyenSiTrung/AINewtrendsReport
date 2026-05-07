@@ -99,7 +99,11 @@ class NodeError:
         return f"NodeError(node={self.node!r}, message={self.message!r})"
 
 
-# ── GraphState ───────────────────────────────────────────
+def _merge_dicts(a: dict[str, Any], b: dict[str, Any]) -> dict[str, Any]:
+    """Merge two metric dicts (b wins on key conflicts)."""
+    merged = dict(a)
+    merged.update(b)
+    return merged
 
 
 class GraphState(TypedDict):
@@ -107,7 +111,7 @@ class GraphState(TypedDict):
 
     List fields use ``Annotated[..., operator.add]`` so that partial
     state updates returned by nodes are *appended* rather than replaced.
-    ``metrics`` is merged via a custom reducer.
+    ``metrics`` is merged via a custom dict-merge reducer.
     """
 
     run_id: str
@@ -121,5 +125,5 @@ class GraphState(TypedDict):
     trends: Annotated[list[Trend], operator.add]
     report_md: str
     errors: Annotated[list[NodeError], operator.add]
-    metrics: dict[str, Any]
+    metrics: Annotated[dict[str, Any], _merge_dicts]
     loop_count: int

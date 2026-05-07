@@ -180,10 +180,10 @@ def track_metrics(
         Metrics dict keyed by node name, suitable for merging into state.
     """
     wall_seconds = time.time() - start_time
-    existing = dict(state.get("metrics", {}))
-    existing[node_name] = {
-        "input_tokens": input_tokens,
-        "output_tokens": output_tokens,
-        "wall_seconds": round(wall_seconds, 3),
+    return {
+        node_name: {
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "wall_seconds": round(wall_seconds, 3),
+        }
     }
-    return existing

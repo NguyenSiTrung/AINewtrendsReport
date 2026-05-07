@@ -30,66 +30,66 @@
 ## Phase 2: Node Implementations
 <!-- execution: parallel -->
 
-- [ ] Task 1: Implement Planner node
+- [x] Task 1: Implement Planner node ✅ 31fa82d
   <!-- files: src/ainews/agents/nodes/planner.py, tests/agents/nodes/test_planner.py -->
-  - [ ] Write unit tests with mocked LLM (structured JSON output, error cases)
-  - [ ] Create `agents/nodes/planner.py` — LLM call via `llm_factory()`, renders `planner.j2`, parses JSON output into `queries` list
-  - [ ] Handle malformed LLM JSON output gracefully (retry parse, fallback)
-  - [ ] Apply `@node_resilient` decorator + metrics tracking
+  - [x] Write unit tests with mocked LLM (structured JSON output, error cases)
+  - [x] Create `agents/nodes/planner.py` — LLM call via `llm_factory()`, renders `planner.j2`, parses JSON output into `queries` list
+  - [x] Handle malformed LLM JSON output gracefully (retry parse, fallback)
+  - [x] Apply `@node_resilient` decorator + metrics tracking
 
-- [ ] Task 2: Implement Retriever node with Send() fan-out
+- [x] Task 2: Implement Retriever node with Send() fan-out ✅
   <!-- files: src/ainews/agents/nodes/retriever.py, tests/agents/nodes/test_retriever.py -->
   <!-- depends: task1 -->
-  - [ ] Write unit tests for fan-out logic, result aggregation, partial failure handling
-  - [ ] Create `agents/nodes/retriever.py` — `retrieve_dispatch()` returns list of `Send("retrieve_one", query)` per query
-  - [ ] Create `retrieve_one()` sub-node — calls Tavily search wrapper (Phase 2 tool), returns `raw_results` partial
-  - [ ] Aggregation merges all `raw_results` from parallel sub-invocations
+  - [x] Write unit tests for fan-out logic, result aggregation, partial failure handling
+  - [x] Create `agents/nodes/retriever.py` — `retrieve_dispatch()` returns list of `Send("retrieve_one", query)` per query
+  - [x] Create `retrieve_one()` sub-node — calls Tavily search wrapper (Phase 2 tool), returns `raw_results` partial
+  - [x] Aggregation merges all `raw_results` from parallel sub-invocations
 
-- [ ] Task 3: Implement Scraper node
+- [x] Task 3: Implement Scraper node ✅
   <!-- files: src/ainews/agents/nodes/scraper.py, tests/agents/nodes/test_scraper.py -->
-  - [ ] Write unit tests with mocked httpx responses (content fill, skip on failure, js_render flag)
-  - [ ] Create `agents/nodes/scraper.py` — iterates `raw_results`, calls async scraper (Phase 2 tool) for items with missing/short content
-  - [ ] Graceful skip on individual scrape failures (append to errors, continue)
-  - [ ] Apply `@node_resilient` decorator + metrics tracking
+  - [x] Write unit tests with mocked httpx responses (content fill, skip on failure, js_render flag)
+  - [x] Create `agents/nodes/scraper.py` — iterates `raw_results`, calls async scraper (Phase 2 tool) for items with missing/short content
+  - [x] Graceful skip on individual scrape failures (append to errors, continue)
+  - [x] Apply `@node_resilient` decorator + metrics tracking
 
-- [ ] Task 4: Implement Filter node
+- [x] Task 4: Implement Filter node ✅
   <!-- files: src/ainews/agents/nodes/filter.py, tests/agents/nodes/test_filter.py -->
-  - [ ] Write unit tests with mocked LLM (scoring, threshold filtering, retry loop trigger)
-  - [ ] Create `agents/nodes/filter.py` — LLM call per article via `filter.j2`, structured output `{score, keep, reason}`
-  - [ ] Apply configurable threshold (default 0.5), output `filtered_articles`
-  - [ ] Increment `loop_count` in state; return routing signal for conditional edge
+  - [x] Write unit tests with mocked LLM (scoring, threshold filtering, retry loop trigger)
+  - [x] Create `agents/nodes/filter.py` — LLM call per article via `filter.j2`, structured output `{score, keep, reason}`
+  - [x] Apply configurable threshold (default 0.5), output `filtered_articles`
+  - [x] Increment `loop_count` in state; return routing signal for conditional edge
 
-- [ ] Task 5: Implement Dedup node
+- [x] Task 5: Implement Dedup node ✅
   <!-- files: src/ainews/agents/nodes/dedup.py, tests/agents/nodes/test_dedup.py -->
-  - [ ] Write unit tests with fixture articles (URL canon, simhash bucketing, Jaccard merge)
-  - [ ] Create `agents/nodes/dedup.py` — wraps Phase 2 dedup engine, transforms `filtered_articles` into `clusters`
-  - [ ] Each cluster has a primary article (highest priority × recency × length) + variants
-  - [ ] Apply `@node_resilient` decorator + metrics tracking
+  - [x] Write unit tests with fixture articles (URL canon, simhash bucketing, Jaccard merge)
+  - [x] Create `agents/nodes/dedup.py` — wraps Phase 2 dedup engine, transforms `filtered_articles` into `clusters`
+  - [x] Each cluster has a primary article (highest priority × recency × length) + variants
+  - [x] Apply `@node_resilient` decorator + metrics tracking
 
-- [ ] Task 6: Implement Synthesizer node with Send() fan-out
+- [x] Task 6: Implement Synthesizer node with Send() fan-out ✅
   <!-- files: src/ainews/agents/nodes/synthesizer.py, tests/agents/nodes/test_synthesizer.py -->
   <!-- depends: task1 -->
-  - [ ] Write unit tests with mocked LLM (per-cluster summary, partial failure, aggregation)
-  - [ ] Create `agents/nodes/synthesizer.py` — `synthesize_dispatch()` returns `Send("synthesize_one", cluster)` per cluster
-  - [ ] Create `synthesize_one()` sub-node — LLM call via `synthesizer.j2`, returns summary with headline, bullets, why_it_matters, sources
-  - [ ] Aggregation merges all summaries; graceful skip on failed clusters
+  - [x] Write unit tests with mocked LLM (per-cluster summary, partial failure, aggregation)
+  - [x] Create `agents/nodes/synthesizer.py` — `synthesize_dispatch()` returns `Send("synthesize_one", cluster)` per cluster
+  - [x] Create `synthesize_one()` sub-node — LLM call via `synthesizer.j2`, returns summary with headline, bullets, why_it_matters, sources
+  - [x] Aggregation merges all summaries; graceful skip on failed clusters
 
-- [ ] Task 7: Implement Trender node
+- [x] Task 7: Implement Trender node ✅
   <!-- files: src/ainews/agents/nodes/trender.py, tests/agents/nodes/test_trender.py -->
-  - [ ] Write unit tests with mocked LLM (trend extraction, edge case: few summaries)
-  - [ ] Create `agents/nodes/trender.py` — single LLM call via `trender.j2` across all summaries
-  - [ ] Output 3–7 `Trend` objects with name, description, evidence_cluster_ids
-  - [ ] Apply `@node_resilient` decorator + metrics tracking
+  - [x] Write unit tests with mocked LLM (trend extraction, edge case: few summaries)
+  - [x] Create `agents/nodes/trender.py` — single LLM call via `trender.j2` across all summaries
+  - [x] Output 3-7 `Trend` objects with name, description, evidence_cluster_ids
+  - [x] Apply `@node_resilient` decorator + metrics tracking
 
-- [ ] Task 8: Implement Writer node
+- [x] Task 8: Implement Writer node ✅
   <!-- files: src/ainews/agents/nodes/writer.py, tests/agents/nodes/test_writer.py -->
-  - [ ] Write unit tests (template rendering, executive summary polish, degraded report)
-  - [ ] Create `agents/nodes/writer.py` — Jinja2 template assembly for full Markdown report
-  - [ ] LLM polish pass on Executive Summary only via `writer_executive.j2`
-  - [ ] Include degradation notice in report header if `state.errors` is non-empty
-  - [ ] Apply `@node_resilient` decorator + metrics tracking
+  - [x] Write unit tests (template rendering, executive summary polish, degraded report)
+  - [x] Create `agents/nodes/writer.py` — Jinja2 template assembly for full Markdown report
+  - [x] LLM polish pass on Executive Summary only via `writer_executive.j2`
+  - [x] Include degradation notice in report header if `state.errors` is non-empty
+  - [x] Apply `@node_resilient` decorator + metrics tracking
 
-- [ ] Task: Conductor - User Manual Verification 'Node Implementations' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Node Implementations' ✅
 
 ## Phase 3: Graph Assembly & Checkpointing
 
