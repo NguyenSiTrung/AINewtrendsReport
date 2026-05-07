@@ -12,5 +12,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Phase 3 — LangGraph Workflow
-*Link: [./conductor/tracks/langgraph-workflow_20260508/](./conductor/tracks/langgraph-workflow_20260508/)*
+<!-- archived: langgraph-workflow_20260508 — Phase 3 LangGraph Workflow completed 2026-05-08 → conductor/archive/langgraph-workflow_20260508/ -->

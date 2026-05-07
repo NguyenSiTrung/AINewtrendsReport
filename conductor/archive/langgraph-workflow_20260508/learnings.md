@@ -20,3 +20,10 @@ Patterns, gotchas, and context discovered during implementation.
 ---
 
 <!-- Learnings from implementation will be appended below -->
+
+## Track-Specific Learnings
+
+- **LangGraph custom dict reducers:** When using a custom merge reducer for a `dict` field in `GraphState` (e.g., `metrics`), nodes should return only their specific updates (`return {"metrics": {"node": data}}`), rather than trying to copy and merge with the existing state themselves.
+- **LangGraph empty Send() behavior:** When a fan-out node returns an empty list of `Send()` objects, LangGraph skips the targeted sub-nodes entirely. The fan-in node is not executed, so any conditional edges after the fan-in will not trigger. Empty collection scenarios must be handled by conditional edges before the fan-out.
+- **LangGraph node decorator typing:** Decorators like `@node_resilient` that widen function signatures to `Callable[[Any], ...]` will cause mypy errors when registering nodes. A `# type: ignore[call-overload]` is required on the `add_node()` calls.
+- **Typer Option defaults:** Using `typer.Option()` directly in function parameter defaults causes Ruff rule `B008` (false positive for Typer's standard pattern). Add `"src/ainews/cli.py" = ["B008"]` to `[tool.ruff.lint.per-file-ignores]` in `pyproject.toml` to suppress it.

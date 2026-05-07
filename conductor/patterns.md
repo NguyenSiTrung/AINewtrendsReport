@@ -30,6 +30,10 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Lazy importing:** Use `TYPE_CHECKING` + lazy import for heavy deps (e.g. `langchain_openai.ChatOpenAI`) to keep module load fast (from: llm-tools_20260507, 2026-05-08)
 - **httpx mocking:** Use `respx.mock` decorator for httpx tests; use `with respx.mock:` context manager for CliRunner tests (from: llm-tools_20260507, 2026-05-08)
 - **ChatOpenAI kwargs:** `ChatOpenAI` kwargs mapping: `openai_api_base`, `model_name`, `temperature`, `max_tokens`, `request_timeout`, `default_headers` (from: llm-tools_20260507, 2026-05-08)
+- **LangGraph custom dict reducers:** When using a custom merge reducer for a `dict` field in `GraphState` (e.g., `metrics`), nodes should return only their specific updates (`return {"metrics": {"node": data}}`), rather than trying to copy and merge with the existing state themselves (from: langgraph-workflow_20260508, 2026-05-08)
+- **LangGraph empty Send() behavior:** When a fan-out node returns an empty list of `Send()` objects, LangGraph skips the targeted sub-nodes entirely. The fan-in node is not executed, so any conditional edges after the fan-in will not trigger. Empty collection scenarios must be handled by conditional edges before the fan-out (from: langgraph-workflow_20260508, 2026-05-08)
+- **LangGraph node decorator typing:** Decorators like `@node_resilient` that widen function signatures to `Callable[[Any], ...]` will cause mypy errors when registering nodes. A `# type: ignore[call-overload]` is required on the `add_node()` calls (from: langgraph-workflow_20260508, 2026-05-08)
+- **Typer Option defaults:** Using `typer.Option()` directly in function parameter defaults causes Ruff rule `B008` (false positive for Typer's standard pattern). Add `"src/ainews/cli.py" = ["B008"]` to `[tool.ruff.lint.per-file-ignores]` in `pyproject.toml` to suppress it (from: langgraph-workflow_20260508, 2026-05-08)
 
 ---
-Last refreshed: 2026-05-08T00:32:00+07:00
+Last refreshed: 2026-05-08T01:27:00+07:00
