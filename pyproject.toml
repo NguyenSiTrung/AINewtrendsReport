@@ -30,3 +30,38 @@ dev = [
     "pytest-cov>=6.1",
     "pre-commit>=4.2",
 ]
+
+# ---------- Ruff ----------
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+exclude = [".agents", ".beads", ".claude", "alembic"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "N",   # pep8-naming
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific rules
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ainews"]
+
+# ---------- mypy ----------
+[tool.mypy]
+strict = true
+packages = ["ainews"]
+mypy_path = "src"
+warn_return_any = true
+warn_unused_configs = true
+
+# ---------- pytest ----------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=ainews --cov-report=term-missing --strict-markers"
