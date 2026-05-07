@@ -517,7 +517,7 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - 124 tests, 99% line coverage on all new modules.
 - **Exit:** `alembic upgrade head` + `ainews seed` work end-to-end ✅ | `make lint && make typecheck && make test` all green ✅
 
-### Phase 2 — LLM client & tools (1–2 days)
+### Phase 2 — LLM client & tools ✅ (completed 2026-05-08)
 - `llm/factory.py`: build `ChatOpenAI(base_url, api_key, model, default_headers, temperature, max_tokens, timeout)` from env + `settings_kv` overrides + optional per-run `model_override`.
 - `llm/test.py`: 1-token completion against the configured local endpoint; surfaced as `ainews llm test` and the admin "Test connection" button.
 - Wrap `TavilySearch` with project defaults and a Valkey cache (`hashlib(query+params) → JSON`, TTL 6h).
