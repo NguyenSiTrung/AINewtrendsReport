@@ -4,4 +4,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-<!-- No tracks yet. Use `/conductor-newtrack` to create one. -->
+## [ ] Track: Phase 0 — Foundations
+*Link: [./conductor/tracks/foundations_20260507/](./conductor/tracks/foundations_20260507/)*
