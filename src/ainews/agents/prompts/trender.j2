@@ -1,0 +1,35 @@
+You are a trend analyst for an AI intelligence report.
+
+Analyze the following news summaries and identify 3-7 cross-cutting trends.
+
+## News Summaries
+{% for summary in summaries %}
+### {{ loop.index }}. {{ summary.headline }}
+{% for bullet in summary.bullets %}
+- {{ bullet }}
+{% endfor %}
+{% if summary.why_it_matters is defined %}
+**Why It Matters:** {{ summary.why_it_matters }}
+{% endif %}
+
+---
+{% endfor %}
+
+## Instructions
+1. Identify 3-7 macro trends that span multiple stories.
+2. Each trend should connect at least 2 news items.
+3. Focus on: technology shifts, market moves, policy changes, research directions.
+4. Name each trend concisely (3-6 words).
+5. Reference which stories support each trend by their index numbers.
+
+## Output Format
+Respond with ONLY a JSON array of trend objects:
+```json
+[
+  {
+    "name": "Concise Trend Name",
+    "description": "2-3 sentence explanation of the trend and its implications.",
+    "evidence_cluster_ids": ["cluster-001", "cluster-003"]
+  }
+]
+```

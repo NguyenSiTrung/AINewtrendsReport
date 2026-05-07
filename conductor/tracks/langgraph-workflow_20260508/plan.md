@@ -2,12 +2,12 @@
 
 ## Phase 1: State & Prompt Infrastructure
 
-- [ ] Task 1: Define GraphState TypedDict and supporting types
-  - [ ] Write tests for GraphState field defaults and type annotations
-  - [ ] Create `agents/state.py` with `GraphState(TypedDict)` — all fields from spec (run_id, params, queries, raw_results, fetched_articles, filtered_articles, clusters, summaries, trends, report_md, errors, metrics, loop_count)
-  - [ ] Create `NodeError` dataclass (node, message, traceback, timestamp)
-  - [ ] Create supporting types: `SearchHit`, `Article`, `Cluster`, `Summary`, `Trend` as TypedDicts
-  - [ ] Verify types pass mypy strict
+- [x] Task 1: Define GraphState TypedDict and supporting types ✅ 93c957a
+  - [x] Write tests for GraphState field defaults and type annotations
+  - [x] Create `agents/state.py` with `GraphState(TypedDict)` — all fields from spec (run_id, params, queries, raw_results, fetched_articles, filtered_articles, clusters, summaries, trends, report_md, errors, metrics, loop_count)
+  - [x] Create `NodeError` dataclass (node, message, traceback, timestamp)
+  - [x] Create supporting types: `SearchHit`, `Article`, `Cluster`, `Summary`, `Trend` as TypedDicts
+  - [x] Verify types pass mypy strict
 
 - [ ] Task 2: Create prompt template loader and Jinja2 templates
   - [ ] Write tests for template loading (file not found, variable rendering, missing vars)

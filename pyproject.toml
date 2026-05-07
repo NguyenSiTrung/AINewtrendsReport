@@ -45,6 +45,7 @@ dev = [
     "pre-commit>=4.2",
     "respx>=0.22",
     "pytest-asyncio>=0.26",
+    "types-jinja2>=0.1",
 ]
 
 # ---------- Ruff ----------
