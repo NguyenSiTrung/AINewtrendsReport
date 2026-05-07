@@ -8,5 +8,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [ ] Track: LLM Client & Tools (Phase 2)
+## [~] Track: LLM Client & Tools (Phase 2)
 *Link: [./conductor/tracks/llm-tools_20260507/](./conductor/tracks/llm-tools_20260507/)*

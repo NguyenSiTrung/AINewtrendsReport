@@ -57,3 +57,93 @@ class TestCLISubApps:
     def test_seed_help(self) -> None:
         result = runner.invoke(app, ["seed", "--help"])
         assert result.exit_code == 0
+
+
+class TestCLILLMTest:
+    """ainews llm test should display config and test connectivity."""
+
+    def test_llm_test_success(self) -> None:
+        import httpx
+        import respx
+
+        with respx.mock:
+            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+                return_value=httpx.Response(
+                    200,
+                    json={
+                        "id": "chatcmpl-test",
+                        "object": "chat.completion",
+                        "model": "local-model",
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": "Hi",
+                                },
+                                "finish_reason": "stop",
+                            }
+                        ],
+                        "usage": {
+                            "prompt_tokens": 5,
+                            "completion_tokens": 1,
+                            "total_tokens": 6,
+                        },
+                    },
+                )
+            )
+            result = runner.invoke(app, ["llm", "test"])
+
+        assert result.exit_code == 0
+        assert "Resolved LLM Config" in result.output
+        assert "base_url" in result.output
+        assert "***" in result.output  # masked api_key
+        assert "Connection OK" in result.output
+
+    def test_llm_test_failure(self) -> None:
+        import httpx
+        import respx
+
+        with respx.mock:
+            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+                side_effect=httpx.ConnectError("Connection refused"),
+            )
+            result = runner.invoke(app, ["llm", "test"])
+
+        assert result.exit_code == 1
+        assert "Connection FAILED" in result.output
+
+    def test_llm_test_shows_config_fields(self) -> None:
+        import httpx
+        import respx
+
+        with respx.mock:
+            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+                return_value=httpx.Response(
+                    200,
+                    json={
+                        "model": "local-model",
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": "Hi",
+                                },
+                                "finish_reason": "stop",
+                            }
+                        ],
+                        "usage": {
+                            "prompt_tokens": 5,
+                            "completion_tokens": 1,
+                            "total_tokens": 6,
+                        },
+                    },
+                )
+            )
+            result = runner.invoke(app, ["llm", "test"])
+
+        output = result.output
+        assert "temperature" in output
+        assert "max_tokens" in output
+        assert "timeout" in output

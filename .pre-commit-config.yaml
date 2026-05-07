@@ -16,5 +16,11 @@ repos:
           - structlog>=24.4
           - sqlalchemy>=2.0
           - alembic>=1.13
+          - langchain-openai>=0.3
+          - langchain-tavily>=0.1
+          - httpx>=0.28
+          - trafilatura>=2.0
+          - cachetools>=5.5
+          - tenacity>=9.0
         args: [--config-file=pyproject.toml]
         pass_filenames: false
