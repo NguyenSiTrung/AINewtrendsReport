@@ -18,3 +18,13 @@ Reusable patterns discovered during development. Read this before starting new w
 - **pre-commit mypy deps:** When adding new runtime packages (e.g., sqlalchemy, alembic), also add them to `additional_dependencies` in the `mirrors-mypy` hook in `.pre-commit-config.yaml` (from: data-layer_20260507, 2026-05-07)
 - **Idempotent upsert:** Use `select(Model).filter_by(key=value).scalar_one_or_none()` — if None insert, else skip; count both outcomes for user-facing output (from: data-layer_20260507, 2026-05-07)
 - **Typer sub-app invoke:** `seed_app = typer.Typer(invoke_without_command=True)` + `@seed_app.callback(invoke_without_command=True)` makes `ainews seed` run directly; check `ctx.invoked_subcommand is not None` to guard against subcommand passthrough (from: data-layer_20260507, 2026-05-07)
+- **Alembic check:** `alembic check` returns non-zero when pending migrations exist — expected before first `revision --autogenerate`; use it to verify metadata is loaded correctly (from: data-layer_20260507, 2026-05-07)
+- **FTS5 rowid:** FTS5 content tables with `content_rowid=id` require the `id` column to be INTEGER PK in SQLite (which maps `rowid = id`) (from: data-layer_20260507, 2026-05-07)
+- **CliRunner env injection:** `CliRunner` from `typer.testing` supports `env={"KEY": "value"}` to inject env vars; use with `AINEWS_DB_PATH` to redirect DB for tests (from: data-layer_20260507, 2026-05-07)
+- **JSON columns:** JSON columns typed as `Mapped[dict[str, Any] | None]` or `Mapped[list[Any] | None]` with `sqlalchemy.JSON` column type (from: data-layer_20260507, 2026-05-07)
+- **Session defaults:** Raw `session.execute(text("INSERT ..."))` bypasses Python-level ORM defaults — use ORM objects for seeding FK-parent rows in tests (from: data-layer_20260507, 2026-05-07)
+- **DB Session Manager:** `get_db_session(engine)` follows commit-on-success / rollback-on-exception / always-close pattern (from: data-layer_20260507, 2026-05-07)
+- **Ruff SIM117:** Ruff SIM117 flags nested `with` statements — flatten to `with pytest.raises(...), ctx_mgr as x:` pattern or split using a named variable (from: data-layer_20260507, 2026-05-07)
+
+---
+Last refreshed: 2026-05-07T23:44:00+07:00
