@@ -498,11 +498,14 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 
 ## 6. Implementation Phases (Roadmap)
 
-### Phase 0 — Foundations (½ day)
-- Init repo, `pyproject.toml` (uv or pip-tools), pre-commit (ruff, black, mypy), `Makefile`.
-- Local dev uses the same SQLite file path under `./var/`; no Docker required.
-- `pydantic-settings` + `.env`; secrets schema documented.
-- **Exit:** `ainews --help` runs.
+### Phase 0 — Foundations ✅ (completed 2026-05-07)
+- `pyproject.toml` (uv + hatchling, src/ layout), `uv.lock`, pre-commit (ruff + mypy), `Makefile` with 8 targets.
+- 13-package `src/ainews/` directory tree, `deploy/` skeleton (systemd/cron/nginx/install.sh), `alembic/` placeholder, `var/.gitkeep`.
+- `pydantic-settings` `Settings` class with all `AINEWS_*` env vars; `.env.example` documenting every variable.
+- `structlog` JSON logging via `setup_logging()`.
+- Typer CLI: `ainews version`, stub sub-apps `llm`, `run`, `seed`.
+- 27 tests, 100% coverage on implemented modules, all lints pass (ruff + mypy strict).
+- **Exit:** `ainews --help` runs ✅ | `make lint && make typecheck && make test` all green ✅
 
 ### Phase 1 — Data layer (1 day)
 - SQLAlchemy models (§2.3), SQLite pragmas in connection event listener.
