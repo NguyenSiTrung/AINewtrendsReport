@@ -526,12 +526,12 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - Tests with VCR cassettes for Tavily + recorded HTML for scraper + a fake OpenAI-compatible chat server (`respx` or a local Ollama in CI) for LLM.
 - **Exit:** `pytest tests/tools/` green; `ainews llm test` succeeds against your local server; `ainews fetch --site openai.com --days 7` prints clean articles; `ainews dedup --run-id ...` clusters a fixture corpus correctly.
 
-### Phase 3 — LangGraph workflow (2–3 days)
+### Phase 3 — LangGraph workflow ✅ (completed 2026-05-08)
 - `state.py`, each node in `agents/nodes/`, prompts as Jinja templates in `agents/prompts/`.
 - Wire `StateGraph`, conditional edges, `Send()` parallelism, `SqliteSaver` checkpointer.
-- Optional Langfuse callback wired through.
-- Integration test: full graph on a tiny fixture (3 sites, 3-day window) using your local LLM endpoint (Ollama or LM Studio is enough for CI).
-- **Exit:** `ainews run --topic LLM --days 7 --limit 20` produces a Markdown file locally.
+- Implemented 5-layer error resilience (Tenacity, `@node_resilient`, graceful skips, degrade-to-Writer).
+- Integration test: full graph on mock fixtures including SQLite checkpoint generation.
+- **Exit:** `ainews run start --topic AI --days 3` invokes compiled graph and produces a Markdown report end-to-end.
 
 ### Phase 4 — Exporters & report templates (½–1 day)
 - Jinja2 Markdown template (Executive Summary, Top Stories, Trends, Sources, Methodology).
