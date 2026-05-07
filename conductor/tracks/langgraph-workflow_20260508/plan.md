@@ -18,14 +18,14 @@
   - [x] Create `trender.j2` — trend extraction prompt with all summaries
   - [x] Create `writer_executive.j2` — executive summary polish prompt
 
-- [ ] Task 3: Create error resilience utilities
-  - [ ] Write tests for retry decorator, metrics accumulator, degrade checker
-  - [ ] Create `agents/resilience.py` with `@node_resilient` decorator (try/except → append NodeError to state.errors)
-  - [ ] Add `with_retries()` wrapper using tenacity (3 attempts, exponential 2s/4s/8s, retry on ConnectionError/5xx/timeout)
-  - [ ] Add `track_metrics(node_name, state, start_time, token_usage)` utility for per-node metrics accumulation
-  - [ ] Add `should_degrade(state, error_threshold) -> bool` checker
+- [x] Task 3: Create error resilience utilities ✅ 82c488f
+  - [x] Write tests for retry decorator, metrics accumulator, degrade checker
+  - [x] Create `agents/resilience.py` with `@node_resilient` decorator (try/except → append NodeError to state.errors)
+  - [x] Add `with_retries()` wrapper using tenacity (3 attempts, exponential 2s/4s/8s, retry on ConnectionError/5xx/timeout)
+  - [x] Add `track_metrics(node_name, state, start_time, token_usage)` utility for per-node metrics accumulation
+  - [x] Add `should_degrade(state, error_threshold) -> bool` checker
 
-- [ ] Task: Conductor - User Manual Verification 'State & Prompt Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'State & Prompt Infrastructure' ✅
 
 ## Phase 2: Node Implementations
 <!-- execution: parallel -->

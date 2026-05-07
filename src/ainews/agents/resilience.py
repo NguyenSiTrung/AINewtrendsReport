@@ -74,13 +74,16 @@ def with_retries(
 def node_resilient(
     node_name: str,
 ) -> Callable[
-    [Callable[[GraphState], dict[str, Any]]],
-    Callable[[GraphState], dict[str, Any]],
+    [Callable[[Any], dict[str, Any]]],
+    Callable[[Any], dict[str, Any]],
 ]:
     """Decorator that wraps a node function with error handling.
 
     On exception, appends a ``NodeError`` to ``state["errors"]`` and
     returns a partial state update instead of crashing the graph.
+
+    Accepts both ``GraphState`` and ``dict[str, Any]`` state arguments
+    to support both full nodes and ``Send()`` sub-nodes.
 
     Parameters
     ----------
@@ -89,10 +92,10 @@ def node_resilient(
     """
 
     def decorator(
-        func: Callable[[GraphState], dict[str, Any]],
-    ) -> Callable[[GraphState], dict[str, Any]]:
+        func: Callable[[Any], dict[str, Any]],
+    ) -> Callable[[Any], dict[str, Any]]:
         @wraps(func)
-        def wrapper(state: GraphState) -> dict[str, Any]:
+        def wrapper(state: Any) -> dict[str, Any]:
             start = time.time()
             try:
                 result = func(state)
@@ -151,7 +154,7 @@ def should_degrade(state: GraphState, error_threshold: int = 3) -> bool:
 
 def track_metrics(
     node_name: str,
-    state: GraphState,
+    state: dict[str, Any] | GraphState,
     start_time: float,
     input_tokens: int = 0,
     output_tokens: int = 0,
