@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
+  <p class="text-surface-700 dark:text-surface-200">Welcome to the {{ app_name }} admin panel.</p>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="card">
+      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Recent Runs</div>
+      <div class="mt-1 text-2xl font-bold">—</div>
+    </div>
+    <div class="card">
+      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Success Rate</div>
+      <div class="mt-1 text-2xl font-bold">—</div>
+    </div>
+    <div class="card">
+      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Next Run</div>
+      <div class="mt-1 text-2xl font-bold">—</div>
+    </div>
+    <div class="card">
+      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Health</div>
+      <div class="mt-1 text-2xl font-bold">—</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,4 @@
-.PHONY: install dev lint format typecheck test pre-commit clean
+.PHONY: install dev lint format typecheck test pre-commit clean css css-watch
 
 install:  ## Install production dependencies
 	uv sync --no-dev
@@ -28,3 +28,10 @@ clean:  ## Remove build artifacts and caches
 	rm -rf dist *.egg-info
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name '*.pyc' -delete 2>/dev/null || true
+
+css:  ## Build Tailwind CSS (production)
+	./tools/tailwindcss -i src/ainews/api/static/src/input.css -o src/ainews/api/static/css/output.css --minify
+
+css-watch:  ## Watch and rebuild Tailwind CSS on changes
+	./tools/tailwindcss -i src/ainews/api/static/src/input.css -o src/ainews/api/static/css/output.css --watch
+
