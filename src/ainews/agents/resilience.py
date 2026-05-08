@@ -85,6 +85,9 @@ def node_resilient(
     Accepts both ``GraphState`` and ``dict[str, Any]`` state arguments
     to support both full nodes and ``Send()`` sub-nodes.
 
+    Also logs node start/end/error events to the ``run_logs`` table
+    via ``log_to_db()`` for real-time progress tracking.
+
     Parameters
     ----------
     node_name
@@ -97,6 +100,16 @@ def node_resilient(
         @wraps(func)
         def wrapper(state: Any) -> dict[str, Any]:
             start = time.time()
+            run_id = _extract_run_id(state)
+            engine = _get_logging_engine()
+
+            # Log node start
+            if engine is not None and run_id:
+                _safe_log(
+                    engine, run_id, node_name,
+                    "INFO", "Node started",
+                )
+
             try:
                 result = func(state)
                 # Auto-track metrics if not already present
@@ -104,6 +117,16 @@ def node_resilient(
                     result["metrics"] = track_metrics(
                         node_name, state, start_time=start
                     )
+
+                # Log node completion
+                if engine is not None and run_id:
+                    elapsed = round(time.time() - start, 2)
+                    _safe_log(
+                        engine, run_id, node_name,
+                        "INFO", "Node completed",
+                        payload={"wall_seconds": elapsed},
+                    )
+
                 return result
             except Exception as exc:
                 tb = traceback.format_exc()
@@ -118,14 +141,76 @@ def node_resilient(
                     node=node_name,
                     error=str(exc),
                 )
+
+                # Log node failure
+                if engine is not None and run_id:
+                    _safe_log(
+                        engine, run_id, node_name,
+                        "ERROR", f"Node failed: {exc}",
+                    )
+
                 return {
                     "errors": [error],
-                    "metrics": track_metrics(node_name, state, start_time=start),
+                    "metrics": track_metrics(
+                        node_name, state, start_time=start
+                    ),
                 }
 
         return wrapper
 
     return decorator
+
+
+# ── Logging helpers for node_resilient ───────────────────
+
+_logging_engine_cache: Any = None
+
+
+def _get_logging_engine() -> Any:
+    """Lazily resolve the DB engine for run logging.
+
+    Returns ``None`` if engine cannot be created (e.g., during tests
+    without a configured database).
+    """
+    global _logging_engine_cache  # noqa: PLW0603
+    if _logging_engine_cache is not None:
+        return _logging_engine_cache
+    try:
+        from ainews.core.config import Settings
+        from ainews.core.database import create_engine as _create
+
+        settings = Settings()
+        _logging_engine_cache = _create(settings.database_url)
+        return _logging_engine_cache
+    except Exception:
+        return None
+
+
+def _extract_run_id(state: Any) -> str | None:
+    """Extract run_id from a GraphState or dict."""
+    if isinstance(state, dict):
+        return state.get("run_id")
+    return None
+
+
+def _safe_log(
+    engine: Any,
+    run_id: str,
+    node: str,
+    level: str,
+    message: str,
+    payload: dict[str, Any] | None = None,
+) -> None:
+    """Call log_to_db without ever raising."""
+    try:
+        from ainews.services.run_logger import log_to_db
+
+        log_to_db(
+            engine, run_id, node, level, message,
+            payload=payload,
+        )
+    except Exception:
+        pass  # Never crash a node for logging
 
 
 # ── Layer 4: Degrade path ────────────────────────────────
