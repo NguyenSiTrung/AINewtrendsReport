@@ -353,19 +353,50 @@ def _probe_health(session: Session) -> dict[str, Any]:
 @router.get("/sites", response_class=HTMLResponse)
 def sites_list(
     request: Request,
+    search: str = "",
+    page: int = 1,
+    per_page: int = 25,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """List all sites."""
+    """List all sites with server-side search and pagination."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
-    from sqlalchemy import select
+    from sqlalchemy import func, select
 
     from ainews.models.site import Site
 
-    sites = session.execute(select(Site).order_by(Site.priority.desc())).scalars().all()
-    return _render(request, "sites/list.html", {"sites": sites})
+    q = select(Site).order_by(Site.priority.desc())
+    if search:
+        q = q.where(
+            Site.url.ilike(f"%{search}%") | Site.category.ilike(f"%{search}%")
+        )
+
+    total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
+    sites = (
+        session.execute(q.limit(per_page).offset(offset)).scalars().all()
+    )
+    query_params: dict[str, str] = {}
+    if search:
+        query_params["search"] = search
+    return _render(
+        request,
+        "sites/list.html",
+        {
+            "sites": sites,
+            "search": search,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "query_params": query_params,
+        },
+    )
 
 
 @router.get("/sites/new", response_class=HTMLResponse)
@@ -377,7 +408,17 @@ def site_new_form(
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
-    return _render(request, "sites/form.html", {"site": None})
+    return _render(
+        request,
+        "sites/form.html",
+        {
+            "site": None,
+            "breadcrumbs": [
+                {"label": "Sites", "url": "/sites"},
+                {"label": "New Site", "url": None},
+            ],
+        },
+    )
 
 
 @router.post("/sites/new")
@@ -420,7 +461,17 @@ def site_edit_form(
     site = session.get(Site, site_id)
     if not site:
         return RedirectResponse(url="/sites", status_code=303)
-    return _render(request, "sites/form.html", {"site": site})
+    return _render(
+        request,
+        "sites/form.html",
+        {
+            "site": site,
+            "breadcrumbs": [
+                {"label": "Sites", "url": "/sites"},
+                {"label": "Edit Site", "url": None},
+            ],
+        },
+    )
 
 
 @router.post("/sites/{site_id}")
@@ -457,21 +508,40 @@ def site_update(
 @router.get("/schedules", response_class=HTMLResponse)
 def schedules_list(
     request: Request,
+    page: int = 1,
+    per_page: int = 25,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """List all schedules."""
+    """List all schedules with pagination."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
-    from sqlalchemy import select
+    from sqlalchemy import func, select
 
     from ainews.models.schedule import Schedule
 
+    q = select(Schedule).order_by(Schedule.name)
+    total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
     schedules = (
-        session.execute(select(Schedule).order_by(Schedule.name)).scalars().all()
+        session.execute(q.limit(per_page).offset(offset)).scalars().all()
     )
-    return _render(request, "schedules/list.html", {"schedules": schedules})
+    return _render(
+        request,
+        "schedules/list.html",
+        {
+            "schedules": schedules,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "query_params": {},
+        },
+    )
 
 
 @router.get("/schedules/new", response_class=HTMLResponse)
@@ -483,7 +553,17 @@ def schedule_new_form(
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
-    return _render(request, "schedules/form.html", {"schedule": None})
+    return _render(
+        request,
+        "schedules/form.html",
+        {
+            "schedule": None,
+            "breadcrumbs": [
+                {"label": "Schedules", "url": "/schedules"},
+                {"label": "New Schedule", "url": None},
+            ],
+        },
+    )
 
 
 @router.post("/schedules/new")
@@ -530,7 +610,17 @@ def schedule_edit_form(
     sched = session.get(Schedule, schedule_id)
     if not sched:
         return RedirectResponse(url="/schedules", status_code=303)
-    return _render(request, "schedules/form.html", {"schedule": sched})
+    return _render(
+        request,
+        "schedules/form.html",
+        {
+            "schedule": sched,
+            "breadcrumbs": [
+                {"label": "Schedules", "url": "/schedules"},
+                {"label": "Edit Schedule", "url": None},
+            ],
+        },
+    )
 
 
 @router.post("/schedules/{schedule_id}")
@@ -638,7 +728,17 @@ def llm_settings_page(
 
     row = session.get(SettingsKV, "llm")
     settings_data = row.value if row else {}
-    return _render(request, "llm.html", {"settings": settings_data})
+    return _render(
+        request,
+        "llm.html",
+        {
+            "settings": settings_data,
+            "breadcrumbs": [
+                {"label": "Settings", "url": "/settings"},
+                {"label": "LLM Settings", "url": None},
+            ],
+        },
+    )
 
 
 @router.post("/llm")
@@ -698,23 +798,41 @@ def llm_settings_save(
 @router.get("/runs", response_class=HTMLResponse)
 def runs_list(
     request: Request,
+    page: int = 1,
+    per_page: int = 25,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """List all pipeline runs."""
+    """List all pipeline runs with pagination."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
-    from sqlalchemy import select
+    from sqlalchemy import func, select
 
     from ainews.models.run import Run
 
-    runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
+    q = select(Run).order_by(Run.created_at.desc())
+    total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
+    runs = (
+        session.execute(q.limit(per_page).offset(offset)).scalars().all()
+    )
     has_active_runs = any(r.status in ("pending", "running") for r in runs)
     return _render(
         request,
         "runs/list.html",
-        {"runs": runs, "has_active_runs": has_active_runs},
+        {
+            "runs": runs,
+            "has_active_runs": has_active_runs,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "query_params": {},
+        },
     )
 
 
@@ -803,6 +921,10 @@ def run_detail(
             "node_states": node_states,
             "report": report,
             "duration_str": duration_str,
+            "breadcrumbs": [
+                {"label": "Runs", "url": "/runs"},
+                {"label": f"Run {run.id[:12]}", "url": None},
+            ],
         },
     )
 
@@ -1122,6 +1244,11 @@ def report_preview(
             "run": run,
             "report": report,
             "report_html": report_html,
+            "breadcrumbs": [
+                {"label": "Runs", "url": "/runs"},
+                {"label": f"Run {run.id[:12]}", "url": f"/runs/{run_id}"},
+                {"label": "Report", "url": None},
+            ],
         },
     )
 

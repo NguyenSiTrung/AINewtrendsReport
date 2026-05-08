@@ -55,9 +55,16 @@
       </div>
     {% else %}
       <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
-        <p>No schedules configured. <a href="/schedules/new" class="text-primary-600 hover:underline dark:text-primary-400">Create your first schedule</a></p>
+        <svg class="w-12 h-12 mx-auto mb-3 text-surface-700/20 dark:text-surface-200/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="font-medium text-sm">No schedules configured.</p>
+        <p class="mt-1 text-xs"><a href="/schedules/new" class="text-primary-600 hover:underline dark:text-primary-400">Create your first schedule →</a></p>
       </div>
     {% endif %}
+    {% with base_url="/schedules", query_params=query_params %}
+      {% include "partials/pagination.html" %}
+    {% endwith %}
   </div>
 </div>
 {% endblock %}

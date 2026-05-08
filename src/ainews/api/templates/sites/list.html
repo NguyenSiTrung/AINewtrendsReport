@@ -14,67 +14,92 @@
     </a>
   </div>
 
-  <!-- Search -->
-  <div x-data="{ search: '' }">
-    <input type="text" x-model="search" placeholder="Filter sites…"
-           class="form-input max-w-xs mb-4">
+  <!-- Server-side search -->
+  <div class="flex items-center gap-3">
+    <input type="text"
+           id="sites-search"
+           value="{{ search }}"
+           placeholder="Search sites…"
+           class="form-input max-w-xs"
+           hx-get="/sites"
+           hx-push-url="true"
+           hx-target="#sites-list-container"
+           hx-swap="outerHTML"
+           hx-trigger="keyup changed delay:300ms"
+           name="search">
+    {% if total is defined %}
+      <span class="text-sm text-surface-700/60 dark:text-surface-200/50">
+        Showing {{ sites | length }} of {{ total }}
+      </span>
+    {% endif %}
+  </div>
 
-    <div class="card !p-0 overflow-hidden">
-      {% if sites %}
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-left text-surface-700/70 dark:text-surface-200/60 border-b border-surface-200 dark:border-surface-700">
-                <th class="px-6 py-3 font-medium">URL</th>
-                <th class="px-6 py-3 font-medium">Category</th>
-                <th class="px-6 py-3 font-medium">Priority</th>
-                <th class="px-6 py-3 font-medium">Enabled</th>
-                <th class="px-6 py-3 font-medium text-right">Actions</th>
+  <div id="sites-list-container" class="card !p-0 overflow-hidden">
+    {% if sites %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-surface-700/70 dark:text-surface-200/60 border-b border-surface-200 dark:border-surface-700">
+              <th class="px-6 py-3 font-medium">URL</th>
+              <th class="px-6 py-3 font-medium">Category</th>
+              <th class="px-6 py-3 font-medium">Priority</th>
+              <th class="px-6 py-3 font-medium">Enabled</th>
+              <th class="px-6 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+            {% for site in sites %}
+              <tr class="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3">
+                  <a href="{{ site.url }}" target="_blank" class="text-primary-600 hover:underline dark:text-primary-400 break-all">
+                    {{ site.url | truncate(60) }}
+                  </a>
+                </td>
+                <td class="px-6 py-3">
+                  {% if site.category %}
+                    <span class="badge-info">{{ site.category }}</span>
+                  {% else %}
+                    <span class="text-surface-700/40 dark:text-surface-200/30">—</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3 font-mono">{{ site.priority }}</td>
+                <td class="px-6 py-3">
+                  {% if site.enabled is defined and not site.enabled %}
+                    <span class="badge-danger">Off</span>
+                  {% else %}
+                    <span class="badge-success">On</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3 text-right space-x-2">
+                  <a href="/sites/{{ site.id }}/edit" class="text-sm text-primary-600 hover:underline dark:text-primary-400">Edit</a>
+                  <button hx-delete="/api/sites/{{ site.id }}"
+                          hx-confirm="Delete this site?"
+                          hx-target="closest tr"
+                          hx-swap="outerHTML swap:0.3s"
+                          class="text-sm text-danger hover:underline">Delete</button>
+                </td>
               </tr>
-            </thead>
-            <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
-              {% for site in sites %}
-                <tr x-show="!search || '{{ site.url }}'.toLowerCase().includes(search.toLowerCase()) || '{{ site.category or '' }}'.toLowerCase().includes(search.toLowerCase())"
-                    class="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
-                  <td class="px-6 py-3">
-                    <a href="{{ site.url }}" target="_blank" class="text-primary-600 hover:underline dark:text-primary-400 break-all">
-                      {{ site.url | truncate(60) }}
-                    </a>
-                  </td>
-                  <td class="px-6 py-3">
-                    {% if site.category %}
-                      <span class="badge-info">{{ site.category }}</span>
-                    {% else %}
-                      <span class="text-surface-700/40 dark:text-surface-200/30">—</span>
-                    {% endif %}
-                  </td>
-                  <td class="px-6 py-3 font-mono">{{ site.priority }}</td>
-                  <td class="px-6 py-3">
-                    {% if site.enabled is defined and not site.enabled %}
-                      <span class="badge-danger">Off</span>
-                    {% else %}
-                      <span class="badge-success">On</span>
-                    {% endif %}
-                  </td>
-                  <td class="px-6 py-3 text-right space-x-2">
-                    <a href="/sites/{{ site.id }}/edit" class="text-sm text-primary-600 hover:underline dark:text-primary-400">Edit</a>
-                    <button hx-delete="/api/sites/{{ site.id }}"
-                            hx-confirm="Delete this site?"
-                            hx-target="closest tr"
-                            hx-swap="outerHTML swap:0.3s"
-                            class="text-sm text-danger hover:underline">Delete</button>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
-          <p>No sites configured. <a href="/sites/new" class="text-primary-600 hover:underline dark:text-primary-400">Add your first site</a></p>
-        </div>
-      {% endif %}
-    </div>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
+        <svg class="w-12 h-12 mx-auto mb-3 text-surface-700/20 dark:text-surface-200/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+        </svg>
+        {% if search %}
+          <p class="font-medium text-sm">No sites match "{{ search }}".</p>
+          <p class="mt-1 text-xs"><a href="/sites" class="text-primary-600 hover:underline dark:text-primary-400">Clear search</a></p>
+        {% else %}
+          <p class="font-medium text-sm">No sites configured.</p>
+          <p class="mt-1 text-xs"><a href="/sites/new" class="text-primary-600 hover:underline dark:text-primary-400">Add your first site →</a></p>
+        {% endif %}
+      </div>
+    {% endif %}
+    {% with base_url="/sites", query_params=query_params %}
+      {% include "partials/pagination.html" %}
+    {% endwith %}
   </div>
 </div>
 {% endblock %}

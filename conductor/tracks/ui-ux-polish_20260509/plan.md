@@ -118,45 +118,45 @@
 <!-- execution: parallel -->
 <!-- depends: phase2 -->
 
-- [ ] Task 1: Sidebar navigation groups
+- [x] Task 1: Sidebar navigation groups
   <!-- files: src/ainews/api/templates/base.html -->
-  - [ ] Group nav items: Overview, Pipeline, System
-  - [ ] Add muted uppercase section headers
-  - [ ] Alpine.js collapsible groups with localStorage persistence
+  - [x] Group nav items: Overview, Pipeline, System
+  - [x] Add muted uppercase section headers
+  - [x] Alpine.js collapsible groups with localStorage persistence
 
-- [ ] Task 2: Wire pagination into list pages
+- [x] Task 2: Wire pagination into list pages
   <!-- files: src/ainews/api/routes/views.py, src/ainews/api/templates/partials/runs_table.html, src/ainews/api/templates/sites/list.html, src/ainews/api/templates/schedules/list.html -->
-  - [ ] Add `page`/`per_page` params to sites, schedules, runs routes
-  - [ ] Include pagination partial in each list template
-  - [ ] Write tests for pagination boundary cases
+  - [x] Add `page`/`per_page` params to sites, schedules, runs routes
+  - [x] Include pagination partial in each list template
+  - [x] Write tests for pagination boundary cases
 
-- [ ] Task 3: Wire breadcrumbs into sub-pages
+- [x] Task 3: Wire breadcrumbs into sub-pages
   <!-- files: src/ainews/api/routes/views.py, src/ainews/api/templates/sites/form.html, src/ainews/api/templates/schedules/form.html, src/ainews/api/templates/runs/detail.html, src/ainews/api/templates/runs/report.html, src/ainews/api/templates/settings.html, src/ainews/api/templates/llm.html -->
-  - [ ] Add `breadcrumbs` list to template context in each route
-  - [ ] Include breadcrumb partial in base.html
+  - [x] Add `breadcrumbs` list to template context in each route
+  - [x] Include breadcrumb partial in base.html
 
-- [ ] Task 4: Contextual empty states
+- [x] Task 4: Contextual empty states
   <!-- files: src/ainews/api/templates/sites/list.html, src/ainews/api/templates/schedules/list.html, src/ainews/api/templates/partials/runs_table.html, src/ainews/api/templates/logs.html -->
-  - [ ] Per-page SVG icons and descriptive guidance copy
-  - [ ] Dark mode parity
+  - [x] Per-page SVG icons and descriptive guidance copy
+  - [x] Dark mode parity
 
-- [ ] Task 5: Mobile stepper responsiveness
+- [x] Task 5: Mobile stepper responsiveness
   <!-- files: src/ainews/api/templates/partials/run_stepper.html, src/ainews/api/static/src/input.css -->
-  - [ ] Vertical layout on small viewports
-  - [ ] Fade-gradient scroll indicators for horizontal overflow
-  - [ ] Test on narrow viewport
+  - [x] Vertical layout on small viewports
+  - [x] Fade-gradient scroll indicators for horizontal overflow
+  - [x] Test on narrow viewport
 
-- [ ] Task 6: Server-side sites search
+- [x] Task 6: Server-side sites search
   <!-- files: src/ainews/api/routes/views.py, src/ainews/api/templates/sites/list.html -->
-  - [ ] Replace Alpine `x-show` with HTMX `hx-get` search
-  - [ ] Add "showing X of Y" counter
-  - [ ] Debounce search input with `hx-trigger="keyup changed delay:300ms"`
+  - [x] Replace Alpine `x-show` with HTMX `hx-get` search
+  - [x] Add "showing X of Y" counter
+  - [x] Debounce search input with `hx-trigger="keyup changed delay:300ms"`
 
-- [ ] Task 7: Keyboard shortcuts
+- [x] Task 7: Keyboard shortcuts
   <!-- files: src/ainews/api/templates/base.html -->
-  - [ ] Add Alpine.js `@keydown.window` listener for Ctrl/Cmd+K
-  - [ ] Focus search input or show command palette stub
-  - [ ] Visual hint in sidebar footer
+  - [x] Add JS `@keydown.window` listener for Ctrl/Cmd+K
+  - [x] Focus search input or show command palette stub
+  - [x] Visual hint in sidebar footer
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 5' (Protocol in workflow.md)
 

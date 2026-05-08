@@ -66,7 +66,16 @@
     </div>
   {% else %}
     <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
-      <p>No runs yet. <a href="/trigger" class="text-primary-600 hover:underline dark:text-primary-400">Trigger your first run</a></p>
+      <svg class="w-12 h-12 mx-auto mb-3 text-surface-700/20 dark:text-surface-200/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p class="font-medium text-sm">No pipeline runs yet.</p>
+      <p class="mt-1 text-xs"><a href="/trigger" class="text-primary-600 hover:underline dark:text-primary-400">Trigger your first run →</a></p>
     </div>
+  {% endif %}
+  {% if total_pages is defined %}
+    {% with base_url="/runs", query_params=query_params %}
+      {% include "partials/pagination.html" %}
+    {% endwith %}
   {% endif %}
 </div>
