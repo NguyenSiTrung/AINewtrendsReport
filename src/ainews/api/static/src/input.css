@@ -97,3 +97,52 @@
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Pipeline stepper node ───────────────────────────── */
+.stepper-node {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.stepper-pending {
+  background: oklch(0.94 0.008 250);
+  color: oklch(0.30 0.015 250);
+  border-color: oklch(0.94 0.008 250);
+}
+:where(.dark, .dark *) .stepper-pending {
+  background: oklch(0.22 0.015 250);
+  color: oklch(0.55 0.02 250);
+  border-color: oklch(0.22 0.015 250);
+}
+
+.stepper-running {
+  background: oklch(0.62 0.15 250 / 0.15);
+  color: oklch(0.62 0.15 250);
+  border-color: oklch(0.62 0.15 250);
+  animation: stepperPulse 2s ease-in-out infinite;
+}
+
+.stepper-completed {
+  background: oklch(0.65 0.18 145 / 0.15);
+  color: oklch(0.65 0.18 145);
+  border-color: oklch(0.65 0.18 145);
+}
+
+.stepper-failed {
+  background: oklch(0.60 0.20 25 / 0.15);
+  color: oklch(0.60 0.20 25);
+  border-color: oklch(0.60 0.20 25);
+}
+
+@keyframes stepperPulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.62 0.15 250 / 0.4); }
+  50% { box-shadow: 0 0 0 6px oklch(0.62 0.15 250 / 0); }
+}
