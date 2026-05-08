@@ -42,29 +42,4 @@ def downgrade() -> None:
         batch_op.drop_column('xlsx_path')
         batch_op.drop_column('full_md_path')
 
-    op.create_table('reports_fts_config',
-    sa.Column('k', sa.NullType(), nullable=False),
-    sa.Column('v', sa.NullType(), nullable=True),
-    sa.PrimaryKeyConstraint('k')
-    )
-    op.create_table('reports_fts_docsize',
-    sa.Column('id', sa.INTEGER(), nullable=True),
-    sa.Column('sz', sa.BLOB(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('reports_fts',
-    sa.Column('title', sa.NullType(), nullable=True),
-    sa.Column('summary_md', sa.NullType(), nullable=True)
-    )
-    op.create_table('reports_fts_data',
-    sa.Column('id', sa.INTEGER(), nullable=True),
-    sa.Column('block', sa.BLOB(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('reports_fts_idx',
-    sa.Column('segid', sa.NullType(), nullable=False),
-    sa.Column('term', sa.NullType(), nullable=False),
-    sa.Column('pgno', sa.NullType(), nullable=True),
-    sa.PrimaryKeyConstraint('segid', 'term')
-    )
     # ### end Alembic commands ###

@@ -28,12 +28,14 @@ class TestSettingsDefaults:
         s = Settings()  # type: ignore[call-arg]
         assert s.llm_temperature == 0.0
 
-    def test_llm_max_tokens_default(self) -> None:
-        s = Settings()  # type: ignore[call-arg]
+    def test_llm_max_tokens_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AINEWS_LLM_MAX_TOKENS", raising=False)
+        s = Settings(_env_file=None)  # type: ignore[call-arg]
         assert s.llm_max_tokens == 4096
 
-    def test_llm_timeout_default(self) -> None:
-        s = Settings()  # type: ignore[call-arg]
+    def test_llm_timeout_default(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.delenv("AINEWS_LLM_TIMEOUT", raising=False)
+        s = Settings(_env_file=None)  # type: ignore[call-arg]
         assert s.llm_timeout == 120
 
 

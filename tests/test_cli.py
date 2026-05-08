@@ -66,8 +66,10 @@ class TestCLILLMTest:
         import httpx
         import respx
 
+        from ainews.core.config import Settings
+        
         with respx.mock:
-            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+            respx.post(f"{Settings().llm_base_url}/chat/completions").mock(
                 return_value=httpx.Response(
                     200,
                     json={
@@ -104,8 +106,10 @@ class TestCLILLMTest:
         import httpx
         import respx
 
+        from ainews.core.config import Settings
+
         with respx.mock:
-            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+            respx.post(f"{Settings().llm_base_url}/chat/completions").mock(
                 side_effect=httpx.ConnectError("Connection refused"),
             )
             result = runner.invoke(app, ["llm", "test"])
@@ -117,8 +121,10 @@ class TestCLILLMTest:
         import httpx
         import respx
 
+        from ainews.core.config import Settings
+
         with respx.mock:
-            respx.post("http://127.0.0.1:8080/v1/chat/completions").mock(
+            respx.post(f"{Settings().llm_base_url}/chat/completions").mock(
                 return_value=httpx.Response(
                     200,
                     json={

@@ -84,12 +84,13 @@ class TavilySearchTool:
     def _build_tool(self) -> object:
         """Lazily construct the underlying TavilySearch tool."""
         from langchain_tavily import TavilySearch
+        from langchain_tavily._utilities import TavilySearchAPIWrapper
 
         return TavilySearch(
             max_results=10,
             topic="news",
             include_raw_content=True,
-            api_key=self._api_key,
+            api_wrapper=TavilySearchAPIWrapper(tavily_api_key=self._api_key),
         )
 
     @staticmethod
