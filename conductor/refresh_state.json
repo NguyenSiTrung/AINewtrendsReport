@@ -1,8 +1,8 @@
 {
-  "last_refreshed": "2026-05-08T18:45:29+07:00",
+  "last_refresh": "2026-05-08T22:42:00+07:00",
   "changes": [
-    "Updated product.md to mark LLM decisions as decided",
-    "Verified all tracks are archived and 0 Beads issues are open",
-    "Added refresh markers to conductor context files"
-  ]
+    "Updated product.md core capabilities to include real-time pipeline monitoring and node steppers from progress-ui track",
+    "Closed orphaned beads tasks"
+  ],
+  "drift_detected": true
 }
