@@ -69,6 +69,15 @@ def planner_node(state: GraphState) -> dict[str, Any]:
     start = time.time()
     params = state["params"]
 
+    use_smart_planner = params.get("use_smart_planner", True)
+    if not use_smart_planner:
+        queries = list(params["topics"])
+        logger.info("planner_bypassed_using_exact_topics", query_count=len(queries))
+        return {
+            "queries": queries,
+            "metrics": track_metrics("planner", state, start_time=start),
+        }
+
     prompt = load_prompt(
         "planner",
         topics=params["topics"],

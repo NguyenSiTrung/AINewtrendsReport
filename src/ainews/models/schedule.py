@@ -36,6 +36,7 @@ class Schedule(Base):
     site_filter: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     topics: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     model_override: Mapped[str | None] = mapped_column(String, nullable=True)
+    use_smart_planner: Mapped[int] = mapped_column(Integer, default=0)
     enabled: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
 

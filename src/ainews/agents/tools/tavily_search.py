@@ -174,11 +174,17 @@ class TavilySearchTool:
     @staticmethod
     def _parse_results(raw: object) -> list[SearchResult]:
         """Convert Tavily raw output to SearchResult list."""
-        if isinstance(raw, list):
+        if isinstance(raw, dict) and "results" in raw:
+            items = raw["results"]
+        elif isinstance(raw, list):
             items = raw
         elif isinstance(raw, str):
             try:
-                items = json.loads(raw)
+                parsed = json.loads(raw)
+                if isinstance(parsed, dict) and "results" in parsed:
+                    items = parsed["results"]
+                else:
+                    items = parsed
             except json.JSONDecodeError:
                 return []
         else:

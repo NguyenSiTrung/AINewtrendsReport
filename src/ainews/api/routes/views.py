@@ -474,6 +474,7 @@ def trigger_submit(
     schedule_name: str = Form(""),
     topics: str = Form(""),
     days: int = Form(7),
+    use_smart_planner: bool = Form(False),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Enqueue a pipeline run and redirect to runs."""
@@ -487,6 +488,7 @@ def trigger_submit(
     if topics.strip():
         params["topics"] = [t.strip() for t in topics.split(",")]
     params["timeframe_days"] = days
+    params["use_smart_planner"] = use_smart_planner
 
     try:
         run_id = create_and_enqueue_run(

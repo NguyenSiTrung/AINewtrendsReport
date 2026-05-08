@@ -69,6 +69,8 @@ def create_and_enqueue_run(
             input_params["timeframe_days"] = schedule.timeframe_days
         if not input_params.get("sites") and schedule.site_filter:
             input_params["sites"] = schedule.site_filter
+        if "use_smart_planner" not in input_params:
+            input_params["use_smart_planner"] = bool(schedule.use_smart_planner)
 
     now = datetime.now(tz=UTC).isoformat()
 

@@ -21,6 +21,7 @@ that will retrieve the most relevant and recent news articles.
 2. Each query should be specific and newsworthy.
 3. Include at least one query per topic that targets recent developments.
 4. Vary query styles: some broad, some specific, some combining topics.
+5. **IMPORTANT:** DO NOT include specific months, years, or dates in your queries (e.g., do not write "October 2024"). The timeframe filtering is handled automatically by the search API, so adding dates will break the search results. Keep the queries timeless (e.g., use "latest", "recent").
 
 ## Output Format
 Respond with ONLY a JSON array of query strings. Example:

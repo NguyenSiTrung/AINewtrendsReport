@@ -28,6 +28,7 @@ class ScheduleCreate(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    use_smart_planner: bool = Field(default=False)
     enabled: bool = Field(default=True)
 
     @field_validator("cron_expr")
@@ -45,6 +46,7 @@ class ScheduleUpdate(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    use_smart_planner: bool | None = None
     enabled: bool | None = None
 
     @field_validator("cron_expr")
@@ -65,5 +67,6 @@ class ScheduleResponse(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    use_smart_planner: bool
     enabled: bool
     created_at: str | None = None
