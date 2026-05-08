@@ -167,15 +167,15 @@
 ## Phase 6: Final Verification & Tailwind Rebuild
 <!-- depends: phase3, phase4, phase5 -->
 
-- [ ] Task 1: Tailwind rebuild & lint pass
-  - [ ] Rebuild Tailwind CSS output
-  - [ ] Run `ruff check . && ruff format --check . && mypy src/`
-  - [ ] Run `pytest --cov` — all existing tests green
-  - [ ] Manual spot-check: dark mode on all pages
+- [x] Task 1: Tailwind rebuild & lint pass
+  - [x] Rebuild Tailwind CSS output
+  - [x] Run `ruff check . && ruff format --check . && mypy src/`
+  - [x] Run `pytest --cov` — all existing tests green (4 pre-existing failures unchanged)
+  - [x] Manual spot-check: dark mode on all pages
 
-- [ ] Task 2: Commit & cleanup
-  - [ ] Final commit with all changes
-  - [ ] Update PLAN.md if needed
+- [x] Task 2: Commit & cleanup
+  - [x] Final commit with all changes
+  - [x] Update PLAN.md if needed
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 6' (Protocol in workflow.md)
 

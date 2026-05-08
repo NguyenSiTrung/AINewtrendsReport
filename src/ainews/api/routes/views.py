@@ -369,18 +369,14 @@ def sites_list(
 
     q = select(Site).order_by(Site.priority.desc())
     if search:
-        q = q.where(
-            Site.url.ilike(f"%{search}%") | Site.category.ilike(f"%{search}%")
-        )
+        q = q.where(Site.url.ilike(f"%{search}%") | Site.category.ilike(f"%{search}%"))
 
     total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
     offset = (page - 1) * per_page
 
-    sites = (
-        session.execute(q.limit(per_page).offset(offset)).scalars().all()
-    )
+    sites = session.execute(q.limit(per_page).offset(offset)).scalars().all()
     query_params: dict[str, str] = {}
     if search:
         query_params["search"] = search
@@ -527,9 +523,7 @@ def schedules_list(
     page = max(1, min(page, total_pages))
     offset = (page - 1) * per_page
 
-    schedules = (
-        session.execute(q.limit(per_page).offset(offset)).scalars().all()
-    )
+    schedules = session.execute(q.limit(per_page).offset(offset)).scalars().all()
     return _render(
         request,
         "schedules/list.html",
@@ -817,9 +811,7 @@ def runs_list(
     page = max(1, min(page, total_pages))
     offset = (page - 1) * per_page
 
-    runs = (
-        session.execute(q.limit(per_page).offset(offset)).scalars().all()
-    )
+    runs = session.execute(q.limit(per_page).offset(offset)).scalars().all()
     has_active_runs = any(r.status in ("pending", "running") for r in runs)
     return _render(
         request,
