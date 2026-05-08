@@ -437,7 +437,7 @@ sudo apt update
 sudo apt install -y python3.12 python3.12-venv python3-pip \
                     sqlite3 \
                     valkey-server \
-                    nginx build-essential libssl-dev curl git \
+                    build-essential libssl-dev curl git \
                     fonts-liberation
 ```
 > If `valkey-server` is unavailable on your Ubuntu version, install Redis ≤ 7.2.4 from the Ubuntu LTS repo (still BSD-licensed) or build Valkey from source.
@@ -463,7 +463,7 @@ sudo install -d -o ainews -g ainews \
 Bound to `127.0.0.1`, no password if local-only; set `requirepass` if exposed.
 
 ### 5.5 systemd units
-- `ainews-api.service` → `ExecStart=/opt/ainews/venv/bin/uvicorn ainews.api.main:app --host 127.0.0.1 --port 8000 --workers 2`
+- `ainews-api.service` → `ExecStart=/opt/ainews/venv/bin/uvicorn ainews.api.main:app --host 0.0.0.0 --port 8000 --workers 2`
 - `ainews-worker.service` → `ExecStart=/opt/ainews/venv/bin/celery -A ainews.tasks.app worker -l info -Q default,scrape,llm --concurrency=4`
 - `ainews-beat.service` (optional, alternative to cron)
 - All units: `User=ainews`, `EnvironmentFile=/etc/ainews/ainews.env`, `Restart=on-failure`, `StandardOutput=journal`, `ProtectSystem=strict`, `ReadWritePaths=/var/lib/ainews /var/log/ainews`.
@@ -477,8 +477,8 @@ Bound to `127.0.0.1`, no password if local-only; set `requirepass` if exposed.
 ```
 `ainews trigger-run` is a Typer command that resolves the schedule by name in the DB and enqueues a Celery task — keeps cron lines stable while config lives in the DB (admin-editable).
 
-### 5.7 Nginx
-TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, basic IP allowlist on `/api/`.
+### 5.7 Direct Local Access
+FastAPI (uvicorn) binds to `0.0.0.0:8000` for direct local network access. No Nginx or certbot is required for this internal deployment.
 
 ### 5.8 Backups & retention
 - Daily SQLite `.backup` to `/var/backups/ainews/`, retained 30 days.
@@ -555,19 +555,18 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - **Exit:** Admin can add a site, edit LLM settings + Test connection, schedule a run, trigger manually, and watch logs live.
 
 ### Phase 7 — Ubuntu deployment (1 day)
-- systemd units, cron file, nginx config, certbot.
+- systemd units, cron file.
 - Idempotent `deploy/install.sh` covering §5.1–§5.10.
-- Smoke test on a fresh Ubuntu VM (Multipass / EC2 t3.small).
-- **Exit:** Cold-boot install completes; weekly cron fires; admin UI reachable over HTTPS.
+- **Exit:** Cold-boot install completes; weekly cron fires; admin UI reachable locally over HTTP (port 8000).
 
 ### Phase 8 — Hardening & QA (1–2 days)
 - Per-domain scraper rate limits; Tavily monthly-quota guard; concurrency cap on calls into the local LLM (avoid saturating your GPU).
 - Hard caps per run: `max_total_tokens`, `max_wall_seconds`, `max_articles`. Configurable in `settings_kv`.
 - Retry/backoff with `tenacity` for transient LLM and Tavily errors against the single local endpoint.
-- Backup cron + Litestream (optional); log rotation `/etc/logrotate.d/ainews`.
-- Security: CSP, HSTS, file modes audit, env-file ownership audit, masking of API key in logs.
-- E2E test: full nightly run on a staging schedule, diff against a golden report.
-- **Exit:** Full week of cron in staging without manual intervention.
+- Local backup cron; log rotation via `/etc/logrotate.d/ainews`.
+- Security: CSP, file modes audit, env-file ownership audit, masking of API key in logs.
+- E2E test: execute a full manual run from the Admin UI and monitor logs for warnings/errors.
+- **Exit:** First scheduled cron run completes successfully on the local server without manual intervention.
 
 ### Phase 9 — Docs & handover (½ day)
 - `README.md` quickstart, `docs/architecture.md` (this plan), `docs/operations.md` (runbook: add a site, switch the local LLM endpoint or model, replay a failed run, rotate the API key, restore from backup).
