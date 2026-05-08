@@ -26,3 +26,7 @@ This file tracks all major tracks for the project.
 
 <!-- archived: admin-ui_20260508 — Phase 6 Admin UI completed 2026-05-08 → conductor/archive/admin-ui_20260508/ -->
 
+---
+
+## [ ] Track: Ubuntu Deployment + Hardening & QA (Phase 7 + Phase 8)
+*Link: [./conductor/tracks/deploy-hardening_20260508/](./conductor/tracks/deploy-hardening_20260508/)*
