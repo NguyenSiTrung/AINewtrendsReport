@@ -36,6 +36,9 @@ Reusable patterns discovered during development. Read this before starting new w
 - **CSRF double-submit cookie:** Middleware must NOT consume `request.body()` or `request.form()` — this prevents downstream FastAPI `Form()` injection from working. Compare header/cookie values instead. (from: admin-ui_20260508, archived 2026-05-08)
 - **Auth gating pattern:** Use `_require_auth(request, session)` helper that returns `RedirectResponse` or sets `request.state.user`. All protected routes call this first. (from: admin-ui_20260508, archived 2026-05-08)
 - **RunLog timestamp field:** The field is `ts`, not `created_at`. Templates and queries must use `RunLog.ts`. (from: admin-ui_20260508, archived 2026-05-08)
+- **Decorator-level DB logging:** Integrate `log_to_db()` into `@node_resilient` decorator for automatic start/end/error logging on every node without modifying individual node files. Engine resolved lazily from Settings. (from: progress-ui_20260508, archived 2026-05-08)
+- **FastAPI route ordering for path params:** Static routes like `/runs/table` must be registered BEFORE parameterized `/runs/{run_id}` — otherwise FastAPI matches the literal as a path parameter value. (from: progress-ui_20260508, archived 2026-05-08)
+- **HTMX conditional polling:** Use Jinja2 `{% if run.status in ('pending', 'running') %}` to conditionally include `hx-trigger="every 2s"`. Polling stops automatically when the server returns HTML without `hx-trigger`. (from: progress-ui_20260508, archived 2026-05-08)
 
 ---
-Last refreshed: 2026-05-08T13:44:00+07:00
+Last refreshed: 2026-05-08T22:35:00+07:00
