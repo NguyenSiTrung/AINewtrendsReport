@@ -36,5 +36,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Report Preview & Download
+## [x] Track: Report Preview & Download
 *Link: [./conductor/tracks/report-preview_20260509/](./conductor/tracks/report-preview_20260509/)*
