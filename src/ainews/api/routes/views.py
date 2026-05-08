@@ -229,3 +229,217 @@ def _probe_health(session: Session) -> dict[str, Any]:
         overall = "down"
 
     return {"components": components, "overall": overall}
+
+
+# ── Sites CRUD ───────────────────────────────────────────
+
+
+@router.get("/sites", response_class=HTMLResponse)
+def sites_list(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """List all sites."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.site import Site
+
+    sites = session.execute(select(Site).order_by(Site.priority.desc())).scalars().all()
+    return _render(request, "sites/list.html", {"sites": sites})
+
+
+@router.get("/sites/new", response_class=HTMLResponse)
+def site_new_form(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show new site form."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+    return _render(request, "sites/form.html", {"site": None})
+
+
+@router.post("/sites/new")
+def site_create(
+    request: Request,
+    url: str = Form(...),
+    category: str = Form("tech"),
+    priority: int = Form(5),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Create a new site."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.site import Site
+
+    site = Site(url=url, category=category, priority=priority)
+    session.add(site)
+    session.flush()
+
+    resp = RedirectResponse(url="/sites", status_code=303)
+    flash(resp, f"Site '{url}' created", "success")
+    return resp
+
+
+@router.get("/sites/{site_id}/edit", response_class=HTMLResponse)
+def site_edit_form(
+    request: Request,
+    site_id: int,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show edit form for a site."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.site import Site
+
+    site = session.get(Site, site_id)
+    if not site:
+        return RedirectResponse(url="/sites", status_code=303)
+    return _render(request, "sites/form.html", {"site": site})
+
+
+@router.post("/sites/{site_id}")
+def site_update(
+    request: Request,
+    site_id: int,
+    url: str = Form(...),
+    category: str = Form("tech"),
+    priority: int = Form(5),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Update an existing site."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.site import Site
+
+    site = session.get(Site, site_id)
+    if site:
+        site.url = url
+        site.category = category
+        site.priority = priority
+        session.flush()
+
+    resp = RedirectResponse(url="/sites", status_code=303)
+    flash(resp, "Site updated", "success")
+    return resp
+
+
+# ── Schedules CRUD ───────────────────────────────────────
+
+
+@router.get("/schedules", response_class=HTMLResponse)
+def schedules_list(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """List all schedules."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.schedule import Schedule
+
+    schedules = (
+        session.execute(select(Schedule).order_by(Schedule.name)).scalars().all()
+    )
+    return _render(request, "schedules/list.html", {"schedules": schedules})
+
+
+@router.get("/schedules/new", response_class=HTMLResponse)
+def schedule_new_form(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show new schedule form."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+    return _render(request, "schedules/form.html", {"schedule": None})
+
+
+@router.post("/schedules/new")
+def schedule_create(
+    request: Request,
+    name: str = Form(...),
+    cron_expr: str = Form(...),
+    timeframe_days: int = Form(7),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Create a new schedule."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.schedule import Schedule
+
+    sched = Schedule(
+        name=name,
+        cron_expr=cron_expr,
+        timeframe_days=timeframe_days,
+    )
+    session.add(sched)
+    session.flush()
+
+    resp = RedirectResponse(url="/schedules", status_code=303)
+    flash(resp, f"Schedule '{name}' created", "success")
+    return resp
+
+
+@router.get("/schedules/{schedule_id}/edit", response_class=HTMLResponse)
+def schedule_edit_form(
+    request: Request,
+    schedule_id: int,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show edit form for a schedule."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.schedule import Schedule
+
+    sched = session.get(Schedule, schedule_id)
+    if not sched:
+        return RedirectResponse(url="/schedules", status_code=303)
+    return _render(request, "schedules/form.html", {"schedule": sched})
+
+
+@router.post("/schedules/{schedule_id}")
+def schedule_update(
+    request: Request,
+    schedule_id: int,
+    name: str = Form(...),
+    cron_expr: str = Form(...),
+    timeframe_days: int = Form(7),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Update an existing schedule."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.schedule import Schedule
+
+    sched = session.get(Schedule, schedule_id)
+    if sched:
+        sched.name = name
+        sched.cron_expr = cron_expr
+        sched.timeframe_days = timeframe_days
+        session.flush()
+
+    resp = RedirectResponse(url="/schedules", status_code=303)
+    flash(resp, "Schedule updated", "success")
+    return resp

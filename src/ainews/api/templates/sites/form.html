@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Edit Site" if site else "New Site" }}{% endblock %}
+
+{% block content %}
+<div class="max-w-lg space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">{{ "Edit Site" if site else "New Site" }}</h1>
+
+  <div class="card">
+    <form method="POST" action="{{ '/sites/' ~ site.id if site else '/sites/new' }}" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+      <div>
+        <label for="url" class="block text-sm font-medium mb-1.5">URL</label>
+        <input type="url" id="url" name="url" required
+               value="{{ site.url if site else '' }}"
+               class="form-input"
+               placeholder="https://example.com/ai-news">
+      </div>
+
+      <div>
+        <label for="category" class="block text-sm font-medium mb-1.5">Category</label>
+        <select id="category" name="category" class="form-input">
+          {% set cats = ["tech", "research", "industry", "analysis", "newsletter"] %}
+          {% for cat in cats %}
+            <option value="{{ cat }}" {% if site and site.category == cat %}selected{% endif %}>{{ cat | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="priority" class="block text-sm font-medium mb-1.5">Priority (1-10)</label>
+        <input type="number" id="priority" name="priority" min="1" max="10"
+               value="{{ site.priority if site else 5 }}"
+               class="form-input">
+      </div>
+
+      <div class="flex items-center gap-4 pt-2">
+        <button type="submit" class="btn-primary">
+          {{ "Save Changes" if site else "Create Site" }}
+        </button>
+        <a href="/sites" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

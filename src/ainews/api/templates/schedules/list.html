@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Schedules{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold tracking-tight">Schedules</h1>
+    <a href="/schedules/new" class="btn-primary">
+      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Add Schedule
+    </a>
+  </div>
+
+  <div class="card !p-0 overflow-hidden">
+    {% if schedules %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-surface-700/70 dark:text-surface-200/60 border-b border-surface-200 dark:border-surface-700">
+              <th class="px-6 py-3 font-medium">Name</th>
+              <th class="px-6 py-3 font-medium">Cron Expression</th>
+              <th class="px-6 py-3 font-medium">Timeframe (days)</th>
+              <th class="px-6 py-3 font-medium">Enabled</th>
+              <th class="px-6 py-3 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+            {% for sched in schedules %}
+              <tr class="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3 font-medium">{{ sched.name }}</td>
+                <td class="px-6 py-3 font-mono text-xs">{{ sched.cron_expr }}</td>
+                <td class="px-6 py-3">{{ sched.timeframe_days }}</td>
+                <td class="px-6 py-3">
+                  {% if sched.enabled is defined and not sched.enabled %}
+                    <span class="badge-danger">Off</span>
+                  {% else %}
+                    <span class="badge-success">On</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3 text-right space-x-2">
+                  <a href="/schedules/{{ sched.id }}/edit" class="text-sm text-primary-600 hover:underline dark:text-primary-400">Edit</a>
+                  <button hx-delete="/api/schedules/{{ sched.id }}"
+                          hx-confirm="Delete this schedule?"
+                          hx-target="closest tr"
+                          hx-swap="outerHTML swap:0.3s"
+                          class="text-sm text-danger hover:underline">Delete</button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
+        <p>No schedules configured. <a href="/schedules/new" class="text-primary-600 hover:underline dark:text-primary-400">Create your first schedule</a></p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
