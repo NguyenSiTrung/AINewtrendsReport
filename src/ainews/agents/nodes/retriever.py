@@ -38,12 +38,14 @@ def retrieve_dispatch(state: GraphState) -> list[Any]:
     queries = state.get("queries", [])
     logger.info("retriever_dispatch", query_count=len(queries))
 
+    run_id = state.get("run_id", "")
     sends = []
     for query in queries:
         sends.append(
             Send(
                 "retrieve_one",
                 {
+                    "run_id": run_id,
                     "query": query,
                     "sites": state["params"].get("sites", []),
                     "timeframe_days": state["params"]["timeframe_days"],

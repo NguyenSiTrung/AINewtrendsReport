@@ -35,10 +35,15 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
     dict with ``status`` and summary info.
     """
     from ainews.agents.graph import build_graph
+    from ainews.agents.resilience import set_logging_engine
     from ainews.agents.state import GraphState, RunParams
+    from ainews.services.run_logger import log_to_db
 
     settings = Settings()
     engine = create_engine(settings.database_url)
+
+    # Share this engine with @node_resilient so all nodes can log
+    set_logging_engine(engine)
 
     log = logger.bind(run_id=run_id)
     log.info("run_pipeline.start")
@@ -58,6 +63,9 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         # Resolve params
         schedule_id = run.schedule_id
         input_params: dict[str, Any] = run.input_params or {}
+
+    # Log pipeline start
+    log_to_db(engine, run_id, "pipeline", "INFO", "Pipeline started")
 
     # ── Resolve schedule if needed ────────────────────────
     topics: list[str] = input_params.get("topics", [])
@@ -131,12 +139,18 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
                 run.finished_at = datetime.now(tz=UTC).isoformat()
                 run.stats = result.get("metrics", {})
 
+        log_to_db(engine, run_id, "pipeline", "INFO", "Pipeline completed")
         log.info("run_pipeline.completed")
         return {"status": "completed", "run_id": run_id}
 
     except Exception as exc:
         tb = traceback.format_exc()
         log.error("run_pipeline.failed", error=str(exc), traceback=tb)
+
+        log_to_db(
+            engine, run_id, "pipeline", "ERROR",
+            f"Pipeline failed: {exc}",
+        )
 
         with get_db_session(engine) as session:
             run = session.get(Run, run_id)
@@ -149,3 +163,4 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
     finally:
         engine.dispose()
+

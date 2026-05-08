@@ -49,9 +49,10 @@ def _post_dedup_router(
         return "writer"
 
     # Fan-out: one Send per cluster
+    run_id = state.get("run_id", "")
     sends = []
     for cluster in clusters:
-        sends.append(Send("synthesize_one", {"cluster": cluster}))
+        sends.append(Send("synthesize_one", {"run_id": run_id, "cluster": cluster}))
     return sends
 
 

@@ -163,17 +163,19 @@ def node_resilient(
 
 # ── Logging helpers for node_resilient ───────────────────
 
-_logging_engine_cache: Any = None
+_UNSET = object()  # sentinel to distinguish "not yet tried" from "tried and failed"
+_logging_engine_cache: Any = _UNSET
 
 
 def _get_logging_engine() -> Any:
     """Lazily resolve the DB engine for run logging.
 
     Returns ``None`` if engine cannot be created (e.g., during tests
-    without a configured database).
+    without a configured database).  Uses a sentinel so we only
+    attempt engine creation once per process.
     """
     global _logging_engine_cache  # noqa: PLW0603
-    if _logging_engine_cache is not None:
+    if _logging_engine_cache is not _UNSET:
         return _logging_engine_cache
     try:
         from ainews.core.config import Settings
@@ -181,9 +183,24 @@ def _get_logging_engine() -> Any:
 
         settings = Settings()
         _logging_engine_cache = _create(settings.database_url)
+        logger.debug("logging_engine_created", url=settings.database_url)
         return _logging_engine_cache
     except Exception:
+        logger.warning("logging_engine_unavailable", exc_info=True)
+        _logging_engine_cache = None
         return None
+
+
+def set_logging_engine(engine: Any) -> None:
+    """Inject a pre-built engine for run logging.
+
+    Called by the Celery task before invoking the graph, so that
+    ``@node_resilient`` nodes share the task's DB engine instead of
+    trying to create one from scratch (which may fail if env vars
+    are not forwarded to the worker).
+    """
+    global _logging_engine_cache  # noqa: PLW0603
+    _logging_engine_cache = engine
 
 
 def _extract_run_id(state: Any) -> str | None:

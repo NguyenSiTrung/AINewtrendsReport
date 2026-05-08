@@ -751,6 +751,13 @@ PIPELINE_NODES = [
 ]
 
 
+# Mapping from actual @node_resilient names to stepper display names
+_NODE_DISPLAY_MAP: dict[str, str] = {
+    "retrieve_one": "retriever",
+    "synthesize_one": "synthesizer",
+}
+
+
 def _derive_node_states(
     logs: list[Any],
 ) -> dict[str, str]:
@@ -764,7 +771,8 @@ def _derive_node_states(
     """
     states: dict[str, str] = {}
     for log in logs:
-        node = log.node
+        # Map sub-node names to their display names
+        node = _NODE_DISPLAY_MAP.get(log.node, log.node)
         level = log.level.upper() if log.level else ""
         msg = (log.message or "").lower()
 
