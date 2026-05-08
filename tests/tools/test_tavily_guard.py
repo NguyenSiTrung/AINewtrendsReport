@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import patch
-
 import pytest
 from sqlalchemy import create_engine as sa_create_engine
 from sqlalchemy.orm import Session

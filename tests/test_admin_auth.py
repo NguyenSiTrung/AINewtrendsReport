@@ -93,18 +93,14 @@ class TestJWT:
 
 
 class TestLoginFlow:
-    def test_login_page_renders(
-        self, client: TestClient
-    ) -> None:
+    def test_login_page_renders(self, client: TestClient) -> None:
         """GET /login returns the login form."""
         resp = client.get("/login")
         assert resp.status_code == 200
         assert "Sign in" in resp.text
         assert 'name="email"' in resp.text
 
-    def test_login_invalid_credentials(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_login_invalid_credentials(self, client: TestClient, engine: Any) -> None:
         """POST /login with wrong credentials re-renders with error."""
         _seed_admin(engine)
         token = client.get("/login").cookies.get("csrf_token", "")
@@ -121,9 +117,7 @@ class TestLoginFlow:
         assert resp.status_code == 200
         assert "Invalid" in resp.text
 
-    def test_login_success_sets_cookie(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_login_success_sets_cookie(self, client: TestClient, engine: Any) -> None:
         """Successful login sets JWT cookie and redirects."""
         _seed_admin(engine)
         token = client.get("/login").cookies.get("csrf_token", "")
@@ -141,9 +135,7 @@ class TestLoginFlow:
         assert resp.headers["location"] == "/"
         assert "access_token" in resp.cookies
 
-    def test_logout_clears_cookie(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_logout_clears_cookie(self, client: TestClient, engine: Any) -> None:
         """GET /logout clears the JWT cookie."""
         _seed_admin(engine)
         # Login first
@@ -174,9 +166,7 @@ class TestLoginFlow:
 
 
 class TestAuthGating:
-    def test_dashboard_requires_auth(
-        self, client: TestClient
-    ) -> None:
+    def test_dashboard_requires_auth(self, client: TestClient) -> None:
         """GET / without auth redirects to /login."""
         resp = client.get("/", follow_redirects=False)
         assert resp.status_code == 303
@@ -221,9 +211,7 @@ class TestCreateAdminUser:
         from ainews.core.database import get_db_session
 
         with get_db_session(engine) as session:
-            user = create_admin_user(
-                session, "new@admin.com", "pass123"
-            )
+            user = create_admin_user(session, "new@admin.com", "pass123")
             session.commit()
             # Access attrs while session is still open
             assert user.email == "new@admin.com"

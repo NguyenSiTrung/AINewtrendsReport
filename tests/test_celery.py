@@ -68,7 +68,11 @@ class TestRunPipelineTask:
         from ainews.tasks import pipeline
 
         with (
-            patch.object(pipeline, "Settings", return_value=Settings(valkey_url="redis://t:6379/0")),
+            patch.object(
+                pipeline,
+                "Settings",
+                return_value=Settings(valkey_url="redis://t:6379/0"),
+            ),
             patch.object(pipeline, "create_engine", return_value=engine),
         ):
             result = pipeline.run_pipeline("nonexistent-id")
@@ -98,7 +102,11 @@ class TestRunPipelineTask:
         mock_cp = MagicMock()
 
         with (
-            patch.object(pipeline, "Settings", return_value=Settings(valkey_url="redis://t:6379/0")),
+            patch.object(
+                pipeline,
+                "Settings",
+                return_value=Settings(valkey_url="redis://t:6379/0"),
+            ),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
             patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,
@@ -135,7 +143,11 @@ class TestRunPipelineTask:
         mock_graph.invoke.side_effect = RuntimeError("LLM timeout")
 
         with (
-            patch.object(pipeline, "Settings", return_value=Settings(valkey_url="redis://t:6379/0")),
+            patch.object(
+                pipeline,
+                "Settings",
+                return_value=Settings(valkey_url="redis://t:6379/0"),
+            ),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
             patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,

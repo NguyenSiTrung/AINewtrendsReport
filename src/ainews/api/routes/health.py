@@ -44,7 +44,6 @@ def health_check(
 
     # ── LLM probe ─────────────────────────────────────────
     try:
-        from ainews.llm.config import LLMConfig
         from ainews.llm.connectivity import check_llm_connection
         from ainews.llm.factory import get_llm_config
 
@@ -74,4 +73,3 @@ def health_check(
         overall = "down"
 
     return HealthResponse(status=overall, components=components)
-

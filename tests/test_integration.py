@@ -33,9 +33,7 @@ def client(engine: Any) -> TestClient:
 class TestTriggerRunLifecycle:
     """Full trigger → run creation → query lifecycle via API."""
 
-    def test_trigger_then_query_run(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_trigger_then_query_run(self, client: TestClient, engine: Any) -> None:
         """POST /trigger → GET /runs/{id} shows pending run."""
         with patch("ainews.services.pipeline.run_pipeline") as mock_task:
             resp = client.post(
@@ -55,9 +53,7 @@ class TestTriggerRunLifecycle:
         assert detail["status"] == "pending"
         assert detail["triggered_by"] == "api"
 
-    def test_trigger_schedule_then_list(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_trigger_schedule_then_list(self, client: TestClient, engine: Any) -> None:
         """Trigger via schedule, then list runs filtered by status."""
         with get_db_session(engine) as session:
             session.add(
@@ -80,9 +76,7 @@ class TestTriggerRunLifecycle:
         data = resp.json()
         assert data["total"] >= 1
 
-    def test_site_schedule_then_trigger(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_site_schedule_then_trigger(self, client: TestClient, engine: Any) -> None:
         """Create site + schedule via CRUD, then trigger a run referencing them."""
         # Create site
         resp = client.post("/api/sites", json={"url": "https://test.com"})
@@ -117,9 +111,7 @@ class TestHealthE2E:
         if data["components"]["valkey"]["status"] == "down":
             assert data["status"] == "degraded"
 
-    def test_health_all_ok_with_mocked_valkey(
-        self, client: TestClient
-    ) -> None:
+    def test_health_all_ok_with_mocked_valkey(self, client: TestClient) -> None:
         import sys
         import types
 

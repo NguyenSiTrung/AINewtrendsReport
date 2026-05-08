@@ -3,30 +3,30 @@
 ## Phase 1: Design System Foundation & Critical Fixes
 <!-- execution: parallel -->
 
-- [ ] Task 1: Define accent color & fill surface palette gaps
+- [x] Task 1: Define accent color & fill surface palette gaps
   <!-- files: src/ainews/api/static/src/input.css -->
-  - [ ] Add `--color-accent-*` scale (teal/emerald hue) to `@theme`
-  - [ ] Add `surface-300` through `surface-600` steps
-  - [ ] Rebuild Tailwind output: `npx @tailwindcss/cli -i ... -o ...`
-  - [ ] Verify accent color renders in report card
+  - [x] Add `--color-accent-*` scale (teal/emerald hue) to `@theme`
+  - [x] Add `surface-300` through `surface-600` steps
+  - [x] Rebuild Tailwind output: `npx @tailwindcss/cli -i ... -o ...`
+  - [x] Verify accent color renders in report card
 
-- [ ] Task 2: Fix report dark mode & move inline styles
+- [x] Task 2: Fix report dark mode & move inline styles
   <!-- files: src/ainews/api/templates/runs/report.html, src/ainews/api/static/src/input.css -->
-  - [ ] Remove `@media (prefers-color-scheme: dark)` block from report.html
-  - [ ] Migrate `.dark .report-content` styles to `input.css`
-  - [ ] Remove inline `<style>` block from report.html
-  - [ ] Verify dark mode renders consistently
+  - [x] Remove `@media (prefers-color-scheme: dark)` block from report.html
+  - [x] Migrate `.dark .report-content` styles to `input.css`
+  - [x] Remove inline `<style>` block from report.html
+  - [x] Verify dark mode renders consistently
 
-- [ ] Task 3: Fix duration card & pin Alpine.js
+- [x] Task 3: Fix duration card & pin Alpine.js
   <!-- files: src/ainews/api/templates/runs/detail.html, src/ainews/api/templates/base.html, src/ainews/api/templates/login.html -->
-  - [ ] Compute `finished_at - started_at` as human-readable duration
-  - [ ] Replace `{{ run.finished_at[:19] }}` with computed value
-  - [ ] Pin Alpine.js to specific version in base.html and login.html
+  - [x] Compute `finished_at - started_at` as human-readable duration
+  - [x] Replace `{{ run.finished_at[:19] }}` with computed value
+  - [x] Pin Alpine.js to specific version in base.html and login.html
 
-- [ ] Task 4: Add favicon
+- [x] Task 4: Add favicon
   <!-- files: src/ainews/api/static/favicon.svg, src/ainews/api/templates/base.html, src/ainews/api/templates/login.html -->
-  - [ ] Create lightning-bolt SVG favicon
-  - [ ] Add `<link rel="icon">` to base.html and login.html
+  - [x] Create lightning-bolt SVG favicon
+  - [x] Add `<link rel="icon">` to base.html and login.html
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 

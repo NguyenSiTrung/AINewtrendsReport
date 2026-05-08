@@ -17,19 +17,21 @@ from typing import Any
 import structlog
 
 # Keys whose values should be masked in log output
-_SENSITIVE_KEYS: frozenset[str] = frozenset({
-    "api_key",
-    "api-key",
-    "apikey",
-    "secret",
-    "password",
-    "token",
-    "authorization",
-    "ainews_llm_api_key",
-    "ainews_tavily_api_key",
-    "tavily_api_key",
-    "llm_api_key",
-})
+_SENSITIVE_KEYS: frozenset[str] = frozenset(
+    {
+        "api_key",
+        "api-key",
+        "apikey",
+        "secret",
+        "password",
+        "token",
+        "authorization",
+        "ainews_llm_api_key",
+        "ainews_tavily_api_key",
+        "tavily_api_key",
+        "llm_api_key",
+    }
+)
 
 # Regex pattern for sensitive keys (case-insensitive)
 _SENSITIVE_PATTERN = re.compile(
@@ -40,8 +42,8 @@ _MASK = "***REDACTED***"
 
 
 def mask_sensitive_keys(
-    logger: Any,  # noqa: ARG001
-    method_name: str,  # noqa: ARG001
+    logger: Any,
+    method_name: str,
     event_dict: dict[str, Any],
 ) -> dict[str, Any]:
     """Structlog processor that masks sensitive values in log events.
@@ -89,4 +91,3 @@ def setup_logging(level: str = "INFO") -> None:
         wrapper_class=structlog.stdlib.BoundLogger,
         cache_logger_on_first_use=False,
     )
-

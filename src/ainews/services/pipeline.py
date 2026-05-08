@@ -54,9 +54,7 @@ def create_and_enqueue_run(
     # Resolve schedule if named
     if schedule_name is not None:
         schedule = (
-            session.query(Schedule)
-            .filter(Schedule.name == schedule_name)
-            .first()
+            session.query(Schedule).filter(Schedule.name == schedule_name).first()
         )
         if schedule is None:
             msg = f"Schedule '{schedule_name}' not found"

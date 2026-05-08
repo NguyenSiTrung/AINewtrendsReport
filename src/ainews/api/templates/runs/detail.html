@@ -115,7 +115,7 @@
         {% if run.status in ('pending', 'running') %}
           <span x-text="elapsed" class="text-info font-mono"></span>
         {% elif run.finished_at and run.started_at %}
-          {{ run.finished_at[:19] }}
+          {{ duration_str }}
         {% else %}
           —
         {% endif %}

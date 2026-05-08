@@ -6,7 +6,7 @@ configurable monthly cap. Auto-resets on new month.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import select
@@ -22,7 +22,7 @@ _CAP_SETTING_KEY = "tavily_monthly_cap"
 
 def _month_key() -> str:
     """Return the settings_kv key for the current month's counter."""
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     return f"tavily_calls_{now.strftime('%Y_%m')}"
 
 
@@ -39,9 +39,7 @@ def get_monthly_cap(session: Session) -> int:
 def get_current_count(session: Session) -> int:
     """Get the current month's API call count."""
     key = _month_key()
-    row = session.execute(
-        select(SettingsKV).filter_by(key=key)
-    ).scalar_one_or_none()
+    row = session.execute(select(SettingsKV).filter_by(key=key)).scalar_one_or_none()
     if row is not None and isinstance(row.value, int):
         return row.value
     return 0
@@ -50,11 +48,9 @@ def get_current_count(session: Session) -> int:
 def increment_count(session: Session) -> int:
     """Increment the current month's API call count. Returns new count."""
     key = _month_key()
-    now_str = datetime.now(tz=timezone.utc).isoformat()
+    now_str = datetime.now(tz=UTC).isoformat()
 
-    row = session.execute(
-        select(SettingsKV).filter_by(key=key)
-    ).scalar_one_or_none()
+    row = session.execute(select(SettingsKV).filter_by(key=key)).scalar_one_or_none()
 
     if row is not None:
         new_count = (row.value if isinstance(row.value, int) else 0) + 1

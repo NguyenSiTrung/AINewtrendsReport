@@ -16,11 +16,27 @@
   --color-surface-50: oklch(0.985 0.002 250);
   --color-surface-100: oklch(0.97 0.005 250);
   --color-surface-200: oklch(0.94 0.008 250);
+  --color-surface-300: oklch(0.88 0.010 250);
+  --color-surface-400: oklch(0.78 0.012 250);
+  --color-surface-500: oklch(0.62 0.015 250);
+  --color-surface-600: oklch(0.46 0.015 250);
   --color-surface-700: oklch(0.30 0.015 250);
   --color-surface-800: oklch(0.22 0.015 250);
   --color-surface-850: oklch(0.18 0.015 250);
   --color-surface-900: oklch(0.14 0.015 250);
   --color-surface-950: oklch(0.10 0.012 250);
+
+  --color-accent-50: oklch(0.97 0.05 175);
+  --color-accent-100: oklch(0.93 0.09 175);
+  --color-accent-200: oklch(0.87 0.13 175);
+  --color-accent-300: oklch(0.78 0.17 175);
+  --color-accent-400: oklch(0.68 0.19 175);
+  --color-accent-500: oklch(0.58 0.19 175);
+  --color-accent-600: oklch(0.50 0.18 175);
+  --color-accent-700: oklch(0.42 0.16 175);
+  --color-accent-800: oklch(0.35 0.13 175);
+  --color-accent-900: oklch(0.28 0.10 175);
+  --color-accent: oklch(0.58 0.19 175);
 
   --color-success: oklch(0.65 0.18 145);
   --color-warning: oklch(0.75 0.15 75);
@@ -145,4 +161,55 @@
 @keyframes stepperPulse {
   0%, 100% { box-shadow: 0 0 0 0 oklch(0.62 0.15 250 / 0.4); }
   50% { box-shadow: 0 0 0 6px oklch(0.62 0.15 250 / 0); }
+}
+
+/* ── Report content (markdown preview) ───────────────── */
+.report-content h1 { font-size: 1.5rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; line-height: 1.3; }
+.report-content h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; line-height: 1.3; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 0.25rem; }
+.report-content h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+.report-content p { margin: 0.5rem 0; line-height: 1.7; }
+.report-content ul, .report-content ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+.report-content li { margin: 0.25rem 0; line-height: 1.6; }
+.report-content strong { font-weight: 600; }
+.report-content a { color: var(--color-accent); text-decoration: underline; }
+.report-content a:hover { opacity: 0.8; }
+.report-content blockquote { border-left: 3px solid var(--color-accent); padding-left: 1rem; margin: 0.75rem 0; color: rgba(0,0,0,0.6); }
+.report-content code { background: rgba(0,0,0,0.05); padding: 0.1rem 0.3rem; border-radius: 0.25rem; font-size: 0.85em; }
+.report-content pre { background: rgba(0,0,0,0.05); padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin: 0.75rem 0; }
+.report-content pre code { background: none; padding: 0; }
+.report-content table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.875rem; }
+.report-content th, .report-content td { border: 1px solid rgba(0,0,0,0.1); padding: 0.5rem 0.75rem; text-align: left; }
+.report-content th { background: rgba(0,0,0,0.05); font-weight: 600; }
+.report-content hr { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 1.5rem 0; }
+
+:where(.dark, .dark *) .report-content blockquote { color: rgba(255,255,255,0.6); }
+:where(.dark, .dark *) .report-content code { background: rgba(255,255,255,0.1); }
+:where(.dark, .dark *) .report-content pre { background: rgba(255,255,255,0.05); }
+:where(.dark, .dark *) .report-content th { background: rgba(255,255,255,0.1); }
+:where(.dark, .dark *) .report-content th, :where(.dark, .dark *) .report-content td { border-color: rgba(255,255,255,0.1); }
+:where(.dark, .dark *) .report-content h2 { border-bottom-color: rgba(255,255,255,0.1); }
+:where(.dark, .dark *) .report-content hr { border-top-color: rgba(255,255,255,0.1); }
+
+/* ── Button loading state ────────────────────────────── */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 1rem;
+  height: 1rem;
+  top: 50%;
+  left: 50%;
+  margin-top: -0.5rem;
+  margin-left: -0.5rem;
+  border: 2px solid rgba(255,255,255,0.8);
+  border-top-color: transparent;
+  border-radius: 9999px;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

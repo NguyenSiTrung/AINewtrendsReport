@@ -33,9 +33,7 @@ def client(engine: Any) -> TestClient:
     return TestClient(app, raise_server_exceptions=False)
 
 
-def _login(
-    client: TestClient, engine: Any
-) -> dict[str, str]:
+def _login(client: TestClient, engine: Any) -> dict[str, str]:
     """Create admin and login, returning cookies dict."""
     from ainews.api.auth import create_admin_user
     from ainews.core.database import get_db_session
@@ -65,17 +63,13 @@ def _login(
 
 
 class TestStaticFiles:
-    def test_css_output_served(
-        self, client: TestClient
-    ) -> None:
+    def test_css_output_served(self, client: TestClient) -> None:
         """GET /static/css/output.css returns 200."""
         resp = client.get("/static/css/output.css")
         assert resp.status_code == 200
         assert "text/css" in resp.headers["content-type"]
 
-    def test_missing_static_404(
-        self, client: TestClient
-    ) -> None:
+    def test_missing_static_404(self, client: TestClient) -> None:
         """Missing static files return 404."""
         resp = client.get("/static/nonexistent.js")
         assert resp.status_code == 404
@@ -85,9 +79,7 @@ class TestStaticFiles:
 
 
 class TestBaseTemplate:
-    def test_dashboard_renders_html(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_dashboard_renders_html(self, client: TestClient, engine: Any) -> None:
         """GET / returns HTML containing the base layout."""
         cookies = _login(client, engine)
         resp = client.get("/", cookies=cookies)
@@ -97,33 +89,25 @@ class TestBaseTemplate:
         assert "AI News" in html
         assert "Dashboard" in html
 
-    def test_dashboard_has_tailwind_link(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_dashboard_has_tailwind_link(self, client: TestClient, engine: Any) -> None:
         """Base template includes the compiled Tailwind CSS."""
         cookies = _login(client, engine)
         resp = client.get("/", cookies=cookies)
         assert "/static/css/output.css" in resp.text
 
-    def test_dashboard_has_htmx_script(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_dashboard_has_htmx_script(self, client: TestClient, engine: Any) -> None:
         """Base template includes HTMX."""
         cookies = _login(client, engine)
         resp = client.get("/", cookies=cookies)
         assert "htmx.org" in resp.text
 
-    def test_dashboard_has_alpine_script(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_dashboard_has_alpine_script(self, client: TestClient, engine: Any) -> None:
         """Base template includes Alpine.js."""
         cookies = _login(client, engine)
         resp = client.get("/", cookies=cookies)
         assert "alpinejs" in resp.text
 
-    def test_dashboard_has_nav_links(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_dashboard_has_nav_links(self, client: TestClient, engine: Any) -> None:
         """Sidebar contains navigation links to all pages."""
         cookies = _login(client, engine)
         resp = client.get("/", cookies=cookies)
@@ -146,23 +130,17 @@ class TestBaseTemplate:
 
 
 class TestCSRF:
-    def test_csrf_cookie_set(
-        self, client: TestClient
-    ) -> None:
+    def test_csrf_cookie_set(self, client: TestClient) -> None:
         """First request sets the csrf_token cookie."""
         resp = client.get("/login")
         assert "csrf_token" in resp.cookies
 
-    def test_csrf_meta_tag_in_html(
-        self, client: TestClient
-    ) -> None:
+    def test_csrf_meta_tag_in_html(self, client: TestClient) -> None:
         """The login template includes a CSRF meta tag."""
         resp = client.get("/login")
         assert 'name="csrf-token"' in resp.text
 
-    def test_post_without_csrf_fails(
-        self, client: TestClient
-    ) -> None:
+    def test_post_without_csrf_fails(self, client: TestClient) -> None:
         """POST without any CSRF cookie returns 403."""
         # POST without any cookies — no csrf_token cookie
         resp = client.post(
@@ -171,9 +149,7 @@ class TestCSRF:
         )
         assert resp.status_code == 403
 
-    def test_post_with_valid_csrf_passes(
-        self, client: TestClient
-    ) -> None:
+    def test_post_with_valid_csrf_passes(self, client: TestClient) -> None:
         """POST with matching CSRF cookie passes validation."""
         resp = client.get("/login")
         token = resp.cookies.get("csrf_token", "")
@@ -192,9 +168,7 @@ class TestCSRF:
         # Should not be 403 — CSRF passed (may be 200 with error)
         assert resp.status_code != 403
 
-    def test_api_routes_exempt_from_csrf(
-        self, client: TestClient
-    ) -> None:
+    def test_api_routes_exempt_from_csrf(self, client: TestClient) -> None:
         """POST to /api/* routes does NOT require CSRF."""
         resp = client.post(
             "/api/sites",
@@ -226,18 +200,14 @@ class TestFlashMessages:
         assert msg.text == "Test success"
         assert msg.category == "success"
 
-    def test_flash_cookie_round_trip(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_flash_cookie_round_trip(self, client: TestClient, engine: Any) -> None:
         """Flash message cookie is rendered in the dashboard."""
         import json
 
         from ainews.api.flash import FLASH_COOKIE
 
         cookies = _login(client, engine)
-        flash_data = json.dumps(
-            {"text": "Created!", "category": "success"}
-        )
+        flash_data = json.dumps({"text": "Created!", "category": "success"})
         cookies[FLASH_COOKIE] = flash_data
         resp = client.get("/", cookies=cookies)
         assert resp.status_code == 200

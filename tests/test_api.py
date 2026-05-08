@@ -84,9 +84,7 @@ class TestTriggerRouter:
         assert resp.status_code == 400
         assert "not found" in resp.json()["detail"].lower()
 
-    def test_trigger_with_schedule(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_trigger_with_schedule(self, client: TestClient, engine: Any) -> None:
         """Trigger with valid schedule_name resolves config."""
         from ainews.core.database import get_db_session
 
@@ -135,18 +133,14 @@ class TestRunsRouter:
         assert data["total"] == 5
         assert len(data["runs"]) == 5
 
-    def test_list_runs_pagination(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_list_runs_pagination(self, client: TestClient, engine: Any) -> None:
         self._seed_runs(engine)
         resp = client.get("/api/runs?offset=2&limit=2")
         data = resp.json()
         assert len(data["runs"]) == 2
         assert data["offset"] == 2
 
-    def test_list_runs_filter_status(
-        self, client: TestClient, engine: Any
-    ) -> None:
+    def test_list_runs_filter_status(self, client: TestClient, engine: Any) -> None:
         self._seed_runs(engine)
         resp = client.get("/api/runs?status=pending")
         data = resp.json()

@@ -664,6 +664,21 @@ def run_detail(
     ).scalar_one_or_none()
 
     node_states = _derive_node_states(logs)
+
+    # Compute human-readable duration for completed/failed runs
+    duration_str = "—"
+    if run.started_at and run.finished_at:
+        try:
+            from datetime import datetime
+
+            start = datetime.fromisoformat(run.started_at.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(run.finished_at.replace("Z", "+00:00"))
+            diff = int((end - start).total_seconds())
+            m, s = divmod(abs(diff), 60)
+            duration_str = f"{m}m {s}s"
+        except (ValueError, TypeError):
+            pass
+
     return _render(
         request,
         "runs/detail.html",
@@ -672,6 +687,7 @@ def run_detail(
             "logs": logs,
             "node_states": node_states,
             "report": report,
+            "duration_str": duration_str,
         },
     )
 
@@ -800,9 +816,8 @@ def _derive_node_states(
             # Don't override failed state
             if states.get(node) != "failed":
                 states[node] = "completed"
-        elif "started" in msg:
-            if node not in states:
-                states[node] = "running"
+        elif "started" in msg and node not in states:
+            states[node] = "running"
 
     return states
 

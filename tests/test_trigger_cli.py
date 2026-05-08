@@ -64,9 +64,7 @@ class TestTriggerRunCLI:
             patch("ainews.core.database.create_engine", return_value=engine),
             patch("ainews.services.pipeline.run_pipeline"),
         ):
-            result = runner.invoke(
-                app, ["trigger-run", "--schedule", "weekly-ai"]
-            )
+            result = runner.invoke(app, ["trigger-run", "--schedule", "weekly-ai"])
 
         assert result.exit_code == 0
         assert "schedule: weekly-ai" in result.output
@@ -81,9 +79,7 @@ class TestTriggerRunCLI:
             patch("ainews.core.database.create_engine", return_value=engine),
             patch("ainews.services.pipeline.run_pipeline"),
         ):
-            result = runner.invoke(
-                app, ["trigger-run", "--schedule", "nonexistent"]
-            )
+            result = runner.invoke(app, ["trigger-run", "--schedule", "nonexistent"])
 
         assert result.exit_code == 1
         assert "not found" in result.output.lower()

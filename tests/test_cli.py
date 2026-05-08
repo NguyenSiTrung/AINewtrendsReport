@@ -67,7 +67,7 @@ class TestCLILLMTest:
         import respx
 
         from ainews.core.config import Settings
-        
+
         with respx.mock:
             respx.post(f"{Settings().llm_base_url}/chat/completions").mock(
                 return_value=httpx.Response(

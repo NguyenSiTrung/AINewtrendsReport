@@ -88,9 +88,7 @@ class RateLimiter:
 
         # Remove expired entries
         window_start = now - self._window
-        self._memory[domain] = [
-            t for t in self._memory[domain] if t > window_start
-        ]
+        self._memory[domain] = [t for t in self._memory[domain] if t > window_start]
 
         if len(self._memory[domain]) >= self._rate:
             return False

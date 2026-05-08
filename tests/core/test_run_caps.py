@@ -4,9 +4,7 @@ from __future__ import annotations
 
 import time
 
-import pytest
-
-from ainews.core.run_caps import CapViolation, RunCapChecker, RunCapConfig
+from ainews.core.run_caps import RunCapChecker, RunCapConfig
 
 
 class TestRunCapConfig:
@@ -24,10 +22,12 @@ class TestRunCapChecker:
         assert result is None
 
     def test_no_violation_under_limits(self) -> None:
-        checker = RunCapChecker(config=RunCapConfig(
-            max_total_tokens=1000,
-            max_articles=10,
-        ))
+        checker = RunCapChecker(
+            config=RunCapConfig(
+                max_total_tokens=1000,
+                max_articles=10,
+            )
+        )
         state = {
             "metrics": {"node1": {"tokens": 100}},
             "fetched_articles": [{"title": "a"}] * 5,

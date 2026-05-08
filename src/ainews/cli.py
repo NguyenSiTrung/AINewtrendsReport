@@ -271,10 +271,7 @@ def seed(ctx: typer.Context) -> None:
         result = seed_all(session)
     engine.dispose()
 
-    typer.echo(
-        f"Sites: {result.sites_created} created,"
-        f" {result.sites_skipped} skipped"
-    )
+    typer.echo(f"Sites: {result.sites_created} created, {result.sites_skipped} skipped")
     typer.echo(
         f"Schedules: {result.schedules_created} created,"
         f" {result.schedules_skipped} skipped"
@@ -327,4 +324,3 @@ def seed_admin(
         raise typer.Exit(code=1) from exc
     finally:
         engine.dispose()
-

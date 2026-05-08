@@ -38,9 +38,7 @@ class TestSystemdUnits:
     def test_has_required_sections(self, unit_file: str) -> None:
         cfg = _parse_unit(unit_file)
         for section in ["Unit", "Service", "Install"]:
-            assert cfg.has_section(section), (
-                f"{unit_file} missing [{section}] section"
-            )
+            assert cfg.has_section(section), f"{unit_file} missing [{section}] section"
 
     @pytest.mark.parametrize("unit_file", UNIT_FILES)
     def test_user_is_ainews(self, unit_file: str) -> None:

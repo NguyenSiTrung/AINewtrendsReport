@@ -127,7 +127,7 @@ class TestPipelineTrigger:
     )
     def test_trigger_and_poll(self) -> None:
         # Get CSRF token first
-        resp = _get("/api/health")
+        _get("/api/health")
 
         # Trigger a run
         trigger_resp = _post(

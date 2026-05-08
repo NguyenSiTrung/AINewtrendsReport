@@ -34,7 +34,7 @@ def configure(max_concurrency: int | None = None) -> None:
     max_concurrency
         Maximum concurrent LLM calls. Defaults to 2.
     """
-    global _semaphore, _threading_semaphore, _max_concurrency  # noqa: PLW0603
+    global _semaphore, _threading_semaphore, _max_concurrency
     with _lock:
         _max_concurrency = max_concurrency or _DEFAULT_MAX_CONCURRENCY
         _semaphore = asyncio.Semaphore(_max_concurrency)
@@ -44,7 +44,7 @@ def configure(max_concurrency: int | None = None) -> None:
 
 def get_semaphore() -> asyncio.Semaphore:
     """Get the async semaphore, creating it lazily if needed."""
-    global _semaphore  # noqa: PLW0603
+    global _semaphore
     if _semaphore is None:
         with _lock:
             if _semaphore is None:
@@ -54,7 +54,7 @@ def get_semaphore() -> asyncio.Semaphore:
 
 def get_threading_semaphore() -> threading.Semaphore:
     """Get the threading semaphore for sync contexts."""
-    global _threading_semaphore  # noqa: PLW0603
+    global _threading_semaphore
     if _threading_semaphore is None:
         with _lock:
             if _threading_semaphore is None:
