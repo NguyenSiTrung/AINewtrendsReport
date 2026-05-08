@@ -77,6 +77,11 @@ def create_app() -> FastAPI:
 
     app.add_middleware(CSRFMiddleware)
 
+    # ── CSP middleware ───────────────────────────────────
+    from ainews.api.middleware.csp import CSPMiddleware
+
+    app.add_middleware(CSPMiddleware)
+
     # ── Exception handlers ────────────────────────────────
     @app.exception_handler(ValidationError)
     async def validation_error_handler(

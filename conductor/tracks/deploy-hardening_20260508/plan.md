@@ -4,49 +4,49 @@
 <!-- execution: parallel -->
 <!-- depends: -->
 
-- [ ] Task 1: Create systemd unit files
+- [x] Task 1: Create systemd unit files _(commit: 2350864)_
   <!-- files: deploy/systemd/ainews-api.service, deploy/systemd/ainews-worker.service, deploy/systemd/ainews-beat.service, tests/deploy/test_systemd_units.py -->
-  - [ ] Write `deploy/systemd/ainews-api.service` (Uvicorn, 2 workers, port 8000)
-  - [ ] Write `deploy/systemd/ainews-worker.service` (Celery, queues default/scrape/llm, concurrency 4)
-  - [ ] Write `deploy/systemd/ainews-beat.service` (optional Celery beat)
-  - [ ] All units: User=ainews, EnvironmentFile=/etc/ainews/ainews.env, Restart=on-failure, ProtectSystem=strict, ReadWritePaths=/var/lib/ainews /var/log/ainews
-  - [ ] Unit tests: validate unit file structure and key directives
+  - [x] Write `deploy/systemd/ainews-api.service` (Uvicorn, 2 workers, port 8000)
+  - [x] Write `deploy/systemd/ainews-worker.service` (Celery, queues default/scrape/llm, concurrency 4)
+  - [x] Write `deploy/systemd/ainews-beat.service` (optional Celery beat)
+  - [x] All units: User=ainews, EnvironmentFile=/etc/ainews/ainews.env, Restart=on-failure, ProtectSystem=strict, ReadWritePaths=/var/lib/ainews /var/log/ainews
+  - [x] Unit tests: validate unit file structure and key directives
 
-- [ ] Task 2: Create cron schedule file
+- [x] Task 2: Create cron schedule file _(commit: 2350864)_
   <!-- files: deploy/cron/ainews -->
-  - [ ] Write `deploy/cron/ainews` with weekly (Mon 7AM) and monthly (1st, 8AM) triggers
-  - [ ] Cron lines invoke `ainews trigger-run --schedule <name>` as `ainews` user
-  - [ ] Output redirected to `/var/log/ainews/cron.log`
+  - [x] Write `deploy/cron/ainews` with weekly (Mon 7AM) and monthly (1st, 8AM) triggers
+  - [x] Cron lines invoke `ainews trigger-run --schedule <name>` as `ainews` user
+  - [x] Output redirected to `/var/log/ainews/cron.log`
 
-- [ ] Task 3: Create daily backup cron script
+- [x] Task 3: Create daily backup cron script _(commit: 2350864)_
   <!-- files: deploy/cron/ainews-backup -->
-  - [ ] Write `deploy/cron/ainews-backup` — daily SQLite `.backup` to /var/backups/ainews/
-  - [ ] Retention cleanup: `find /var/backups/ainews -name '*.db' -mtime +30 -delete`
-  - [ ] Configurable retention days via env var
+  - [x] Write `deploy/cron/ainews-backup` — daily SQLite `.backup` to /var/backups/ainews/
+  - [x] Retention cleanup: `find /var/backups/ainews -name '*.db' -mtime +30 -delete`
+  - [x] Configurable retention days via env var
 
-- [ ] Task 4: Create logrotate config
+- [x] Task 4: Create logrotate config _(commit: 2350864)_
   <!-- files: deploy/logrotate/ainews -->
-  - [ ] Write `deploy/logrotate/ainews` — daily rotation, 14-day retention, compress, delaycompress, notifempty
-  - [ ] Target: `/var/log/ainews/*.log`
+  - [x] Write `deploy/logrotate/ainews` — daily rotation, 14-day retention, compress, delaycompress, notifempty
+  - [x] Target: `/var/log/ainews/*.log`
 
-- [ ] Task 5: Write idempotent `deploy/install.sh`
+- [x] Task 5: Write idempotent `deploy/install.sh` _(commit: 2350864)_
   <!-- files: deploy/install.sh -->
   <!-- depends: task1, task2, task3, task4 -->
-  - [ ] Detect Ubuntu version (22.04 / 24.04), fail on unsupported
-  - [ ] Install system packages (python3.12, sqlite3, build-essential, libssl-dev, curl, git, fonts-liberation)
-  - [ ] Install Valkey from PPA; fallback to `redis-server` from Ubuntu repos
-  - [ ] Create `ainews` system user + directory layout (/opt/ainews, /var/lib/ainews, /var/log/ainews, /etc/ainews, /var/backups/ainews)
-  - [ ] Clone/update repo, create venv, pip install -e
-  - [ ] Install .env.example → /etc/ainews/ainews.env (skip if exists), set root:ainews 0640
-  - [ ] Run alembic upgrade head + ainews seed as ainews user
-  - [ ] Copy systemd units → /etc/systemd/system/, daemon-reload, enable (don't start)
-  - [ ] Copy cron file → /etc/cron.d/ainews, backup cron → /etc/cron.d/ainews-backup
-  - [ ] Copy logrotate config → /etc/logrotate.d/ainews
-  - [ ] File-mode audit: verify ownership/permissions on all sensitive paths
-  - [ ] Print post-install instructions (configure env → start → verify)
-  - [ ] Shellcheck lint pass on install.sh
+  - [x] Detect Ubuntu version (22.04 / 24.04), fail on unsupported
+  - [x] Install system packages (python3.12, sqlite3, build-essential, libssl-dev, curl, git, fonts-liberation)
+  - [x] Install Valkey from PPA; fallback to `redis-server` from Ubuntu repos
+  - [x] Create `ainews` system user + directory layout (/opt/ainews, /var/lib/ainews, /var/log/ainews, /etc/ainews, /var/backups/ainews)
+  - [x] Clone/update repo, create venv, pip install -e
+  - [x] Install .env.example → /etc/ainews/ainews.env (skip if exists), set root:ainews 0640
+  - [x] Run alembic upgrade head + ainews seed as ainews user
+  - [x] Copy systemd units → /etc/systemd/system/, daemon-reload, enable (don't start)
+  - [x] Copy cron file → /etc/cron.d/ainews, backup cron → /etc/cron.d/ainews-backup
+  - [x] Copy logrotate config → /etc/logrotate.d/ainews
+  - [x] File-mode audit: verify ownership/permissions on all sensitive paths
+  - [x] Print post-install instructions (configure env → start → verify)
+  - [x] Shellcheck lint pass on install.sh
 
-- [ ] Task: Conductor - User Manual Verification 'Deployment Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Deployment Infrastructure' _(48 tests passing)_
 
 ## Phase 2: Operational Hardening (Rate Limits, Caps, Security)
 <!-- execution: parallel -->
