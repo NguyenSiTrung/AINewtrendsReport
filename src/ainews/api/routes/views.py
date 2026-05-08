@@ -117,8 +117,115 @@ def dashboard(
     request: Request,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """Render the dashboard page (auth required)."""
+    """Render the dashboard page with real data (auth required)."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
-    return _render(request, "dashboard.html")
+
+    from sqlalchemy import func, select
+
+    from ainews.models.run import Run
+    from ainews.models.schedule import Schedule
+    from ainews.models.site import Site
+
+    # Stats
+    total_runs = session.scalar(select(func.count(Run.id))) or 0
+    completed = (
+        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+    )
+    success_rate = round(completed / total_runs * 100) if total_runs else 0
+    active_sites = session.scalar(select(func.count(Site.id))) or 0
+    schedule_count = session.scalar(select(func.count(Schedule.id))) or 0
+
+    # Recent runs (last 10)
+    recent_runs = (
+        session.execute(select(Run).order_by(Run.created_at.desc()).limit(10))
+        .scalars()
+        .all()
+    )
+
+    return _render(
+        request,
+        "dashboard.html",
+        {
+            "stats": {
+                "total_runs": total_runs,
+                "success_rate": success_rate,
+                "active_sites": active_sites,
+                "schedule_count": schedule_count,
+            },
+            "recent_runs": recent_runs,
+        },
+    )
+
+
+@router.get("/health", response_class=HTMLResponse)
+def health_page(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Render the health page (auth required)."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    health_data = _probe_health(session)
+    return _render(request, "health.html", health_data)
+
+
+@router.get("/health/probes", response_class=HTMLResponse)
+def health_probes(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: return just the health grid for auto-refresh."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    health_data = _probe_health(session)
+    return _render(request, "partials/health_grid.html", health_data)
+
+
+def _probe_health(session: Session) -> dict[str, Any]:
+    """Run health probes and return template context."""
+    from sqlalchemy import text
+
+    components: dict[str, dict[str, str]] = {}
+
+    # DB probe
+    try:
+        session.execute(text("SELECT 1"))
+        components["Database"] = {"status": "ok"}
+    except Exception as exc:
+        components["Database"] = {
+            "status": "down",
+            "detail": str(exc),
+        }
+
+    # Valkey probe
+    try:
+        import redis
+
+        from ainews.core.config import Settings
+
+        settings = Settings()
+        r: Any = redis.from_url(settings.valkey_url, socket_timeout=2)
+        r.ping()
+        components["Valkey"] = {"status": "ok"}
+    except Exception as exc:
+        components["Valkey"] = {
+            "status": "down",
+            "detail": str(exc),
+        }
+
+    # Overall
+    statuses = [c["status"] for c in components.values()]
+    if all(s == "ok" for s in statuses):
+        overall = "ok"
+    elif any(s == "ok" for s in statuses):
+        overall = "degraded"
+    else:
+        overall = "down"
+
+    return {"components": components, "overall": overall}

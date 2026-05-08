@@ -4,26 +4,110 @@
 
 {% block content %}
 <div class="space-y-6">
-  <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
-  <p class="text-surface-700 dark:text-surface-200">Welcome to the {{ app_name }} admin panel.</p>
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
+    <a href="/trigger" class="btn-primary">
+      <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+      </svg>
+      Trigger Run
+    </a>
+  </div>
 
+  <!-- Summary cards -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="card">
-      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Recent Runs</div>
-      <div class="mt-1 text-2xl font-bold">—</div>
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Total Runs</div>
+        <svg class="w-5 h-5 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+      </div>
+      <div class="mt-2 text-3xl font-bold">{{ stats.total_runs }}</div>
     </div>
+
     <div class="card">
-      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Success Rate</div>
-      <div class="mt-1 text-2xl font-bold">—</div>
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Success Rate</div>
+        <svg class="w-5 h-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="mt-2 text-3xl font-bold">{{ stats.success_rate }}%</div>
     </div>
+
     <div class="card">
-      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Next Run</div>
-      <div class="mt-1 text-2xl font-bold">—</div>
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Active Sites</div>
+        <svg class="w-5 h-5 text-info" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+        </svg>
+      </div>
+      <div class="mt-2 text-3xl font-bold">{{ stats.active_sites }}</div>
     </div>
+
     <div class="card">
-      <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Health</div>
-      <div class="mt-1 text-2xl font-bold">—</div>
+      <div class="flex items-center justify-between">
+        <div class="text-sm font-medium text-surface-700/70 dark:text-surface-200/60">Schedules</div>
+        <svg class="w-5 h-5 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <div class="mt-2 text-3xl font-bold">{{ stats.schedule_count }}</div>
     </div>
+  </div>
+
+  <!-- Recent runs table -->
+  <div class="card !p-0 overflow-hidden">
+    <div class="px-6 py-4 border-b border-surface-200 dark:border-surface-700 flex items-center justify-between">
+      <h2 class="text-lg font-semibold">Recent Runs</h2>
+      <a href="/runs" class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400">View all →</a>
+    </div>
+    {% if recent_runs %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-surface-700/70 dark:text-surface-200/60 border-b border-surface-200 dark:border-surface-700">
+              <th class="px-6 py-3 font-medium">Run ID</th>
+              <th class="px-6 py-3 font-medium">Status</th>
+              <th class="px-6 py-3 font-medium">Triggered By</th>
+              <th class="px-6 py-3 font-medium">Created</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+            {% for run in recent_runs %}
+              <tr class="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3 font-mono text-xs">
+                  <a href="/runs/{{ run.id }}" class="text-primary-600 hover:underline dark:text-primary-400">
+                    {{ run.id[:12] }}…
+                  </a>
+                </td>
+                <td class="px-6 py-3">
+                  {% if run.status == 'completed' %}
+                    <span class="badge-success">{{ run.status }}</span>
+                  {% elif run.status == 'failed' %}
+                    <span class="badge-danger">{{ run.status }}</span>
+                  {% elif run.status == 'running' %}
+                    <span class="badge-info">{{ run.status }}</span>
+                  {% else %}
+                    <span class="badge-neutral">{{ run.status }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3">{{ run.triggered_by or '—' }}</td>
+                <td class="px-6 py-3 text-surface-700/70 dark:text-surface-200/60">{{ run.created_at[:16] if run.created_at else '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
+        <svg class="w-12 h-12 mx-auto mb-3 text-surface-700/30 dark:text-surface-200/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <p>No runs yet. <a href="/trigger" class="text-primary-600 hover:underline dark:text-primary-400">Trigger your first run</a></p>
+      </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

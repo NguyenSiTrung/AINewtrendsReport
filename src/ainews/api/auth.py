@@ -39,16 +39,12 @@ def _get_jwt_secret() -> str:
 
 def hash_password(plain: str) -> str:
     """Hash a plaintext password with bcrypt."""
-    return bcrypt.hashpw(
-        plain.encode("utf-8"), bcrypt.gensalt()
-    ).decode("utf-8")
+    return bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
     """Verify a plaintext password against a bcrypt hash."""
-    return bcrypt.checkpw(
-        plain.encode("utf-8"), hashed.encode("utf-8")
-    )
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 # ── JWT utilities ────────────────────────────────────────
@@ -80,13 +76,9 @@ def decode_access_token(token: str) -> dict[str, Any] | None:
 # ── User lookup ──────────────────────────────────────────
 
 
-def authenticate_user(
-    session: Session, email: str, password: str
-) -> User | None:
+def authenticate_user(session: Session, email: str, password: str) -> User | None:
     """Validate credentials. Returns the User if valid, else None."""
-    user = session.execute(
-        select(User).where(User.email == email)
-    ).scalar_one_or_none()
+    user = session.execute(select(User).where(User.email == email)).scalar_one_or_none()
     if user is None:
         return None
     if not verify_password(password, user.hashed_pw):
@@ -99,9 +91,7 @@ def get_user_by_id(session: Session, user_id: int) -> User | None:
     return session.get(User, user_id)
 
 
-def create_admin_user(
-    session: Session, email: str, password: str
-) -> User:
+def create_admin_user(session: Session, email: str, password: str) -> User:
     """Create an admin user. Raises ValueError if email exists."""
     existing = session.execute(
         select(User).where(User.email == email)

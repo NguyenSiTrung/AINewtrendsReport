@@ -1,0 +1,30 @@
+<!-- Health probes grid — rendered as HTMX partial -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+  {% for name, component in components.items() %}
+    <div class="card fade-in">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold uppercase tracking-wider">{{ name }}</h3>
+        {% if component.status == 'ok' %}
+          <span class="badge-success">OK</span>
+        {% elif component.status == 'degraded' %}
+          <span class="badge-warning">Degraded</span>
+        {% else %}
+          <span class="badge-danger">Down</span>
+        {% endif %}
+      </div>
+      {% if component.detail %}
+        <p class="text-xs text-surface-700/60 dark:text-surface-200/50 break-all">{{ component.detail }}</p>
+      {% else %}
+        <p class="text-xs text-surface-700/60 dark:text-surface-200/50">All checks passed</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Overall status -->
+<div class="mt-4 text-center text-sm font-medium
+     {% if overall == 'ok' %}text-success
+     {% elif overall == 'degraded' %}text-warning
+     {% else %}text-danger{% endif %}">
+  Overall: {{ overall | upper }}
+</div>
