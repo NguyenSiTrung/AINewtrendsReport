@@ -29,3 +29,8 @@ This file tracks all major tracks for the project.
 ---
 
 <!-- archived: deploy-hardening_20260508 — Phase 7+8 Deployment & Hardening completed 2026-05-08 → conductor/archive/deploy-hardening_20260508/ -->
+
+---
+
+## [~] Track: Pipeline Progress UI — Real-time node stepper, live logs, auto-refresh runs list
+*Link: [./conductor/tracks/progress-ui_20260508/](./conductor/tracks/progress-ui_20260508/)*

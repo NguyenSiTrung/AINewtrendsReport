@@ -594,7 +594,45 @@ def runs_list(
     from ainews.models.run import Run
 
     runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
-    return _render(request, "runs/list.html", {"runs": runs})
+    has_active_runs = any(
+        r.status in ("pending", "running") for r in runs
+    )
+    return _render(
+        request, "runs/list.html",
+        {"runs": runs, "has_active_runs": has_active_runs},
+    )
+
+
+@router.get("/runs/table", response_class=HTMLResponse)
+def runs_table_partial(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: runs table body with auto-refresh."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+
+    runs = (
+        session.execute(
+            select(Run).order_by(Run.created_at.desc())
+        )
+        .scalars()
+        .all()
+    )
+    has_active_runs = any(
+        r.status in ("pending", "running") for r in runs
+    )
+
+    return _render(
+        request,
+        "partials/runs_table.html",
+        {"runs": runs, "has_active_runs": has_active_runs},
+    )
 
 
 @router.get("/runs/{run_id}", response_class=HTMLResponse)
@@ -626,10 +664,15 @@ def run_detail(
         .scalars()
         .all()
     )
+    node_states = _derive_node_states(logs)
     return _render(
         request,
         "runs/detail.html",
-        {"run": run, "logs": logs},
+        {
+            "run": run,
+            "logs": logs,
+            "node_states": node_states,
+        },
     )
 
 
@@ -690,3 +733,132 @@ def settings_seed(
     resp = RedirectResponse(url="/settings", status_code=303)
     flash(resp, msg, "success")
     return resp
+
+
+# ── HTMX Polling Partials ────────────────────────────────
+
+# Pipeline stage names in execution order
+PIPELINE_NODES = [
+    "planner",
+    "retriever",
+    "scraper",
+    "filter",
+    "dedup",
+    "synthesizer",
+    "trender",
+    "writer",
+    "exporter",
+]
+
+
+def _derive_node_states(
+    logs: list[Any],
+) -> dict[str, str]:
+    """Derive node states from RunLog entries.
+
+    Returns a dict mapping node name to state:
+    - 'pending': no log entries for this node
+    - 'running': has a 'started' log but no 'completed' log
+    - 'completed': has a 'completed' log
+    - 'failed': has an ERROR-level log
+    """
+    states: dict[str, str] = {}
+    for log in logs:
+        node = log.node
+        level = log.level.upper() if log.level else ""
+        msg = (log.message or "").lower()
+
+        if level == "ERROR":
+            states[node] = "failed"
+        elif "completed" in msg:
+            # Don't override failed state
+            if states.get(node) != "failed":
+                states[node] = "completed"
+        elif "started" in msg:
+            if node not in states:
+                states[node] = "running"
+
+    return states
+
+
+@router.get("/runs/{run_id}/stepper", response_class=HTMLResponse)
+def run_stepper_partial(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: pipeline node stepper visualization."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    run = session.execute(
+        select(Run).where(Run.id == run_id)
+    ).scalar_one_or_none()
+    if not run:
+        return HTMLResponse("")
+
+    logs = (
+        session.execute(
+            select(RunLog)
+            .where(RunLog.run_id == run_id)
+            .order_by(RunLog.ts)
+        )
+        .scalars()
+        .all()
+    )
+
+    node_states = _derive_node_states(logs)
+
+    return _render(
+        request,
+        "partials/run_stepper.html",
+        {"run": run, "node_states": node_states},
+    )
+
+
+@router.get(
+    "/runs/{run_id}/logs-partial",
+    response_class=HTMLResponse,
+)
+def run_logs_partial(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: live log entries for a run."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    run = session.execute(
+        select(Run).where(Run.id == run_id)
+    ).scalar_one_or_none()
+    if not run:
+        return HTMLResponse("")
+
+    logs = (
+        session.execute(
+            select(RunLog)
+            .where(RunLog.run_id == run_id)
+            .order_by(RunLog.ts)
+        )
+        .scalars()
+        .all()
+    )
+
+    return _render(
+        request,
+        "partials/run_logs.html",
+        {"run": run, "logs": logs},
+    )

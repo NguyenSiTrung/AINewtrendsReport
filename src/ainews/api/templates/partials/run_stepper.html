@@ -1,0 +1,63 @@
+{# HTMX partial: Pipeline node stepper visualization.
+
+   Renders a 9-stage horizontal pipeline showing each node's state.
+   States derived from RunLog entries: pending, running, completed, failed.
+
+   Polls every 2s via hx-get when the run is active (pending/running).
+   Polling stops automatically when the run reaches a terminal state.
+#}
+<div id="run-stepper"
+     {% if run.status in ('pending', 'running') %}
+       hx-get="/runs/{{ run.id }}/stepper"
+       hx-trigger="every 2s"
+       hx-swap="outerHTML"
+     {% endif %}
+     class="card !p-4">
+  <div class="flex items-center justify-between overflow-x-auto gap-0" id="stepper-nodes">
+    {% set nodes = ['planner', 'retriever', 'scraper', 'filter', 'dedup', 'synthesizer', 'trender', 'writer', 'exporter'] %}
+    {% for node_name in nodes %}
+      {% set state = node_states.get(node_name, 'pending') %}
+      <div class="flex items-center {% if not loop.last %}flex-1{% endif %}">
+        {# Node circle + label #}
+        <div class="flex flex-col items-center min-w-[4rem]">
+          <div class="stepper-node stepper-{{ state }}" title="{{ node_name|title }}: {{ state }}">
+            {% if state == 'completed' %}
+              {# Checkmark #}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+              </svg>
+            {% elif state == 'failed' %}
+              {# X mark #}
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            {% elif state == 'running' %}
+              {# Animated dot #}
+              <div class="w-2.5 h-2.5 rounded-full bg-current animate-pulse"></div>
+            {% else %}
+              {# Empty circle number #}
+              <span class="text-xs font-bold">{{ loop.index }}</span>
+            {% endif %}
+          </div>
+          <span class="mt-1.5 text-[10px] font-medium uppercase tracking-wider
+                       {% if state == 'completed' %}text-success
+                       {% elif state == 'failed' %}text-danger
+                       {% elif state == 'running' %}text-info
+                       {% else %}text-surface-700/40 dark:text-surface-200/30
+                       {% endif %}">
+            {{ node_name }}
+          </span>
+        </div>
+        {# Connector line #}
+        {% if not loop.last %}
+          <div class="flex-1 h-0.5 mx-1
+                      {% if state == 'completed' %}bg-success/50
+                      {% elif state == 'failed' %}bg-danger/30
+                      {% else %}bg-surface-200 dark:bg-surface-700
+                      {% endif %}">
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
