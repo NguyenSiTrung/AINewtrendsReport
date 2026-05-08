@@ -17,3 +17,8 @@ This file tracks all major tracks for the project.
 ---
 
 <!-- archived: exporters-templates_20260508 — Phase 4 Exporters & Report Templates completed 2026-05-08 → conductor/archive/exporters-templates_20260508/ -->
+
+---
+
+## [ ] Track: Phase 5 — Backend API + Celery
+*Link: [./conductor/tracks/backend-api-celery_20260508/](./conductor/tracks/backend-api-celery_20260508/)*
