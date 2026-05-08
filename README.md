@@ -49,7 +49,7 @@ sudo systemctl start valkey-server
 uv run uvicorn ainews.api.main:app --reload --port 8000
 
 # Open Terminal 2: Start background worker
-uv run celery -A ainews.worker worker --loglevel=info
+uv run celery -A ainews.tasks.celery_app worker --loglevel=info
 
 # Run tests
 uv run pytest
