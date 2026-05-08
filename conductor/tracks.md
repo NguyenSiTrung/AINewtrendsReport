@@ -16,5 +16,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [ ] Track: Phase 4 — Exporters & Report Templates
+## [~] Track: Phase 4 — Exporters & Report Templates
 *Link: [./conductor/tracks/exporters-templates_20260508/](./conductor/tracks/exporters-templates_20260508/)*
