@@ -36,6 +36,10 @@ class Run(Base):
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
     input_params: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     stats: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
+    triggered_by: Mapped[str] = mapped_column(
+        String, nullable=False, default="api"
+    )
 
     def __repr__(self) -> str:
         return f"<Run id={self.id!r} status={self.status!r}>"
