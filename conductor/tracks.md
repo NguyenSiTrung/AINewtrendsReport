@@ -35,3 +35,6 @@ This file tracks all major tracks for the project.
 <!-- archived: progress-ui_20260508 — Pipeline Progress UI completed 2026-05-08 → conductor/archive/progress-ui_20260508/ -->
 
 ---
+
+## [ ] Track: Report Preview & Download
+*Link: [./conductor/tracks/report-preview_20260509/](./conductor/tracks/report-preview_20260509/)*
