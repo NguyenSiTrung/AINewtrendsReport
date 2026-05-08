@@ -27,6 +27,8 @@ dependencies = [
     "celery>=5.4",
     "croniter>=6.0",
     "python-multipart>=0.0.27",
+    "pyjwt>=2.8",
+    "bcrypt>=4.2",
 ]
 
 [project.optional-dependencies]

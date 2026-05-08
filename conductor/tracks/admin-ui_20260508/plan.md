@@ -2,39 +2,39 @@
 
 ## Phase 1: Foundation & Base Layout
 
-- [ ] Task 1: Install Tailwind CSS standalone CLI and configure build
-  - [ ] Download tailwindcss standalone binary to `tools/tailwindcss`
-  - [ ] Create `src/ainews/api/static/src/input.css` with Tailwind directives (@tailwind base/components/utilities)
-  - [ ] Create `tailwind.config.js` with template paths, dark mode 'class', custom color palette
-  - [ ] Add `make css` and `make css-watch` targets to Makefile
-  - [ ] Build initial `output.css` to `src/ainews/api/static/css/output.css`
+- [x] Task 1: Install Tailwind CSS standalone CLI and configure build
+  - [x] Download tailwindcss standalone binary to `tools/tailwindcss`
+  - [x] Create `src/ainews/api/static/src/input.css` with Tailwind directives (@tailwind base/components/utilities)
+  - [x] Create `tailwind.config.js` with template paths, dark mode 'class', custom color palette
+  - [x] Add `make css` and `make css-watch` targets to Makefile
+  - [x] Build initial `output.css` to `src/ainews/api/static/css/output.css`
 
-- [ ] Task 2: Configure Jinja2 templating and static file serving in FastAPI
-  - [ ] Add `Jinja2Templates` setup in `src/ainews/api/main.py`
-  - [ ] Mount `/static` directory via `StaticFiles`
-  - [ ] Add template globals (app_name, version, current_year)
-  - [ ] Create `src/ainews/api/templates/` directory structure
+- [x] Task 2: Configure Jinja2 templating and static file serving in FastAPI
+  - [x] Add `Jinja2Templates` setup in `src/ainews/api/main.py`
+  - [x] Mount `/static` directory via `StaticFiles`
+  - [x] Add template globals (app_name, version, current_year)
+  - [x] Create `src/ainews/api/templates/` directory structure
 
-- [ ] Task 3: Create base layout template with navigation
-  - [ ] `templates/base.html`: HTML5 skeleton, Tailwind CSS link, Alpine.js CDN, HTMX CDN
-  - [ ] Responsive sidebar navigation (collapsible on mobile via Alpine.js `x-data`)
-  - [ ] Dark mode toggle with localStorage persistence
-  - [ ] Flash message partial (`templates/partials/flash.html`) with auto-dismiss
-  - [ ] HTMX `hx-indicator` loading spinner partial
-  - [ ] CSRF meta tag injection
+- [x] Task 3: Create base layout template with navigation
+  - [x] `templates/base.html`: HTML5 skeleton, Tailwind CSS link, Alpine.js CDN, HTMX CDN
+  - [x] Responsive sidebar navigation (collapsible on mobile via Alpine.js `x-data`)
+  - [x] Dark mode toggle with localStorage persistence
+  - [x] Flash message partial (`templates/partials/flash.html`) with auto-dismiss
+  - [x] HTMX `hx-indicator` loading spinner partial
+  - [x] CSRF meta tag injection
 
-- [ ] Task 4: Add CSRF protection middleware
-  - [ ] Create `src/ainews/api/middleware/csrf.py`: generate + validate CSRF tokens
-  - [ ] Token stored in signed cookie, injected as hidden field in all forms
-  - [ ] Validate on POST/PUT/DELETE requests to non-API routes
+- [x] Task 4: Add CSRF protection middleware
+  - [x] Create `src/ainews/api/middleware/csrf.py`: generate + validate CSRF tokens
+  - [x] Token stored in signed cookie, injected as hidden field in all forms
+  - [x] Validate on POST/PUT/DELETE requests to non-API routes
 
-- [ ] Task 5: Write tests for foundation
-  - [ ] Test static file serving (GET /static/css/output.css returns 200)
-  - [ ] Test Jinja2 template rendering with base layout
-  - [ ] Test CSRF token generation and validation
-  - [ ] Test flash message cookie set/clear cycle
+- [x] Task 5: Write tests for foundation
+  - [x] Test static file serving (GET /static/css/output.css returns 200)
+  - [x] Test Jinja2 template rendering with base layout
+  - [x] Test CSRF token generation and validation
+  - [x] Test flash message cookie set/clear cycle
 
-- [ ] Task: Conductor - User Manual Verification 'Foundation & Base Layout' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Foundation & Base Layout' (Protocol in workflow.md)
 
 ## Phase 2: Authentication System
 

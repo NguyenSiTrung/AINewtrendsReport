@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
+      x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
+      :class="{ 'dark': darkMode }">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — {{ app_name }}</title>
+  <meta name="csrf-token" content="{{ request.state.csrf_token }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/output.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+
+<body class="bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100 font-sans antialiased min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-sm">
+    <!-- Logo -->
+    <div class="flex items-center justify-center gap-3 mb-8">
+      <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
+        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <span class="font-bold text-2xl tracking-tight">{{ app_name }}</span>
+    </div>
+
+    <!-- Login card -->
+    <div class="card">
+      <h1 class="text-lg font-semibold text-center mb-6">Sign in to your account</h1>
+
+      {% if error %}
+        <div class="mb-4 rounded-lg bg-danger/10 border border-danger/20 px-4 py-3 text-sm text-danger fade-in">
+          {{ error }}
+        </div>
+      {% endif %}
+
+      <form method="POST" action="/login" class="space-y-4">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+        <div>
+          <label for="email" class="block text-sm font-medium mb-1.5">Email</label>
+          <input type="email" id="email" name="email" required autofocus
+                 value="{{ email or '' }}"
+                 class="form-input"
+                 placeholder="admin@example.com">
+        </div>
+
+        <div>
+          <label for="password" class="block text-sm font-medium mb-1.5">Password</label>
+          <input type="password" id="password" name="password" required
+                 class="form-input"
+                 placeholder="••••••••">
+        </div>
+
+        <button type="submit" class="btn-primary w-full">
+          Sign in
+        </button>
+      </form>
+    </div>
+
+    <!-- Dark mode toggle -->
+    <div class="mt-6 text-center">
+      <button @click="darkMode = !darkMode"
+              class="text-sm text-surface-700/50 dark:text-surface-200/40 hover:text-surface-700 dark:hover:text-surface-200 transition-colors">
+        <span x-text="darkMode ? '☀ Light Mode' : '🌙 Dark Mode'"></span>
+      </button>
+    </div>
+  </div>
+
+</body>
+</html>

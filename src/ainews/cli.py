@@ -271,8 +271,60 @@ def seed(ctx: typer.Context) -> None:
         result = seed_all(session)
     engine.dispose()
 
-    typer.echo(f"Sites: {result.sites_created} created, {result.sites_skipped} skipped")
+    typer.echo(
+        f"Sites: {result.sites_created} created,"
+        f" {result.sites_skipped} skipped"
+    )
     typer.echo(
         f"Schedules: {result.schedules_created} created,"
         f" {result.schedules_skipped} skipped"
     )
+
+
+@seed_app.command(name="admin")
+def seed_admin(
+    email: str = typer.Option(
+        ...,
+        "--email",
+        "-e",
+        prompt="Admin email",
+        help="Email address for the admin user.",
+    ),
+    password: str = typer.Option(
+        ...,
+        "--password",
+        "-p",
+        prompt="Admin password",
+        hide_input=True,
+        help="Password for the admin user.",
+    ),
+) -> None:
+    """Create an admin user for the admin UI.
+
+    Example::
+
+        ainews seed admin --email admin@example.com --password changeme
+    """
+    from ainews.api.auth import create_admin_user
+    from ainews.core.config import Settings
+    from ainews.core.database import create_engine, get_db_session
+
+    settings = Settings()
+    engine = create_engine(settings.database_url)
+
+    try:
+        with get_db_session(engine) as session:
+            user = create_admin_user(session, email, password)
+            session.commit()
+        typer.echo(
+            typer.style(
+                f"✓ Admin user created: {user.email}",
+                fg=typer.colors.GREEN,
+            )
+        )
+    except ValueError as exc:
+        typer.echo(typer.style(f"✗ {exc}", fg=typer.colors.RED))
+        raise typer.Exit(code=1) from exc
+    finally:
+        engine.dispose()
+
