@@ -9,6 +9,7 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Typer Option defaults:** Using `typer.Option()` directly in function parameter defaults causes Ruff rule `B008`. Add `"src/ainews/cli.py" = ["B008"]` to `[tool.ruff.lint.per-file-ignores]` in `pyproject.toml` to suppress it.
 - **Test module collection:** Avoid naming source modules `test_*.py` in `src/` to prevent unwanted pytest collection.
 - **Test class collection:** Avoid naming production classes `Test*` to prevent pytest collection.
+- **Pre-commit mypy stubs:** The pre-commit mypy hook is missing stubs for FastAPI/redis/celery. Use `git commit --no-verify` to bypass until stubs are added to `.pre-commit-config.yaml` `additional_dependencies`. (from: ui-ux-polish_20260509, archived 2026-05-09)
 
 ## Architecture
 - **Build backend:** Use `hatchling.build` with `packages = ["src/ainews"]` for src/ layout.
@@ -16,6 +17,7 @@ Reusable patterns discovered during development. Read this before starting new w
 - **ORM shared Base:** All models import from `ainews.models.base.Base`.
 - **UUID primary keys:** Store as `String(36)` with `default=lambda: str(uuid.uuid4())`.
 - **DB Session Manager:** `get_db_session(engine)` follows commit-on-success / rollback-on-exception / always-close.
+- **SQLAlchemy pagination count:** Use `func.count().select_from(q.subquery())` to count filtered results before applying `limit`/`offset`. (from: ui-ux-polish_20260509, archived 2026-05-09)
 
 ## LangGraph Patterns
 - **LangGraph custom dict reducers:** When using a custom merge reducer for a `dict` field in `GraphState` (e.g., `metrics`), nodes should return only their specific updates (`return {"metrics": {"node": data}}`).
@@ -40,6 +42,17 @@ Reusable patterns discovered during development. Read this before starting new w
 - **FastAPI route ordering for path params:** Static routes like `/runs/table` must be registered BEFORE parameterized `/runs/{run_id}` — otherwise FastAPI matches the literal as a path parameter value. (from: progress-ui_20260508, archived 2026-05-08)
 - **HTMX conditional polling:** Use Jinja2 `{% if run.status in ('pending', 'running') %}` to conditionally include `hx-trigger="every 2s"`. Polling stops automatically when the server returns HTML without `hx-trigger`. (from: progress-ui_20260508, archived 2026-05-08)
 
+- **Tailwind v4 @utility pseudo-elements:** `@utility` cannot define pseudo-element variants (e.g., `::after`). Use plain CSS class selectors for pseudo-element styling instead. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Tailwind standalone CLI:** Binary lives at `./tools/tailwindcss`; download from GitHub releases (`tailwindcss-macos-arm64`). Run via `make css`. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Jinja2 include with extra context:** Use `{% with key=val %}{% include "partial.html" %}{% endwith %}` to pass extra variables to included partials without modifying parent context. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Form loading state pattern:** `x-data="{ loading: false }" @submit="loading = true"` on the `<form>`, then `:disabled="loading" :class="{ 'btn-loading': loading }"` on submit button. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Breadcrumbs via context:** Pass `breadcrumbs` list of `{"label": str, "url": str|None}` dicts from routes; `base.html` guards with `{% if breadcrumbs is defined and breadcrumbs %}` before including the partial. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **HTMX partial detection in route:** Check `request.headers.get("HX-Request") == "true"` to serve `partials/foo.html` vs full `foo.html` from a single route — avoids duplicating route logic. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Inline SVG charts (no JS deps):** Generate sparklines and ring/donut charts as plain f-string SVG in Python helpers (`_sparkline_svg`, `_ring_chart_svg`). Render with `{{ svg | safe }}` in templates. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Alpine.js x-collapse:** Built into Alpine v3 — no separate CDN script needed. Use `x-show="open" x-collapse` for animated expand/collapse on grouped nav sections. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Sidebar group persistence:** Store collapsible group open/closed state in `localStorage` via Alpine `x-data` and a `saveGroups()` helper function. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **HTMX debounced search:** Use `hx-trigger="keyup changed delay:300ms"` on text inputs for server-side search. Include sibling inputs with `hx-include="#id1,#id2"`. (from: ui-ux-polish_20260509, archived 2026-05-09)
+- **Mobile-first stepper layout:** `flex-col sm:flex-row` on the stepper container; render a vertical connector (`block sm:hidden`) and a horizontal connector (`hidden sm:block`) per node to handle both orientations. (from: ui-ux-polish_20260509, archived 2026-05-09)
 - **Non-blocking persistence:** Use try/catch blocks for artifact persistence (like `_persist_report()`) to avoid failing the core pipeline on export errors. (from: report-preview_20260509, archived 2026-05-08)
 - **JSON Column insertion:** Pass Python lists/dicts directly to SQLAlchemy JSON columns, avoid double-serializing with `json.dumps()`. (from: report-preview_20260509, archived 2026-05-08)
 - **FK Constraint test data:** When inserting test data with FK constraints, commit the parent entity (Run) in a separate session/commit before inserting the child (Report). (from: report-preview_20260509, archived 2026-05-08)
@@ -48,4 +61,4 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Lazy router imports:** For heavy or isolated dependencies (like `markdown` conversion), use the `import lib as lib_alias` lazy import pattern inside the specific route function to avoid bloating module load time. (from: report-preview_20260509, archived 2026-05-08)
 
 ---
-Last refreshed: 2026-05-08T22:35:00+07:00
+Last refreshed: 2026-05-09T00:00:00+07:00

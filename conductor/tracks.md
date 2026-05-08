@@ -40,5 +40,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [x] Track: Admin UI/UX Polish & Enhancement
-*Link: [./conductor/tracks/ui-ux-polish_20260509/](./conductor/tracks/ui-ux-polish_20260509/)*
+<!-- archived: ui-ux-polish_20260509 — Admin UI/UX Polish & Enhancement completed 2026-05-09 → conductor/archive/ui-ux-polish_20260509/ -->
