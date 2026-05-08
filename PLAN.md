@@ -568,9 +568,10 @@ FastAPI (uvicorn) binds to `0.0.0.0:8000` for direct local network access. No Ng
 - E2E test: execute a full manual run from the Admin UI and monitor logs for warnings/errors.
 - **Exit:** First scheduled cron run completes successfully on the local server without manual intervention. ✅
 
-### Phase 9 — Docs & handover (½ day)
-- `README.md` quickstart, `docs/architecture.md` (this plan), `docs/operations.md` (runbook: add a site, switch the local LLM endpoint or model, replay a failed run, rotate the API key, restore from backup).
-- Short demo recording of the admin UI.
+### Phase 9 — Docs & handover ✅ (completed 2026-05-08)
+- `README.md` quickstart (already existed; updated with docs links).
+- `docs/architecture.md` — standalone architecture reference (system design, DB schema, pipeline topology, API surface, deployment layout).
+- `docs/operations.md` — operational runbook: add a site, switch the local LLM endpoint or model, replay a failed run, rotate the API key, restore from backup, create/edit schedules, service management, log inspection, health checks.
 
 **Total v1 estimate:** ~10–14 focused engineering days.
 

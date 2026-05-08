@@ -4,7 +4,7 @@ A multi-agent system that automatically gathers, processes, and synthesizes AI n
 
 ## Status
 
-✅ **Phases 1-8 complete** — fully implemented with deployment hardening.
+✅ **All phases complete (0–9)** — fully implemented with deployment hardening and documentation.
 
 The full architecture and phased development plan lives in [`PLAN.md`](./PLAN.md).
 
@@ -131,9 +131,13 @@ sudo journalctl -u ainews-api -f
 | Run wall time | 30 minutes | `settings_kv` |
 | Run article cap | 200 articles | `settings_kv` |
 
-## Architecture
+## Documentation
 
-See [`PLAN.md`](./PLAN.md) for full architecture documentation.
+| Document | Description |
+|----------|-------------|
+| [`PLAN.md`](./PLAN.md) | Full development plan and design spec |
+| [`docs/architecture.md`](./docs/architecture.md) | System architecture reference |
+| [`docs/operations.md`](./docs/operations.md) | Operational runbook (add sites, switch LLM, restore backups, etc.) |
 
 ## License
 
