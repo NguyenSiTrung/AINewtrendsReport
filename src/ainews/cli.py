@@ -148,6 +148,70 @@ def run_start(
         raise typer.Exit(code=1) from exc
 
 
+@app.command(name="trigger-run")
+def trigger_run(
+    schedule: str | None = typer.Option(
+        None,
+        "--schedule",
+        "-s",
+        help="Named schedule to execute.",
+    ),
+    topics: str | None = typer.Option(
+        None,
+        "--topics",
+        help='Comma-separated topics for a one-off run (e.g. "AI,ML").',
+    ),
+    days: int = typer.Option(
+        7,
+        "--days",
+        "-d",
+        help="Timeframe window in days.",
+    ),
+) -> None:
+    """Enqueue a pipeline run via the shared service layer.
+
+    Uses the same code path as ``POST /api/trigger`` — creates a Run row
+    and enqueues a Celery task for background execution.
+
+    Examples::
+
+        ainews trigger-run --schedule weekly-ai-news
+        ainews trigger-run --topics "AI,ML" --days 7
+    """
+    from ainews.core.config import Settings
+    from ainews.core.database import create_engine, get_db_session
+    from ainews.services.pipeline import create_and_enqueue_run
+
+    params: dict[str, object] = {}
+    if topics:
+        params["topics"] = [t.strip() for t in topics.split(",")]
+    if days:
+        params["timeframe_days"] = days
+
+    settings = Settings()
+    engine = create_engine(settings.database_url)
+
+    try:
+        with get_db_session(engine) as session:
+            run_id = create_and_enqueue_run(
+                session,
+                schedule_name=schedule,
+                params=params or None,
+                triggered_by="cli",
+            )
+    except ValueError as exc:
+        typer.echo(typer.style(f"✗ {exc}", fg=typer.colors.RED))
+        raise typer.Exit(code=1) from exc
+    finally:
+        engine.dispose()
+
+    typer.echo(f"✓ Run enqueued: {run_id}")
+    typer.echo(f"  triggered_by: cli")
+    if schedule:
+        typer.echo(f"  schedule: {schedule}")
+    typer.echo("  Monitor via: GET /api/runs/" + run_id)
+
+
 # ── Commands ──────────────────────────────────────────────
 @app.command()
 def version() -> None:

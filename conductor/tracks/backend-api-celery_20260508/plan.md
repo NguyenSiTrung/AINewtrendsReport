@@ -4,37 +4,37 @@
 <!-- execution: sequential -->
 <!-- depends: -->
 
-- [ ] Task 1: Create API request/response schemas
-  - [ ] `TriggerRequest` and `TriggerResponse` in `src/ainews/schemas/trigger.py`
-  - [ ] `RunListResponse`, `RunDetailResponse` in `src/ainews/schemas/run.py`
-  - [ ] `SiteCreate`, `SiteUpdate`, `SiteResponse` in `src/ainews/schemas/site.py`
-  - [ ] `ScheduleCreate`, `ScheduleUpdate`, `ScheduleResponse` in `src/ainews/schemas/schedule.py`
-  - [ ] `HealthResponse` with component-level status in `src/ainews/schemas/health.py`
-  - [ ] Tests for schema validation (required fields, cron format, URL format)
+- [x] Task 1: Create API request/response schemas <!-- 4078a88 -->
+  - [x] `TriggerRequest` and `TriggerResponse` in `src/ainews/schemas/trigger.py`
+  - [x] `RunListResponse`, `RunDetailResponse` in `src/ainews/schemas/run.py`
+  - [x] `SiteCreate`, `SiteUpdate`, `SiteResponse` in `src/ainews/schemas/site.py`
+  - [x] `ScheduleCreate`, `ScheduleUpdate`, `ScheduleResponse` in `src/ainews/schemas/schedule.py`
+  - [x] `HealthResponse` with component-level status in `src/ainews/schemas/health.py`
+  - [x] Tests for schema validation (required fields, cron format, URL format)
 
-- [ ] Task: Conductor - User Manual Verification 'Pydantic Schemas' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Pydantic Schemas' (Protocol in workflow.md)
 
 ## Phase 2: Celery Infrastructure
 <!-- execution: sequential -->
 <!-- depends: -->
 
-- [ ] Task 1: Celery app configuration
-  - [ ] `src/ainews/tasks/celery_app.py` — Celery instance with Valkey broker URL from `Settings`
-  - [ ] Declare three queues: `default`, `scrape`, `llm`
-  - [ ] Serialization config (JSON), task result backend (Valkey)
-  - [ ] Tests for app instantiation and config resolution
+- [x] Task 1: Celery app configuration <!-- 4078a88 -->
+  - [x] `src/ainews/tasks/celery_app.py` — Celery instance with Valkey broker URL from `Settings`
+  - [x] Declare three queues: `default`, `scrape`, `llm`
+  - [x] Serialization config (JSON), task result backend (Valkey)
+  - [x] Tests for app instantiation and config resolution
 
-- [ ] Task 2: `run_pipeline` task implementation
-  - [ ] Task function in `src/ainews/tasks/pipeline.py`
-  - [ ] Load `Run` row from DB, update status `pending → running`
-  - [ ] Resolve schedule params (sites, topics, timeframe) from DB
-  - [ ] Build LangGraph with `SqliteSaver` checkpointer, invoke with `thread_id=run_id`
-  - [ ] On success: update `Run.status = "completed"`, populate `stats` and `finished_at`
-  - [ ] On failure: update `Run.status = "failed"`, populate `error` field
-  - [ ] Resumability: detect existing `checkpoint_id`, resume from last checkpoint
-  - [ ] Tests with mocked graph invocation
+- [x] Task 2: `run_pipeline` task implementation <!-- 4078a88 -->
+  - [x] Task function in `src/ainews/tasks/pipeline.py`
+  - [x] Load `Run` row from DB, update status `pending → running`
+  - [x] Resolve schedule params (sites, topics, timeframe) from DB
+  - [x] Build LangGraph with `SqliteSaver` checkpointer, invoke with `thread_id=run_id`
+  - [x] On success: update `Run.status = "completed"`, populate `stats` and `finished_at`
+  - [x] On failure: update `Run.status = "failed"`, populate `error` field
+  - [x] Resumability: detect existing `checkpoint_id`, resume from last checkpoint
+  - [x] Tests with mocked graph invocation
 
-- [ ] Task: Conductor - User Manual Verification 'Celery Infrastructure' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Celery Infrastructure' (Protocol in workflow.md)
 
 ## Phase 3: Service Layer
 <!-- execution: sequential -->
