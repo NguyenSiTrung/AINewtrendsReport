@@ -94,21 +94,21 @@
 <!-- execution: sequential -->
 <!-- depends: phase1, phase2 -->
 
-- [ ] Task 1: Health endpoint enhancement
-  - [ ] Ensure `/health` probes: DB connectivity, Valkey connectivity, LLM endpoint reachability
-  - [ ] Return structured JSON: `{db: ok/error, valkey: ok/error, llm: ok/error}`
-  - [ ] Tests for each probe in isolation
+- [x] Task 1: Health endpoint enhancement _(commit: 915bba7)_
+  - [x] Ensure `/health` probes: DB connectivity, Valkey connectivity, LLM endpoint reachability
+  - [x] Return structured JSON: `{db: ok/error, valkey: ok/error, llm: ok/error}`
+  - [x] Tests for each probe in isolation
 
-- [ ] Task 2: E2E smoke test script
-  - [ ] Create `tests/e2e/test_smoke.py` (or `deploy/smoke_test.sh`)
-  - [ ] Steps: verify services → hit /health → trigger run → poll completion → validate report files
-  - [ ] Add `ainews e2e-test` CLI command wrapping the script
-  - [ ] Timeout handling (default: 10 min for full pipeline)
+- [x] Task 2: E2E smoke test script _(commit: 915bba7)_
+  - [x] Create `tests/e2e/test_smoke.py` (or `deploy/smoke_test.sh`)
+  - [x] Steps: verify services → hit /health → trigger run → poll completion → validate report files
+  - [x] Add `ainews e2e-test` CLI command wrapping the script
+  - [x] Timeout handling (default: 10 min for full pipeline)
 
-- [ ] Task 3: Integration verification & documentation
-  - [ ] Run full test suite: `make lint && make typecheck && make test`
-  - [ ] Verify all hardening settings have defaults in `settings_kv` seed
-  - [ ] Verify install.sh passes shellcheck
-  - [ ] Update README.md with deployment quickstart section
+- [x] Task 3: Integration verification & documentation _(commit: 915bba7)_
+  - [x] Run full test suite: `make lint && make typecheck && make test`
+  - [x] Verify all hardening settings have defaults in `settings_kv` seed
+  - [x] Verify install.sh passes shellcheck
+  - [x] Update README.md with deployment quickstart section
 
-- [ ] Task: Conductor - User Manual Verification 'E2E Validation' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'E2E Validation' _(538 tests passing, 0 failures)_

@@ -28,5 +28,6 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Ubuntu Deployment + Hardening & QA (Phase 7 + Phase 8)
+## [x] Track: Ubuntu Deployment + Hardening & QA (Phase 7 + Phase 8) ✅
 *Link: [./conductor/tracks/deploy-hardening_20260508/](./conductor/tracks/deploy-hardening_20260508/)*
+
