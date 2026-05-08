@@ -1,0 +1,110 @@
+{#
+  Reusable pagination component.
+  Context variables:
+    page        — current page number (1-based)
+    total_pages — total number of pages
+    base_url    — URL path without query params (e.g. "/logs")
+    query_params — dict of extra query params to preserve
+#}
+{% if total_pages > 1 %}
+{% macro page_url(p) %}{{ base_url }}?page={{ p }}{% for k, v in (query_params or {}).items() if v %}&{{ k }}={{ v | urlencode }}{% endfor %}{% endmacro %}
+<nav class="flex items-center justify-between px-4 py-3 border-t border-surface-200 dark:border-surface-700"
+     aria-label="Pagination">
+  <div class="text-sm text-surface-700/60 dark:text-surface-200/50">
+    Page {{ page }} of {{ total_pages }}
+  </div>
+  <div class="flex items-center gap-1">
+    {# Previous #}
+    {% if page > 1 %}
+      <a href="{{ page_url(page - 1) }}"
+         hx-get="{{ page_url(page - 1) }}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         hx-swap="innerHTML"
+         class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm font-medium
+                border border-surface-200 dark:border-surface-700
+                text-surface-700 dark:text-surface-200
+                hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </a>
+    {% else %}
+      <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm
+                   border border-surface-200 dark:border-surface-700
+                   text-surface-700/30 dark:text-surface-200/30 cursor-not-allowed">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </span>
+    {% endif %}
+
+    {# Page numbers (show up to 5 pages around current) #}
+    {% set start_page = [1, page - 2] | max %}
+    {% set end_page = [total_pages, page + 2] | min %}
+
+    {% if start_page > 1 %}
+      <a href="{{ page_url(1) }}"
+         hx-get="{{ page_url(1) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+         class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                border border-surface-200 dark:border-surface-700
+                text-surface-700 dark:text-surface-200
+                hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">1</a>
+      {% if start_page > 2 %}
+        <span class="px-1 text-surface-700/40 dark:text-surface-200/30">…</span>
+      {% endif %}
+    {% endif %}
+
+    {% for p in range(start_page, end_page + 1) %}
+      {% if p == page %}
+        <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                     bg-primary-600 text-white">{{ p }}</span>
+      {% else %}
+        <a href="{{ page_url(p) }}"
+           hx-get="{{ page_url(p) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+           class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                  border border-surface-200 dark:border-surface-700
+                  text-surface-700 dark:text-surface-200
+                  hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if end_page < total_pages %}
+      {% if end_page < total_pages - 1 %}
+        <span class="px-1 text-surface-700/40 dark:text-surface-200/30">…</span>
+      {% endif %}
+      <a href="{{ page_url(total_pages) }}"
+         hx-get="{{ page_url(total_pages) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+         class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
+                border border-surface-200 dark:border-surface-700
+                text-surface-700 dark:text-surface-200
+                hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">{{ total_pages }}</a>
+    {% endif %}
+
+    {# Next #}
+    {% if page < total_pages %}
+      <a href="{{ page_url(page + 1) }}"
+         hx-get="{{ page_url(page + 1) }}"
+         hx-push-url="true"
+         hx-target="#page-content"
+         hx-swap="innerHTML"
+         class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm font-medium
+                border border-surface-200 dark:border-surface-700
+                text-surface-700 dark:text-surface-200
+                hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    {% else %}
+      <span class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm
+                   border border-surface-200 dark:border-surface-700
+                   text-surface-700/30 dark:text-surface-200/30 cursor-not-allowed">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+        </svg>
+      </span>
+    {% endif %}
+  </div>
+</nav>
+{% endif %}

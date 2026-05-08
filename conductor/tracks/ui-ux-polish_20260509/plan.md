@@ -37,24 +37,24 @@
 ## Phase 2: Reusable UI Components
 <!-- execution: parallel -->
 
-- [ ] Task 1: Pagination partial
+- [x] Task 1: Pagination partial
   <!-- files: src/ainews/api/templates/partials/pagination.html -->
-  - [ ] Create reusable pagination component accepting `page`, `total_pages`, `base_url`
-  - [ ] Support query param preservation
-  - [ ] Dark mode styling
-  - [ ] HTMX `hx-get` integration with `hx-push-url`
+  - [x] Create reusable pagination component accepting `page`, `total_pages`, `base_url`
+  - [x] Support query param preservation
+  - [x] Dark mode styling
+  - [x] HTMX `hx-get` integration with `hx-push-url`
 
-- [ ] Task 2: Breadcrumb partial
+- [x] Task 2: Breadcrumb partial
   <!-- files: src/ainews/api/templates/partials/breadcrumbs.html, src/ainews/api/templates/base.html -->
-  - [ ] Create breadcrumb component accepting `breadcrumbs` context list
-  - [ ] Add to base.html main content area (above page content)
-  - [ ] Style with muted separators and active item highlight
+  - [x] Create breadcrumb component accepting `breadcrumbs` context list
+  - [x] Add to base.html main content area (above page content)
+  - [x] Style with muted separators and active item highlight
 
-- [ ] Task 3: Form loading state pattern
+- [x] Task 3: Form loading state pattern
   <!-- files: src/ainews/api/static/src/input.css, src/ainews/api/templates/login.html, src/ainews/api/templates/trigger.html, src/ainews/api/templates/llm.html, src/ainews/api/templates/sites/form.html, src/ainews/api/templates/schedules/form.html, src/ainews/api/templates/settings.html -->
-  - [ ] Add `btn-loading` CSS utility with spinner animation
-  - [ ] Add Alpine.js loading pattern to all form submit buttons
-  - [ ] Disable button during submission
+  - [x] Add `btn-loading` CSS utility with spinner animation
+  - [x] Add Alpine.js loading pattern to all form submit buttons
+  - [x] Disable button during submission
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 

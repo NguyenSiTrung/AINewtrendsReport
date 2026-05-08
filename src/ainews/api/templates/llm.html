@@ -7,7 +7,7 @@
   <h1 class="text-2xl font-bold tracking-tight">LLM Settings</h1>
 
   <div class="card">
-    <form method="POST" action="/llm" class="space-y-4">
+    <form method="POST" action="/llm" class="space-y-4" x-data="{ loading: false }" @submit="loading = true">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
       <div>
@@ -50,7 +50,9 @@
         </div>
       </div>
 
-      <button type="submit" class="btn-primary">Save Settings</button>
+      <button type="submit" class="btn-primary" :disabled="loading" :class="{ 'btn-loading': loading }">
+        <span x-text="loading ? 'Saving…' : 'Save Settings'"></span>
+      </button>
     </form>
   </div>
 </div>

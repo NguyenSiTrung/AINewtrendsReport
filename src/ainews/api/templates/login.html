@@ -38,7 +38,7 @@
         </div>
       {% endif %}
 
-      <form method="POST" action="/login" class="space-y-4">
+      <form method="POST" action="/login" class="space-y-4" x-data="{ loading: false }" @submit="loading = true">
         <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
         <div>
@@ -56,8 +56,8 @@
                  placeholder="••••••••">
         </div>
 
-        <button type="submit" class="btn-primary w-full">
-          Sign in
+        <button type="submit" class="btn-primary w-full" :disabled="loading" :class="{ 'btn-loading': loading }">
+          <span x-text="loading ? 'Signing in…' : 'Sign in'"></span>
         </button>
       </form>
     </div>

@@ -31,10 +31,10 @@
   <div class="card">
     <h2 class="text-lg font-semibold mb-4">Actions</h2>
     <div class="space-y-3">
-      <form method="POST" action="/settings/seed" class="inline">
+      <form method="POST" action="/settings/seed" class="inline" x-data="{ loading: false }" @submit="loading = true">
         <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-        <button type="submit" class="btn-secondary w-full">
-          Seed Default Sites &amp; Schedules
+        <button type="submit" class="btn-secondary w-full" :disabled="loading" :class="{ 'btn-loading': loading }">
+          <span x-text="loading ? 'Seeding…' : 'Seed Default Sites &amp; Schedules'"></span>
         </button>
       </form>
     </div>

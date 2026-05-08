@@ -7,7 +7,7 @@
   <h1 class="text-2xl font-bold tracking-tight">{{ "Edit Site" if site else "New Site" }}</h1>
 
   <div class="card">
-    <form method="POST" action="{{ '/sites/' ~ site.id if site else '/sites/new' }}" class="space-y-4">
+    <form method="POST" action="{{ '/sites/' ~ site.id if site else '/sites/new' }}" class="space-y-4" x-data="{ loading: false }" @submit="loading = true">
       <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
       <div>
@@ -36,8 +36,8 @@
       </div>
 
       <div class="flex items-center gap-4 pt-2">
-        <button type="submit" class="btn-primary">
-          {{ "Save Changes" if site else "Create Site" }}
+        <button type="submit" class="btn-primary" :disabled="loading" :class="{ 'btn-loading': loading }">
+          <span x-text="loading ? 'Saving…' : '{{ 'Save Changes' if site else 'Create Site' }}'"></span>
         </button>
         <a href="/sites" class="btn-secondary">Cancel</a>
       </div>
