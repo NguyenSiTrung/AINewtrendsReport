@@ -594,11 +594,10 @@ def runs_list(
     from ainews.models.run import Run
 
     runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
-    has_active_runs = any(
-        r.status in ("pending", "running") for r in runs
-    )
+    has_active_runs = any(r.status in ("pending", "running") for r in runs)
     return _render(
-        request, "runs/list.html",
+        request,
+        "runs/list.html",
         {"runs": runs, "has_active_runs": has_active_runs},
     )
 
@@ -617,16 +616,8 @@ def runs_table_partial(
 
     from ainews.models.run import Run
 
-    runs = (
-        session.execute(
-            select(Run).order_by(Run.created_at.desc())
-        )
-        .scalars()
-        .all()
-    )
-    has_active_runs = any(
-        r.status in ("pending", "running") for r in runs
-    )
+    runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
+    has_active_runs = any(r.status in ("pending", "running") for r in runs)
 
     return _render(
         request,
@@ -709,11 +700,29 @@ def settings_page(
     request: Request,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """Show system settings."""
+    """Show system settings with data management options."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
-    return _render(request, "settings.html")
+
+    from sqlalchemy import func, select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    total_runs = session.scalar(select(func.count(Run.id))) or 0
+    total_logs = session.scalar(select(func.count(RunLog.id))) or 0
+
+    return _render(
+        request,
+        "settings.html",
+        {
+            "stats": {
+                "total_runs": total_runs,
+                "total_logs": total_logs,
+            },
+        },
+    )
 
 
 @router.post("/settings/seed")
@@ -805,17 +814,13 @@ def run_stepper_partial(
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
 
-    run = session.execute(
-        select(Run).where(Run.id == run_id)
-    ).scalar_one_or_none()
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
     if not run:
         return HTMLResponse("")
 
     logs = (
         session.execute(
-            select(RunLog)
-            .where(RunLog.run_id == run_id)
-            .order_by(RunLog.ts)
+            select(RunLog).where(RunLog.run_id == run_id).order_by(RunLog.ts)
         )
         .scalars()
         .all()
@@ -849,17 +854,13 @@ def run_logs_partial(
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
 
-    run = session.execute(
-        select(Run).where(Run.id == run_id)
-    ).scalar_one_or_none()
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
     if not run:
         return HTMLResponse("")
 
     logs = (
         session.execute(
-            select(RunLog)
-            .where(RunLog.run_id == run_id)
-            .order_by(RunLog.ts)
+            select(RunLog).where(RunLog.run_id == run_id).order_by(RunLog.ts)
         )
         .scalars()
         .all()
@@ -870,3 +871,113 @@ def run_logs_partial(
         "partials/run_logs.html",
         {"run": run, "logs": logs},
     )
+
+
+# ── Data Management (Delete) ─────────────────────────────
+
+
+@router.post("/runs/{run_id}/delete")
+def run_delete(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Delete a single run and all its associated logs."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import delete, select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
+    if not run:
+        resp = RedirectResponse(url="/runs", status_code=303)
+        flash(resp, "Run not found", "error")
+        return resp
+
+    # Delete logs first (no FK cascade)
+    log_count = session.execute(
+        delete(RunLog).where(RunLog.run_id == run_id)
+    ).rowcount
+    session.execute(delete(Run).where(Run.id == run_id))
+    session.flush()
+
+    resp = RedirectResponse(url="/runs", status_code=303)
+    flash(resp, f"Deleted run {run_id[:12]} and {log_count} log(s)", "success")
+    return resp
+
+
+@router.post("/settings/purge-runs")
+def settings_purge_runs(
+    request: Request,
+    older_than_days: int = Form(30),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Delete all runs (and their logs) older than N days."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy import delete, select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    cutoff = (datetime.now(tz=UTC) - timedelta(days=older_than_days)).isoformat()
+
+    # Find runs to delete
+    old_run_ids = (
+        session.execute(
+            select(Run.id).where(Run.created_at < cutoff)
+        )
+        .scalars()
+        .all()
+    )
+
+    if old_run_ids:
+        # Delete associated logs first
+        log_count = session.execute(
+            delete(RunLog).where(RunLog.run_id.in_(old_run_ids))
+        ).rowcount
+        run_count = session.execute(
+            delete(Run).where(Run.id.in_(old_run_ids))
+        ).rowcount
+        session.flush()
+        msg = (
+            f"Purged {run_count} run(s) and {log_count} log(s)"
+            f" older than {older_than_days} days"
+        )
+    else:
+        msg = f"No runs older than {older_than_days} days found"
+
+    resp = RedirectResponse(url="/settings", status_code=303)
+    flash(resp, msg, "success")
+    return resp
+
+
+@router.post("/settings/clear-logs")
+def settings_clear_logs(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Delete all run logs (keeps run records intact)."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import delete, func, select
+
+    from ainews.models.run_log import RunLog
+
+    count = session.scalar(select(func.count(RunLog.id))) or 0
+    session.execute(delete(RunLog))
+    session.flush()
+
+    resp = RedirectResponse(url="/settings", status_code=303)
+    flash(resp, f"Cleared {count} log entries", "success")
+    return resp

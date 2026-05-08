@@ -85,14 +85,18 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
     # Fallback: if no sites are specified, use all sites from the database
     if not sites:
-        from ainews.models.site import Site
-        from sqlalchemy import select
         import urllib.parse
+
+        from sqlalchemy import select
+
+        from ainews.models.site import Site
 
         with get_db_session(engine) as session:
             all_urls = session.execute(select(Site.url)).scalars().all()
             # Extract just the domain from the URLs for Tavily
-            parsed_domains = [urllib.parse.urlparse(url).netloc for url in all_urls if url]
+            parsed_domains = [
+                urllib.parse.urlparse(url).netloc for url in all_urls if url
+            ]
             # Remove any empty strings and www. prefix for better matching
             sites = list({d.removeprefix("www.") for d in parsed_domains if d})
 
@@ -148,7 +152,10 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         log.error("run_pipeline.failed", error=str(exc), traceback=tb)
 
         log_to_db(
-            engine, run_id, "pipeline", "ERROR",
+            engine,
+            run_id,
+            "pipeline",
+            "ERROR",
             f"Pipeline failed: {exc}",
         )
 
@@ -163,4 +170,3 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
     finally:
         engine.dispose()
-

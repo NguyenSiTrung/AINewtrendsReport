@@ -106,8 +106,11 @@ def node_resilient(
             # Log node start
             if engine is not None and run_id:
                 _safe_log(
-                    engine, run_id, node_name,
-                    "INFO", "Node started",
+                    engine,
+                    run_id,
+                    node_name,
+                    "INFO",
+                    "Node started",
                 )
 
             try:
@@ -122,8 +125,11 @@ def node_resilient(
                 if engine is not None and run_id:
                     elapsed = round(time.time() - start, 2)
                     _safe_log(
-                        engine, run_id, node_name,
-                        "INFO", "Node completed",
+                        engine,
+                        run_id,
+                        node_name,
+                        "INFO",
+                        "Node completed",
                         payload={"wall_seconds": elapsed},
                     )
 
@@ -145,15 +151,16 @@ def node_resilient(
                 # Log node failure
                 if engine is not None and run_id:
                     _safe_log(
-                        engine, run_id, node_name,
-                        "ERROR", f"Node failed: {exc}",
+                        engine,
+                        run_id,
+                        node_name,
+                        "ERROR",
+                        f"Node failed: {exc}",
                     )
 
                 return {
                     "errors": [error],
-                    "metrics": track_metrics(
-                        node_name, state, start_time=start
-                    ),
+                    "metrics": track_metrics(node_name, state, start_time=start),
                 }
 
         return wrapper
@@ -174,7 +181,7 @@ def _get_logging_engine() -> Any:
     without a configured database).  Uses a sentinel so we only
     attempt engine creation once per process.
     """
-    global _logging_engine_cache  # noqa: PLW0603
+    global _logging_engine_cache
     if _logging_engine_cache is not _UNSET:
         return _logging_engine_cache
     try:
@@ -199,7 +206,7 @@ def set_logging_engine(engine: Any) -> None:
     trying to create one from scratch (which may fail if env vars
     are not forwarded to the worker).
     """
-    global _logging_engine_cache  # noqa: PLW0603
+    global _logging_engine_cache
     _logging_engine_cache = engine
 
 
@@ -223,7 +230,11 @@ def _safe_log(
         from ainews.services.run_logger import log_to_db
 
         log_to_db(
-            engine, run_id, node, level, message,
+            engine,
+            run_id,
+            node,
+            level,
+            message,
             payload=payload,
         )
     except Exception:
