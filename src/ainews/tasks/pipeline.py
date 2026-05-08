@@ -8,7 +8,7 @@ This task is enqueued by the shared service layer and picks up a Run by
 from __future__ import annotations
 
 import traceback
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -52,7 +52,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             return {"status": "error", "detail": "Run not found"}
 
         run.status = "running"
-        run.started_at = datetime.now(tz=timezone.utc).isoformat()
+        run.started_at = datetime.now(tz=UTC).isoformat()
         session.flush()
 
         # Resolve params
@@ -114,7 +114,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             run = session.get(Run, run_id)
             if run is not None:
                 run.status = "completed"
-                run.finished_at = datetime.now(tz=timezone.utc).isoformat()
+                run.finished_at = datetime.now(tz=UTC).isoformat()
                 run.stats = result.get("metrics", {})
 
         log.info("run_pipeline.completed")
@@ -128,7 +128,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             run = session.get(Run, run_id)
             if run is not None:
                 run.status = "failed"
-                run.finished_at = datetime.now(tz=timezone.utc).isoformat()
+                run.finished_at = datetime.now(tz=UTC).isoformat()
                 run.error = str(exc)
 
         return {"status": "failed", "run_id": run_id, "error": str(exc)}

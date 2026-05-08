@@ -40,73 +40,73 @@
 <!-- execution: sequential -->
 <!-- depends: phase1, phase2 -->
 
-- [ ] Task 1: Pipeline service
-  - [ ] `src/ainews/services/pipeline.py` with `create_and_enqueue_run()`
-  - [ ] Accepts `schedule_name` (resolve from DB) or inline `params` (topics, sites, timeframe_days)
-  - [ ] Creates `Run` row with `status="pending"`, `triggered_by` field
-  - [ ] Calls `run_pipeline.delay(run_id)` to enqueue
-  - [ ] Returns `run_id` for caller
-  - [ ] Tests with mocked DB session and Celery task
+- [x] Task 1: Pipeline service <!-- 9656449 -->
+  - [x] `src/ainews/services/pipeline.py` with `create_and_enqueue_run()`
+  - [x] Accepts `schedule_name` (resolve from DB) or inline `params` (topics, sites, timeframe_days)
+  - [x] Creates `Run` row with `status="pending"`, `triggered_by` field
+  - [x] Calls `run_pipeline.delay(run_id)` to enqueue
+  - [x] Returns `run_id` for caller
+  - [x] Tests with mocked DB session and Celery task
 
-- [ ] Task: Conductor - User Manual Verification 'Service Layer' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Service Layer' (Protocol in workflow.md)
 
 ## Phase 4: FastAPI Application & Routers
 <!-- execution: sequential -->
 <!-- depends: phase3 -->
 
-- [ ] Task 1: App factory and dependencies
-  - [ ] `src/ainews/api/main.py` — `create_app()` with lifespan handler (engine init/dispose)
-  - [ ] `src/ainews/api/deps.py` — `get_db` dependency yielding SQLAlchemy sessions
-  - [ ] CORS middleware for localhost
-  - [ ] Global exception handlers (validation errors → 422, DB errors → 500)
-  - [ ] Tests for app startup/shutdown lifecycle
+- [x] Task 1: App factory and dependencies <!-- 9656449 -->
+  - [x] `src/ainews/api/main.py` — `create_app()` with lifespan handler (engine init/dispose)
+  - [x] `src/ainews/api/deps.py` — `get_db` dependency yielding SQLAlchemy sessions
+  - [x] CORS middleware for localhost
+  - [x] Global exception handlers (validation errors → 422, DB errors → 500)
+  - [x] Tests for app startup/shutdown lifecycle
 
-- [ ] Task 2: Health router
-  - [ ] `src/ainews/api/routes/health.py` — `GET /api/health`
-  - [ ] Probes: SQLite DB connectivity, Valkey ping
-  - [ ] Returns `{status, components: {db: ok/down, valkey: ok/down}}`
-  - [ ] Tests with healthy and degraded scenarios
+- [x] Task 2: Health router <!-- 9656449 -->
+  - [x] `src/ainews/api/routes/health.py` — `GET /api/health`
+  - [x] Probes: SQLite DB connectivity, Valkey ping
+  - [x] Returns `{status, components: {db: ok/down, valkey: ok/down}}`
+  - [x] Tests with healthy and degraded scenarios
 
-- [ ] Task 3: Trigger router
-  - [ ] `src/ainews/api/routes/trigger.py` — `POST /api/trigger`
-  - [ ] Calls shared service `create_and_enqueue_run()`
-  - [ ] Returns `{run_id, status: "pending"}`
-  - [ ] Validates schedule exists (if `schedule_name` provided)
-  - [ ] Tests with mocked service layer
+- [x] Task 3: Trigger router <!-- 9656449 -->
+  - [x] `src/ainews/api/routes/trigger.py` — `POST /api/trigger`
+  - [x] Calls shared service `create_and_enqueue_run()`
+  - [x] Returns `{run_id, status: "pending"}`
+  - [x] Validates schedule exists (if `schedule_name` provided)
+  - [x] Tests with mocked service layer
 
-- [ ] Task 4: Runs router
-  - [ ] `src/ainews/api/routes/runs.py`
-  - [ ] `GET /api/runs` — paginated list (offset/limit), filterable by status
-  - [ ] `GET /api/runs/{run_id}` — detail with metrics, errors, timestamps
-  - [ ] 404 handling for unknown run_id
-  - [ ] Tests with seeded run data
+- [x] Task 4: Runs router <!-- 9656449 -->
+  - [x] `src/ainews/api/routes/runs.py`
+  - [x] `GET /api/runs` — paginated list (offset/limit), filterable by status
+  - [x] `GET /api/runs/{run_id}` — detail with metrics, errors, timestamps
+  - [x] 404 handling for unknown run_id
+  - [x] Tests with seeded run data
 
-- [ ] Task 5: Sites CRUD router
-  - [ ] `src/ainews/api/routes/sites.py`
-  - [ ] `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`
-  - [ ] Pydantic validation on create/update
-  - [ ] Unique URL constraint handling (409 on duplicate)
-  - [ ] Tests for full CRUD lifecycle
+- [x] Task 5: Sites CRUD router <!-- 9656449 -->
+  - [x] `src/ainews/api/routes/sites.py`
+  - [x] `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`
+  - [x] Pydantic validation on create/update
+  - [x] Unique URL constraint handling (409 on duplicate)
+  - [x] Tests for full CRUD lifecycle
 
-- [ ] Task 6: Schedules CRUD router
-  - [ ] `src/ainews/api/routes/schedules.py`
-  - [ ] `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`
-  - [ ] Cron expression validation via `croniter`
-  - [ ] Tests for full CRUD lifecycle
+- [x] Task 6: Schedules CRUD router <!-- 9656449 -->
+  - [x] `src/ainews/api/routes/schedules.py`
+  - [x] `GET`, `POST`, `GET/{id}`, `PUT/{id}`, `DELETE/{id}`
+  - [x] Cron expression validation via `croniter`
+  - [x] Tests for full CRUD lifecycle
 
-- [ ] Task: Conductor - User Manual Verification 'FastAPI Application & Routers' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'FastAPI Application & Routers' (Protocol in workflow.md)
 
 ## Phase 5: CLI Integration
 <!-- execution: sequential -->
 <!-- depends: phase3 -->
 
-- [ ] Task 1: Update `trigger-run` CLI command
-  - [ ] Implement `ainews trigger-run --schedule <name>` using shared service
-  - [ ] Implement `ainews trigger-run --topics "AI,ML" --days 7` for one-off runs
-  - [ ] Set `triggered_by = "cli"`
-  - [ ] Tests with mocked service function
+- [x] Task 1: Update `trigger-run` CLI command <!-- 9656449 -->
+  - [x] Implement `ainews trigger-run --schedule <name>` using shared service
+  - [x] Implement `ainews trigger-run --topics "AI,ML" --days 7` for one-off runs
+  - [x] Set `triggered_by = "cli"`
+  - [x] Tests with mocked service function
 
-- [ ] Task: Conductor - User Manual Verification 'CLI Integration' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'CLI Integration' (Protocol in workflow.md)
 
 ## Phase 6: End-to-End Verification
 <!-- execution: sequential -->

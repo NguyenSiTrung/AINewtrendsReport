@@ -206,7 +206,7 @@ def trigger_run(
         engine.dispose()
 
     typer.echo(f"✓ Run enqueued: {run_id}")
-    typer.echo(f"  triggered_by: cli")
+    typer.echo("  triggered_by: cli")
     if schedule:
         typer.echo(f"  schedule: {schedule}")
     typer.echo("  Monitor via: GET /api/runs/" + run_id)

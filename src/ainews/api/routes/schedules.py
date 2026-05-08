@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -59,7 +59,7 @@ def create_schedule(
         topics=body.topics,
         model_override=body.model_override,
         enabled=int(body.enabled),
-        created_at=datetime.now(tz=timezone.utc).isoformat(),
+        created_at=datetime.now(tz=UTC).isoformat(),
     )
     try:
         session.add(sched)

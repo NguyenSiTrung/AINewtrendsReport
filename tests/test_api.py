@@ -8,11 +8,10 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
-from ainews.core.database import create_engine, make_session_factory
+from ainews.core.database import create_engine
 from ainews.models import Base
 from ainews.models.run import Run
 from ainews.models.schedule import Schedule
-from ainews.models.site import Site
 
 
 @pytest.fixture()

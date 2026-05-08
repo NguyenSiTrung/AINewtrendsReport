@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import pytest
 
-from ainews.core.config import Settings
 from ainews.core.database import create_engine, get_db_session
 from ainews.models import Base
 from ainews.models.run import Run

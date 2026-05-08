@@ -34,7 +34,9 @@ class TestTriggerRunCLI:
             patch("ainews.core.database.create_engine", return_value=engine),
             patch("ainews.services.pipeline.run_pipeline") as mock_task,
         ):
-            result = runner.invoke(app, ["trigger-run", "--topics", "AI,ML", "--days", "7"])
+            result = runner.invoke(
+                app, ["trigger-run", "--topics", "AI,ML", "--days", "7"]
+            )
 
         assert result.exit_code == 0
         assert "Run enqueued" in result.output

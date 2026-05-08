@@ -101,12 +101,12 @@ class TestRunPipelineTask:
             patch.object(pipeline, "Settings", return_value=Settings(valkey_url="redis://t:6379/0")),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
-            patch("langgraph.checkpoint.sqlite.SqliteSaver") as MockSaver,
+            patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,
         ):
-            MockSaver.from_conn_string.return_value.__enter__ = MagicMock(
+            mock_saver.from_conn_string.return_value.__enter__ = MagicMock(
                 return_value=mock_cp
             )
-            MockSaver.from_conn_string.return_value.__exit__ = MagicMock(
+            mock_saver.from_conn_string.return_value.__exit__ = MagicMock(
                 return_value=False
             )
 
@@ -138,12 +138,12 @@ class TestRunPipelineTask:
             patch.object(pipeline, "Settings", return_value=Settings(valkey_url="redis://t:6379/0")),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
-            patch("langgraph.checkpoint.sqlite.SqliteSaver") as MockSaver,
+            patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,
         ):
-            MockSaver.from_conn_string.return_value.__enter__ = MagicMock(
+            mock_saver.from_conn_string.return_value.__enter__ = MagicMock(
                 return_value=MagicMock()
             )
-            MockSaver.from_conn_string.return_value.__exit__ = MagicMock(
+            mock_saver.from_conn_string.return_value.__exit__ = MagicMock(
                 return_value=False
             )
 

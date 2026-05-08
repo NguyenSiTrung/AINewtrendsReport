@@ -11,7 +11,6 @@ from ainews.schemas.schedule import ScheduleCreate, ScheduleResponse, ScheduleUp
 from ainews.schemas.site import SiteCreate, SiteResponse, SiteUpdate
 from ainews.schemas.trigger import TriggerRequest, TriggerResponse
 
-
 # ── TriggerRequest / TriggerResponse ──────────────────────
 
 
@@ -76,7 +75,9 @@ class TestRunSchemas:
 
     def test_run_detail_response(self) -> None:
         resp = RunDetailResponse(
-            run=RunDetail(id="r1", status="failed", triggered_by="cron", error="timeout"),
+            run=RunDetail(
+                id="r1", status="failed", triggered_by="cron", error="timeout"
+            ),
         )
         assert resp.run.error == "timeout"
 

@@ -6,7 +6,7 @@ use ``create_and_enqueue_run()`` so run creation is never duplicated.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -70,7 +70,7 @@ def create_and_enqueue_run(
         if not input_params.get("sites") and schedule.site_filter:
             input_params["sites"] = schedule.site_filter
 
-    now = datetime.now(tz=timezone.utc).isoformat()
+    now = datetime.now(tz=UTC).isoformat()
 
     run = Run(
         status="pending",
