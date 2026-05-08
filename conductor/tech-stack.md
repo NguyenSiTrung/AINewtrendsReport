@@ -40,8 +40,8 @@
 | FastAPI | REST API framework | MIT |
 | Uvicorn | ASGI server | BSD-3 |
 | Starlette | ASGI toolkit (FastAPI dependency) | BSD-3 |
-| pydantic / pydantic-settings | Data validation, configuration | MIT |
-| fastapi-users | Single-admin auth (JWT cookie) | MIT |
+| pyjwt | JSON Web Token generation/validation | MIT |
+| bcrypt | Password hashing | Apache-2.0 |
 
 ## Task Queue & Caching
 
@@ -91,8 +91,6 @@
 |-----------|---------|---------|
 | Ubuntu 22.04 / 24.04 | Target OS | GPL (OS level) |
 | systemd | Process supervision (3 units: api, worker, beat) | LGPL |
-| nginx | TLS termination + reverse proxy | BSD-2 |
-| certbot | TLS certificate automation | Apache-2.0 |
 | cron | Schedule-based run triggering | OS built-in |
 
 ## Dev Tooling

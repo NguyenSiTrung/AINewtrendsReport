@@ -1,8 +1,8 @@
 {
-  "last_refresh": "2026-05-08T10:57:46+07:00",
+  "last_refresh": "2026-05-08T14:50:00+07:00",
   "scope": "all",
   "changes": [
-    "Consolidated learnings from completed tracks into conductor/patterns.md",
-    "Synced Beads drift: Closed epic AINewtrendsReport-ifc and its 18 subtasks to match Conductor state"
+    "Removed nginx and certbot from tech-stack.md due to local deployment strategy",
+    "Updated auth dependencies in tech-stack.md (pyjwt/bcrypt instead of fastapi-users)"
   ]
 }
