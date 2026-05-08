@@ -540,7 +540,7 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - Exporter node integrated into LangGraph, persisting files and updating `reports` DB table.
 - **Exit:** Outputs validated against schema; full test suite passes.
 
-### Phase 5 — Backend API + Celery (1–2 days)
+### Phase 5 — Backend API + Celery ✅ (completed 2026-05-08)
 - FastAPI app, routers per resource, dependency-injected DB session.
 - Celery app with queues (`scrape`, `llm`, `default`); task `run_pipeline(run_id)` hydrates params and invokes the graph with the run's `thread_id` for resumability.
 - `POST /api/trigger` enqueues; `cli.py trigger-run` shares the same path.
