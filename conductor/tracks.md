@@ -37,3 +37,8 @@ This file tracks all major tracks for the project.
 ---
 
 <!-- archived: report-preview_20260509 — Report Preview & Download completed 2026-05-08 → conductor/archive/report-preview_20260509/ -->
+
+---
+
+## [ ] Track: Admin UI/UX Polish & Enhancement
+*Link: [./conductor/tracks/ui-ux-polish_20260509/](./conductor/tracks/ui-ux-polish_20260509/)*
