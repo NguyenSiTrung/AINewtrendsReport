@@ -36,5 +36,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [x] Track: Report Preview & Download
-*Link: [./conductor/tracks/report-preview_20260509/](./conductor/tracks/report-preview_20260509/)*
+<!-- archived: report-preview_20260509 — Report Preview & Download completed 2026-05-08 → conductor/archive/report-preview_20260509/ -->

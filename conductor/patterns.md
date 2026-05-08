@@ -40,5 +40,12 @@ Reusable patterns discovered during development. Read this before starting new w
 - **FastAPI route ordering for path params:** Static routes like `/runs/table` must be registered BEFORE parameterized `/runs/{run_id}` — otherwise FastAPI matches the literal as a path parameter value. (from: progress-ui_20260508, archived 2026-05-08)
 - **HTMX conditional polling:** Use Jinja2 `{% if run.status in ('pending', 'running') %}` to conditionally include `hx-trigger="every 2s"`. Polling stops automatically when the server returns HTML without `hx-trigger`. (from: progress-ui_20260508, archived 2026-05-08)
 
+- **Non-blocking persistence:** Use try/catch blocks for artifact persistence (like `_persist_report()`) to avoid failing the core pipeline on export errors. (from: report-preview_20260509, archived 2026-05-08)
+- **JSON Column insertion:** Pass Python lists/dicts directly to SQLAlchemy JSON columns, avoid double-serializing with `json.dumps()`. (from: report-preview_20260509, archived 2026-05-08)
+- **FK Constraint test data:** When inserting test data with FK constraints, commit the parent entity (Run) in a separate session/commit before inserting the child (Report). (from: report-preview_20260509, archived 2026-05-08)
+- **Markdown rendering:** Use `markdown.markdown(..., extensions=["tables", "fenced_code", "codehilite", "toc"])` for standard full-featured GitHub-like rendering. (from: report-preview_20260509, archived 2026-05-08)
+- **FileResponse Content-Disposition:** Passing `filename="name.ext"` directly into `FileResponse` automatically sets the correct `Content-Disposition: attachment` header. (from: report-preview_20260509, archived 2026-05-08)
+- **Lazy router imports:** For heavy or isolated dependencies (like `markdown` conversion), use the `import lib as lib_alias` lazy import pattern inside the specific route function to avoid bloating module load time. (from: report-preview_20260509, archived 2026-05-08)
+
 ---
 Last refreshed: 2026-05-08T22:35:00+07:00
