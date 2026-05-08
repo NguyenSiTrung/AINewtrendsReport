@@ -7,20 +7,20 @@ Workflow: TDD per `conductor/workflow.md`
 
 ## Phase 1: Jinja2 Report Template & Writer Refactor
 
-- [ ] Task 1: Create Jinja2 report template
-  - [ ] Create `src/ainews/agents/prompts/report.j2` with all report sections (header, exec summary, top stories, trends, source index, methodology, degradation notice)
-  - [ ] Template must accept: `title`, `generated_at`, `params`, `summaries`, `trends`, `errors`, `executive_summary`
+- [x] Task 1: Create Jinja2 report template (commit: d291a8f)
+  - [x] Create `src/ainews/agents/prompts/report.j2` with all report sections (header, exec summary, top stories, trends, source index, methodology, degradation notice)
+  - [x] Template must accept: `title`, `generated_at`, `params`, `summaries`, `trends`, `errors`, `executive_summary`
 
-- [ ] Task 2: Write tests for writer refactor (TDD)
-  - [ ] Test that `writer_node` with template produces identical output to current hardcoded implementation for a known fixture
-  - [ ] Test degradation notice renders when `errors` is non-empty
-  - [ ] Test empty summaries edge case
-  - [ ] Test empty trends edge case
+- [x] Task 2: Write tests for writer refactor (TDD) (commit: d291a8f)
+  - [x] Test that `writer_node` with template produces identical output to current hardcoded implementation for a known fixture
+  - [x] Test degradation notice renders when `errors` is non-empty
+  - [x] Test empty summaries edge case
+  - [x] Test empty trends edge case
 
-- [ ] Task 3: Refactor `writer_node` to use Jinja2 template
-  - [ ] Replace hardcoded string assembly with `load_prompt("report", **context)` call
-  - [ ] Keep `_generate_executive_summary()` LLM logic unchanged
-  - [ ] Ensure all existing writer tests still pass
+- [x] Task 3: Refactor `writer_node` to use Jinja2 template (commit: d291a8f)
+  - [x] Replace hardcoded string assembly with `render_template("report", **context)` call
+  - [x] Keep `_generate_executive_summary()` LLM logic unchanged
+  - [x] Ensure all existing writer tests still pass (285 passed)
 
 - [ ] Task: Conductor - User Manual Verification 'Jinja2 Template & Writer Refactor' (Protocol in workflow.md)
 
