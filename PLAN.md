@@ -554,19 +554,19 @@ FastAPI (uvicorn) binds to `0.0.0.0:8000` for direct local network access. No Ng
 - Auth via fastapi-users JWT cookie; `seed-admin` CLI.
 - **Exit:** Admin can add a site, edit LLM settings + Test connection, schedule a run, trigger manually, and watch logs live.
 
-### Phase 7 — Ubuntu deployment (1 day)
+### Phase 7 — Ubuntu deployment ✅ (completed 2026-05-08)
 - systemd units, cron file.
 - Idempotent `deploy/install.sh` covering §5.1–§5.10.
-- **Exit:** Cold-boot install completes; weekly cron fires; admin UI reachable locally over HTTP (port 8000).
+- **Exit:** Cold-boot install completes; weekly cron fires; admin UI reachable locally over HTTP (port 8000). ✅
 
-### Phase 8 — Hardening & QA (1–2 days)
+### Phase 8 — Hardening & QA ✅ (completed 2026-05-08)
 - Per-domain scraper rate limits; Tavily monthly-quota guard; concurrency cap on calls into the local LLM (avoid saturating your GPU).
 - Hard caps per run: `max_total_tokens`, `max_wall_seconds`, `max_articles`. Configurable in `settings_kv`.
 - Retry/backoff with `tenacity` for transient LLM and Tavily errors against the single local endpoint.
 - Local backup cron; log rotation via `/etc/logrotate.d/ainews`.
 - Security: CSP, file modes audit, env-file ownership audit, masking of API key in logs.
 - E2E test: execute a full manual run from the Admin UI and monitor logs for warnings/errors.
-- **Exit:** First scheduled cron run completes successfully on the local server without manual intervention.
+- **Exit:** First scheduled cron run completes successfully on the local server without manual intervention. ✅
 
 ### Phase 9 — Docs & handover (½ day)
 - `README.md` quickstart, `docs/architecture.md` (this plan), `docs/operations.md` (runbook: add a site, switch the local LLM endpoint or model, replay a failed run, rotate the API key, restore from backup).
