@@ -65,7 +65,7 @@ Keeping up with the rapidly evolving AI landscape requires monitoring dozens of 
 |----------|--------|--------|
 | Frontend approach | Decided | HTMX + Jinja2 (server-rendered, no Node toolchain) |
 | Scheduler | Decided | cron triggers Celery tasks |
-| Cache/broker | Decided | Valkey (BSD-3, Redis fork) |
+| Cache/broker | Decided | Valkey (BSD-3) |
 | Dedup strategy | Decided (v1) | URL + simhash + Jaccard (deterministic, no embeddings) |
 | Local LLM server | **Open** | vLLM / Ollama / LM Studio / llama-server / TGI |
 | Default model | **Open** | qwen2.5-32b / llama3.1-70b / mistral-small-3.1 |

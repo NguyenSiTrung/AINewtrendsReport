@@ -95,7 +95,7 @@ A **multi-agent pipeline** that gathers AI news from configurable sources (Tavil
 | Search | Tavily Search API | MIT |
 | Web framework | FastAPI + Uvicorn | MIT/BSD |
 | Task queue | Celery | BSD |
-| Broker | Valkey (Redis-compatible) | BSD-3 |
+| Broker | Valkey | BSD-3 |
 | Database | SQLite (WAL + FTS5) | Public domain |
 | ORM | SQLAlchemy 2.0 | MIT |
 | Migrations | Alembic | MIT |
@@ -207,6 +207,6 @@ Auth: JWT in HttpOnly cookie + CSRF tokens.
 | Frontend | HTMX + Jinja2 | Lightest stack, minimal JS |
 | Scheduler | Ubuntu cron | Simple, auditable |
 | LLM | Single OpenAI-compatible endpoint | Server-agnostic |
-| Broker | Valkey (BSD-3) | Redis-compat without licensing issues |
+| Broker | Valkey (BSD-3) | Message broker without licensing issues |
 | Dedup | URL + simhash + Jaccard | No embeddings for v1 |
 | Checkpoints | langgraph-checkpoint-sqlite | Same DB file, unified backup |

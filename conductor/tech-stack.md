@@ -48,7 +48,7 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | Celery | Distributed task queue (workers for scrape/llm/default queues) | BSD-3 |
-| Valkey | Message broker + Tavily response cache (Redis fork) | BSD-3 |
+| Valkey | Message broker + Tavily response cache | BSD-3 |
 
 ## Database
 

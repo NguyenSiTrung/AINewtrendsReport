@@ -285,7 +285,7 @@ sudo systemctl enable ainews-api ainews-worker
 ### Checking Valkey
 
 ```bash
-sudo systemctl status valkey-server   # or redis-server
+sudo systemctl status valkey-server
 valkey-cli ping                       # → PONG
 ```
 

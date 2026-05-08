@@ -1,7 +1,7 @@
 [Unit]
 Description=AI News & Trends Report — Uvicorn API
 Documentation=https://github.com/NguyenSiTrung/AINewtrendsReport
-After=network.target valkey-server.service redis-server.service
+After=network.target valkey-server.service
 Wants=valkey-server.service
 
 [Service]

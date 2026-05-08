@@ -20,7 +20,7 @@
 | SQLAlchemy / Alembic | MIT | ✅ | None |
 | LangChain / LangGraph | MIT | ✅ | None |
 | Celery | BSD-3 | ✅ | None |
-| Redis (≤ 7.2.4) / Valkey | BSD-3 / BSD-3 | ✅ | None — **use Valkey** to avoid Redis 7.4+ RSAL/SSPL concerns |
+| Valkey | BSD-3 | ✅ | None |
 | Tailwind CSS | MIT | ✅ | None |
 | HTMX / Alpine.js | BSD / MIT | ✅ | None |
 | openpyxl | MIT | ✅ | None |
@@ -42,7 +42,7 @@
 | Backend API | **FastAPI + Uvicorn** | Lightweight, async, OpenAPI built-in |
 | Admin frontend | **Jinja2 + HTMX + Tailwind + Alpine.js** | Single-repo, no Node toolchain, server-rendered |
 | **Database** | **SQLite** (WAL mode) | Public-domain, zero-admin, single file, perfect fit for this workload |
-| Cache / broker | **Valkey** (Redis fork, BSD-3) | Tavily cache + Celery broker; avoids Redis 7.4+ license change |
+| Cache / broker | **Valkey** (BSD-3) | Tavily cache + Celery broker |
 | Job execution | **cron** (schedules) + **Celery** (workers) | Cron per spec, Celery for retries/concurrency |
 | LangGraph persistence | **`langgraph-checkpoint-sqlite`** | Native SQLite checkpointer; resumable runs |
 | Excel export | **openpyxl** | Stable, no native deps |
@@ -440,7 +440,7 @@ sudo apt install -y python3.12 python3.12-venv python3-pip \
                     build-essential libssl-dev curl git \
                     fonts-liberation
 ```
-> If `valkey-server` is unavailable on your Ubuntu version, install Redis ≤ 7.2.4 from the Ubuntu LTS repo (still BSD-licensed) or build Valkey from source.
+> Install `valkey-server` from the official PPA repository.
 
 ### 5.2 Application user & layout
 ```
@@ -584,7 +584,7 @@ FastAPI (uvicorn) binds to `0.0.0.0:8000` for direct local network access. No Ng
 3. **Local LLM server:** which one will host your model in production? (vLLM / Ollama / LM Studio / llama.cpp / TGI). This is purely operational — the application code is identical for all of them — but it tells us which one to use in CI integration tests and which model name to seed as the default.
 4. **Default model name** to seed (e.g. `qwen2.5-32b-instruct`, `llama3.1-70b-instruct`, `mistral-small-3.1`). Affects prompt token budgets and the `max_tokens` default.
 5. **Tracing:** Langfuse self-hosted (recommended for enterprise — no data leaves your network) vs. none.
-6. **Cache/broker:** **Valkey** (recommended, BSD-3) vs. Redis ≤ 7.2.4 (also BSD-3) vs. Redis 7.4+ (RSAL/SSPL — avoid for enterprise).
+6. **Cache/broker:** **Valkey** (BSD-3).
 7. **Dedup quality bar:** confirm "URL + simhash + Jaccard" is acceptable for v1. If during Phase 3 testing you observe paraphrased duplicates leaking through (different outlets writing very different prose about the same event), we add an embeddings step in v2 — same single-endpoint pattern, just call `/v1/embeddings` on your local server, no schema migration needed beyond an optional `articles.embedding` blob column.
 
 Once you confirm #1, #3, #4, #5, #6, I will start Phase 0: scaffold the repo, `pyproject.toml`, Alembic baseline against SQLite, the `llm_factory` + `ainews llm test` CLI against your local endpoint, and the systemd/cron skeletons — then move into Phase 1.

@@ -86,41 +86,34 @@ PACKAGES=(
 apt-get install -y -qq "${PACKAGES[@]}"
 ok "System packages installed"
 
-# ─── Step 2: Install Valkey / Redis ───────────────────────
-info "Installing Valkey/Redis..."
+# ─── Step 2: Install Valkey ───────────────────────
+info "Installing Valkey..."
 
 if command -v valkey-server &>/dev/null; then
     ok "Valkey already installed: $(valkey-server --version 2>/dev/null | head -1)"
-elif command -v redis-server &>/dev/null; then
-    ok "Redis already installed (Valkey fallback): $(redis-server --version 2>/dev/null | head -1)"
 else
-    # Try Valkey from official PPA first
-    VALKEY_INSTALLED=false
+    # Install Valkey from official PPA
     if curl -fsSL https://packages.valkey.io/gpg 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/valkey-archive-keyring.gpg 2>/dev/null; then
         echo "deb [signed-by=/usr/share/keyrings/valkey-archive-keyring.gpg] https://packages.valkey.io/deb stable main" \
             > /etc/apt/sources.list.d/valkey.list
         apt-get update -qq
         if apt-get install -y -qq valkey-server 2>/dev/null; then
-            VALKEY_INSTALLED=true
             ok "Valkey installed from official PPA"
+        else
+            err "Failed to install Valkey from PPA."
+            exit 1
         fi
-    fi
-
-    if [[ "$VALKEY_INSTALLED" != "true" ]]; then
-        warn "Valkey PPA unavailable, falling back to redis-server from Ubuntu repos"
-        apt-get install -y -qq redis-server
-        ok "Redis installed as Valkey fallback"
+    else
+        err "Failed to add Valkey GPG key."
+        exit 1
     fi
 fi
 
 # Ensure the service is enabled and running
-for svc in valkey-server redis-server; do
-    if systemctl list-unit-files "$svc.service" &>/dev/null; then
-        systemctl enable "$svc" 2>/dev/null || true
-        systemctl start "$svc" 2>/dev/null || true
-        break
-    fi
-done
+if systemctl list-unit-files valkey-server.service &>/dev/null; then
+    systemctl enable valkey-server 2>/dev/null || true
+    systemctl start valkey-server 2>/dev/null || true
+fi
 
 # ─── Step 3: Create system user ──────────────────────────
 info "Ensuring system user '$APP_USER' exists..."

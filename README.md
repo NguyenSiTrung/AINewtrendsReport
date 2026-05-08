@@ -36,8 +36,20 @@ uv sync
 uv run alembic upgrade head
 uv run ainews seed
 
-# Start development server
+# Ensure Valkey is running locally (required for Celery)
+# Valkey is the 100% open-source, commercial-safe fork of Redis.
+sudo apt-get install -y lsb-release curl gpg
+curl -fsSL https://serverless.industries/public.key | sudo gpg --dearmor -o /usr/share/keyrings/valkey.gpg
+echo "deb [signed-by=/usr/share/keyrings/valkey.gpg] https://serverless.industries/valkey/apt $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/valkey.list
+sudo apt-get update
+sudo apt-get install -y valkey-server
+sudo systemctl start valkey-server
+
+# Open Terminal 1: Start development server
 uv run uvicorn ainews.api.main:app --reload --port 8000
+
+# Open Terminal 2: Start background worker
+uv run celery -A ainews.worker worker --loglevel=info
 
 # Run tests
 uv run pytest

@@ -314,11 +314,11 @@ def seed_admin(
 
     try:
         with get_db_session(engine) as session:
-            user = create_admin_user(session, email, password)
+            create_admin_user(session, email, password)
             session.commit()
         typer.echo(
             typer.style(
-                f"✓ Admin user created: {user.email}",
+                f"✓ Admin user created: {email}",
                 fg=typer.colors.GREEN,
             )
         )
