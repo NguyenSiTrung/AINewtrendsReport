@@ -58,3 +58,7 @@ reports/
 node_modules/
 .next/
 .svelte-kit/
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+.beads-credential-key
