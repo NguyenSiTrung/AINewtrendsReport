@@ -9,12 +9,16 @@ from __future__ import annotations
 
 import traceback
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 import structlog
 
 from ainews.core.config import Settings
 from ainews.core.database import create_engine, get_db_session
+from ainews.exporters.markdown import export_markdown
+from ainews.exporters.xlsx import export_xlsx
+from ainews.models.report import Report
 from ainews.models.run import Run
 from ainews.tasks.celery_app import celery_app
 
@@ -135,6 +139,10 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             config = {"configurable": {"thread_id": run_id}}
             result = graph.invoke(initial_state, config)
 
+        # ── Export reports & persist Report row ────────────
+        reports_dir = settings.db_path.parent / "reports"
+        _persist_report(engine, run_id, result, reports_dir, log)
+
         # ── Update Run on success ─────────────────────────
         with get_db_session(engine) as session:
             run = session.get(Run, run_id)
@@ -170,3 +178,87 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
     finally:
         engine.dispose()
+
+
+def _persist_report(
+    engine: Any,
+    run_id: str,
+    result: dict[str, Any],
+    reports_dir: Path,
+    log: Any,
+) -> None:
+    """Export MD/XLSX and create a Report row in the database."""
+    try:
+        report_md: str = result.get("report_md", "")
+        summaries: list[dict[str, Any]] = result.get("summaries", [])
+        trends: list[dict[str, Any]] = result.get("trends", [])
+
+        # Export files
+        md_path = export_markdown(report_md, run_id, reports_dir)
+        xlsx_data = {
+            "summaries": summaries,
+            "trends": trends,
+            "executive_summary": report_md[:500] if report_md else "",
+            "params": {},
+            "generated_at": datetime.now(tz=UTC).isoformat(),
+        }
+        xlsx_path = export_xlsx(xlsx_data, run_id, reports_dir)
+
+        # Build title from first markdown heading or fallback
+        title = _extract_title(report_md)
+
+        # Extract summary snippet
+        summary_md = _extract_summary(report_md)
+
+        with get_db_session(engine) as session:
+            report = Report(
+                run_id=run_id,
+                title=title,
+                summary_md=summary_md,
+                full_md_path=str(md_path),
+                xlsx_path=str(xlsx_path),
+                trends=trends,
+                token_usage=result.get("metrics", {}).get("token_usage"),
+                created_at=datetime.now(tz=UTC).isoformat(),
+            )
+            session.add(report)
+
+        log.info("run_pipeline.report_persisted", run_id=run_id)
+
+    except Exception as exc:
+        # Report persistence failure should not fail the pipeline
+        log.warning(
+            "run_pipeline.report_persist_failed",
+            run_id=run_id,
+            error=str(exc),
+        )
+
+
+def _extract_title(report_md: str) -> str:
+    """Extract the first heading from markdown, or return a default."""
+    for line in report_md.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+    return f"AI News Report — {datetime.now(tz=UTC).strftime('%Y-%m-%d')}"
+
+
+def _extract_summary(report_md: str, max_chars: int = 500) -> str:
+    """Extract the first paragraph after the title as a summary snippet."""
+    lines = report_md.splitlines()
+    collecting = False
+    paragraphs: list[str] = []
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            collecting = True
+            continue
+        if collecting:
+            if stripped.startswith("## "):
+                break
+            if stripped:
+                paragraphs.append(stripped)
+
+    summary = " ".join(paragraphs)
+    return summary[:max_chars] if summary else report_md[:max_chars]

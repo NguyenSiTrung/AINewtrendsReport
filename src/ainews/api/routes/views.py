@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from sqlalchemy.orm import Session
 
 from ainews.api.auth import (
@@ -632,13 +633,14 @@ def run_detail(
     run_id: str,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """Show run detail with logs."""
+    """Show run detail with logs and optional report card."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
     from sqlalchemy import select
 
+    from ainews.models.report import Report
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
 
@@ -655,6 +657,12 @@ def run_detail(
         .scalars()
         .all()
     )
+
+    # Query associated report
+    report = session.execute(
+        select(Report).where(Report.run_id == run_id)
+    ).scalar_one_or_none()
+
     node_states = _derive_node_states(logs)
     return _render(
         request,
@@ -663,6 +671,7 @@ def run_detail(
             "run": run,
             "logs": logs,
             "node_states": node_states,
+            "report": report,
         },
     )
 
@@ -873,6 +882,131 @@ def run_logs_partial(
     )
 
 
+# ── Report Preview & Download ─────────────────────────────
+
+
+@router.get("/runs/{run_id}/report", response_class=HTMLResponse)
+def report_preview(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Render the full markdown report as styled HTML."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    import markdown as md_lib
+    from sqlalchemy import select
+
+    from ainews.models.report import Report
+    from ainews.models.run import Run
+
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
+    if not run:
+        resp = RedirectResponse(url="/runs", status_code=303)
+        flash(resp, "Run not found", "error")
+        return resp
+
+    report = session.execute(
+        select(Report).where(Report.run_id == run_id)
+    ).scalar_one_or_none()
+    if not report:
+        resp = RedirectResponse(url=f"/runs/{run_id}", status_code=303)
+        flash(resp, "No report available for this run", "error")
+        return resp
+
+    # Read markdown from disk and convert to HTML
+    report_html = ""
+    md_path = Path(report.full_md_path) if report.full_md_path else None
+    if md_path and md_path.exists():
+        raw_md = md_path.read_text(encoding="utf-8")
+        report_html = md_lib.markdown(
+            raw_md,
+            extensions=["tables", "fenced_code", "codehilite", "toc"],
+        )
+    else:
+        report_html = (
+            "<p class='text-surface-700/60 "
+            "dark:text-surface-200/50'>"
+            "Report file not found on disk.</p>"
+        )
+
+    return _render(
+        request,
+        "runs/report.html",
+        {
+            "run": run,
+            "report": report,
+            "report_html": report_html,
+        },
+    )
+
+
+@router.get("/runs/{run_id}/report/download/md")
+def report_download_md(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Download the markdown report file."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.report import Report
+
+    report = session.execute(
+        select(Report).where(Report.run_id == run_id)
+    ).scalar_one_or_none()
+    if not report or not report.full_md_path:
+        return JSONResponse({"detail": "Report not found"}, status_code=404)
+
+    file_path = Path(report.full_md_path)
+    if not file_path.exists():
+        return JSONResponse({"detail": "File not found on disk"}, status_code=404)
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="text/markdown",
+        filename=f"report_{run_id[:12]}.md",
+    )
+
+
+@router.get("/runs/{run_id}/report/download/xlsx")
+def report_download_xlsx(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Download the Excel report file."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.report import Report
+
+    report = session.execute(
+        select(Report).where(Report.run_id == run_id)
+    ).scalar_one_or_none()
+    if not report or not report.xlsx_path:
+        return JSONResponse({"detail": "Report not found"}, status_code=404)
+
+    file_path = Path(report.xlsx_path)
+    if not file_path.exists():
+        return JSONResponse({"detail": "File not found on disk"}, status_code=404)
+
+    return FileResponse(
+        path=str(file_path),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"report_{run_id[:12]}.xlsx",
+    )
+
+
 # ── Data Management (Delete) ─────────────────────────────
 
 
@@ -899,9 +1033,7 @@ def run_delete(
         return resp
 
     # Delete logs first (no FK cascade)
-    log_count = session.execute(
-        delete(RunLog).where(RunLog.run_id == run_id)
-    ).rowcount
+    log_count = session.execute(delete(RunLog).where(RunLog.run_id == run_id)).rowcount
     session.execute(delete(Run).where(Run.id == run_id))
     session.flush()
 
@@ -932,11 +1064,7 @@ def settings_purge_runs(
 
     # Find runs to delete
     old_run_ids = (
-        session.execute(
-            select(Run.id).where(Run.created_at < cutoff)
-        )
-        .scalars()
-        .all()
+        session.execute(select(Run.id).where(Run.created_at < cutoff)).scalars().all()
     )
 
     if old_run_ids:
@@ -944,9 +1072,7 @@ def settings_purge_runs(
         log_count = session.execute(
             delete(RunLog).where(RunLog.run_id.in_(old_run_ids))
         ).rowcount
-        run_count = session.execute(
-            delete(Run).where(Run.id.in_(old_run_ids))
-        ).rowcount
+        run_count = session.execute(delete(Run).where(Run.id.in_(old_run_ids))).rowcount
         session.flush()
         msg = (
             f"Purged {run_count} run(s) and {log_count} log(s)"
