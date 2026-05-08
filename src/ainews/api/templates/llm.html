@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}LLM Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-lg space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">LLM Settings</h1>
+
+  <div class="card">
+    <form method="POST" action="/llm" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+      <div>
+        <label for="base_url" class="block text-sm font-medium mb-1.5">Base URL</label>
+        <input type="url" id="base_url" name="base_url"
+               value="{{ settings.base_url or '' }}"
+               class="form-input"
+               placeholder="http://localhost:11434/v1">
+      </div>
+
+      <div>
+        <label for="model" class="block text-sm font-medium mb-1.5">Model</label>
+        <input type="text" id="model" name="model"
+               value="{{ settings.model or '' }}"
+               class="form-input"
+               placeholder="llama3.1:8b">
+      </div>
+
+      <div>
+        <label for="api_key" class="block text-sm font-medium mb-1.5">API Key</label>
+        <input type="password" id="api_key" name="api_key"
+               value="{{ settings.api_key or '' }}"
+               class="form-input"
+               placeholder="sk-...">
+        <p class="text-xs text-surface-700/50 dark:text-surface-200/40 mt-1">Leave blank to keep existing key</p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="temperature" class="block text-sm font-medium mb-1.5">Temperature</label>
+          <input type="number" id="temperature" name="temperature" step="0.1" min="0" max="2"
+                 value="{{ settings.temperature or 0.3 }}"
+                 class="form-input">
+        </div>
+        <div>
+          <label for="max_tokens" class="block text-sm font-medium mb-1.5">Max Tokens</label>
+          <input type="number" id="max_tokens" name="max_tokens" min="100" max="32000"
+                 value="{{ settings.max_tokens or 4096 }}"
+                 class="form-input">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Save Settings</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

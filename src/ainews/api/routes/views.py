@@ -443,3 +443,248 @@ def schedule_update(
     resp = RedirectResponse(url="/schedules", status_code=303)
     flash(resp, "Schedule updated", "success")
     return resp
+
+
+# ── Trigger ──────────────────────────────────────────────
+
+
+@router.get("/trigger", response_class=HTMLResponse)
+def trigger_page(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show the trigger run form."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.schedule import Schedule
+
+    schedules = (
+        session.execute(select(Schedule).order_by(Schedule.name)).scalars().all()
+    )
+    return _render(request, "trigger.html", {"schedules": schedules})
+
+
+@router.post("/trigger")
+def trigger_submit(
+    request: Request,
+    schedule_name: str = Form(""),
+    topics: str = Form(""),
+    days: int = Form(7),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Enqueue a pipeline run and redirect to runs."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.services.pipeline import create_and_enqueue_run
+
+    params: dict[str, object] = {}
+    if topics.strip():
+        params["topics"] = [t.strip() for t in topics.split(",")]
+    params["timeframe_days"] = days
+
+    try:
+        run_id = create_and_enqueue_run(
+            session,
+            schedule_name=schedule_name or None,
+            params=params or None,
+            triggered_by="admin",
+        )
+        resp = RedirectResponse(url="/runs", status_code=303)
+        flash(resp, f"Run {run_id[:12]} enqueued", "success")
+    except ValueError as exc:
+        resp = RedirectResponse(url="/trigger", status_code=303)
+        flash(resp, str(exc), "error")
+    return resp
+
+
+# ── LLM Settings ─────────────────────────────────────────
+
+
+@router.get("/llm", response_class=HTMLResponse)
+def llm_settings_page(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show LLM settings form."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.settings_kv import SettingsKV
+
+    row = session.get(SettingsKV, "llm")
+    settings_data = row.value if row else {}
+    return _render(request, "llm.html", {"settings": settings_data})
+
+
+@router.post("/llm")
+def llm_settings_save(
+    request: Request,
+    base_url: str = Form(""),
+    model: str = Form(""),
+    api_key: str = Form(""),
+    temperature: float = Form(0.3),
+    max_tokens: int = Form(4096),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Save LLM settings."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from datetime import UTC, datetime
+
+    from ainews.models.settings_kv import SettingsKV
+
+    data: dict[str, object] = {
+        "base_url": base_url,
+        "model": model,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    if api_key:
+        data["api_key"] = api_key
+
+    row = session.get(SettingsKV, "llm")
+    if row:
+        # Merge: keep existing api_key if not provided
+        existing = row.value or {}
+        if not api_key and "api_key" in existing:
+            data["api_key"] = existing["api_key"]
+        row.value = data
+        row.updated_at = datetime.now(tz=UTC).isoformat()
+    else:
+        session.add(
+            SettingsKV(
+                key="llm",
+                value=data,
+                updated_at=datetime.now(tz=UTC).isoformat(),
+            )
+        )
+    session.flush()
+
+    resp = RedirectResponse(url="/llm", status_code=303)
+    flash(resp, "LLM settings saved", "success")
+    return resp
+
+
+# ── Runs ─────────────────────────────────────────────────
+
+
+@router.get("/runs", response_class=HTMLResponse)
+def runs_list(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """List all pipeline runs."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+
+    runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
+    return _render(request, "runs/list.html", {"runs": runs})
+
+
+@router.get("/runs/{run_id}", response_class=HTMLResponse)
+def run_detail(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show run detail with logs."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+    from ainews.models.run_log import RunLog
+
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
+    if not run:
+        resp = RedirectResponse(url="/runs", status_code=303)
+        flash(resp, "Run not found", "error")
+        return resp
+
+    logs = (
+        session.execute(
+            select(RunLog).where(RunLog.run_id == run_id).order_by(RunLog.ts)
+        )
+        .scalars()
+        .all()
+    )
+    return _render(
+        request,
+        "runs/detail.html",
+        {"run": run, "logs": logs},
+    )
+
+
+# ── Logs ─────────────────────────────────────────────────
+
+
+@router.get("/logs", response_class=HTMLResponse)
+def logs_page(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show recent system logs."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.run_log import RunLog
+
+    logs = (
+        session.execute(select(RunLog).order_by(RunLog.ts.desc()).limit(200))
+        .scalars()
+        .all()
+    )
+    return _render(request, "logs.html", {"logs": logs})
+
+
+# ── Settings ─────────────────────────────────────────────
+
+
+@router.get("/settings", response_class=HTMLResponse)
+def settings_page(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show system settings."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+    return _render(request, "settings.html")
+
+
+@router.post("/settings/seed")
+def settings_seed(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Seed default sites and schedules."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.seed import seed_all
+
+    result = seed_all(session)
+    msg = f"Seeded: {result.sites_created} sites, {result.schedules_created} schedules"
+    resp = RedirectResponse(url="/settings", status_code=303)
+    flash(resp, msg, "success")
+    return resp

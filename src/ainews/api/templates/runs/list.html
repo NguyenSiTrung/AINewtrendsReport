@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Runs{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">Pipeline Runs</h1>
+
+  <div class="card !p-0 overflow-hidden">
+    {% if runs %}
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-surface-700/70 dark:text-surface-200/60 border-b border-surface-200 dark:border-surface-700">
+              <th class="px-6 py-3 font-medium">Run ID</th>
+              <th class="px-6 py-3 font-medium">Status</th>
+              <th class="px-6 py-3 font-medium">Triggered By</th>
+              <th class="px-6 py-3 font-medium">Schedule</th>
+              <th class="px-6 py-3 font-medium">Created</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-surface-200 dark:divide-surface-700">
+            {% for run in runs %}
+              <tr class="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
+                <td class="px-6 py-3 font-mono text-xs">
+                  <a href="/runs/{{ run.id }}" class="text-primary-600 hover:underline dark:text-primary-400">
+                    {{ run.id[:12] }}…
+                  </a>
+                </td>
+                <td class="px-6 py-3">
+                  {% if run.status == 'completed' %}
+                    <span class="badge-success">{{ run.status }}</span>
+                  {% elif run.status == 'failed' %}
+                    <span class="badge-danger">{{ run.status }}</span>
+                  {% elif run.status == 'running' %}
+                    <span class="badge-info">{{ run.status }}</span>
+                  {% else %}
+                    <span class="badge-neutral">{{ run.status }}</span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-3">{{ run.triggered_by or '—' }}</td>
+                <td class="px-6 py-3">{{ run.schedule_name or '—' }}</td>
+                <td class="px-6 py-3 text-surface-700/70 dark:text-surface-200/60">{{ run.created_at[:16] if run.created_at else '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="px-6 py-12 text-center text-surface-700/50 dark:text-surface-200/40">
+        <p>No runs yet. <a href="/trigger" class="text-primary-600 hover:underline dark:text-primary-400">Trigger your first run</a></p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

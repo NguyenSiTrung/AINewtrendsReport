@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Trigger Run{% endblock %}
+
+{% block content %}
+<div class="max-w-lg space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">Trigger Run</h1>
+
+  <div class="card">
+    <form method="POST" action="/trigger" class="space-y-4">
+      <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+      <div>
+        <label for="schedule" class="block text-sm font-medium mb-1.5">Schedule (optional)</label>
+        <select id="schedule" name="schedule_name" class="form-input">
+          <option value="">— Ad-hoc run —</option>
+          {% for sched in schedules %}
+            <option value="{{ sched.name }}">{{ sched.name }} ({{ sched.cron_expr }})</option>
+          {% endfor %}
+        </select>
+        <p class="text-xs text-surface-700/50 dark:text-surface-200/40 mt-1">Select a schedule or leave empty for a one-off run</p>
+      </div>
+
+      <div>
+        <label for="topics" class="block text-sm font-medium mb-1.5">Topics (comma-separated)</label>
+        <input type="text" id="topics" name="topics"
+               class="form-input"
+               placeholder="AI, ML, LLM">
+      </div>
+
+      <div>
+        <label for="days" class="block text-sm font-medium mb-1.5">Timeframe (days)</label>
+        <input type="number" id="days" name="days" min="1" max="90" value="7"
+               class="form-input">
+      </div>
+
+      <button type="submit" class="btn-primary w-full">
+        <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+        </svg>
+        Start Pipeline Run
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

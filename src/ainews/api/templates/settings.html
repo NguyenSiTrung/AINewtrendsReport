@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-lg space-y-6">
+  <h1 class="text-2xl font-bold tracking-tight">Settings</h1>
+
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">System Information</h2>
+    <dl class="space-y-3 text-sm">
+      <div class="flex justify-between">
+        <dt class="text-surface-700/70 dark:text-surface-200/60">Version</dt>
+        <dd class="font-mono">{{ app_version }}</dd>
+      </div>
+      <div class="flex justify-between">
+        <dt class="text-surface-700/70 dark:text-surface-200/60">Database</dt>
+        <dd class="font-mono text-xs break-all">SQLite</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="card">
+    <h2 class="text-lg font-semibold mb-4">Actions</h2>
+    <div class="space-y-3">
+      <form method="POST" action="/settings/seed" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+        <button type="submit" class="btn-secondary w-full">
+          Seed Default Sites & Schedules
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
