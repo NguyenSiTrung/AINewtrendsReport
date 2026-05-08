@@ -698,23 +698,76 @@ def run_detail(
 @router.get("/logs", response_class=HTMLResponse)
 def logs_page(
     request: Request,
+    level: str = "",
+    search: str = "",
+    run_id: str = "",
+    page: int = 1,
+    per_page: int = 50,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """Show recent system logs."""
+    """Show system logs with filtering and pagination."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
-    from sqlalchemy import select
+    from sqlalchemy import func, select
 
     from ainews.models.run_log import RunLog
 
+    # Build filtered query
+    q = select(RunLog)
+    if level:
+        q = q.where(RunLog.level == level.upper())
+    if search:
+        q = q.where(RunLog.message.ilike(f"%{search}%"))
+    if run_id:
+        q = q.where(RunLog.run_id == run_id)
+
+    # Count totals per level for summary bar
+    level_counts_rows = session.execute(
+        select(RunLog.level, func.count(RunLog.id)).group_by(RunLog.level)
+    ).all()
+    level_counts = {row[0]: row[1] for row in level_counts_rows}
+
+    # Total matching records for pagination
+    total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
     logs = (
-        session.execute(select(RunLog).order_by(RunLog.ts.desc()).limit(200))
+        session.execute(q.order_by(RunLog.ts.desc()).limit(per_page).offset(offset))
         .scalars()
         .all()
     )
-    return _render(request, "logs.html", {"logs": logs})
+
+    query_params: dict[str, str] = {}
+    if level:
+        query_params["level"] = level
+    if search:
+        query_params["search"] = search
+    if run_id:
+        query_params["run_id"] = run_id
+
+    is_htmx = request.headers.get("HX-Request") == "true"
+    template = "partials/logs_table.html" if is_htmx else "logs.html"
+
+    return _render(
+        request,
+        template,
+        {
+            "logs": logs,
+            "level_filter": level,
+            "search": search,
+            "run_id_filter": run_id,
+            "level_counts": level_counts,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "query_params": query_params,
+        },
+    )
 
 
 # ── Settings ─────────────────────────────────────────────

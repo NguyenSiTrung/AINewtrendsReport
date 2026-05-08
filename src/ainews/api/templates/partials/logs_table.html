@@ -1,0 +1,28 @@
+{#
+  Partial: log entries table body — refreshed independently via HTMX.
+  Same context as logs.html.
+#}
+<div id="logs-table-container">
+  {% if logs %}
+    <div class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-xs overflow-x-auto max-h-[600px] overflow-y-auto space-y-0.5">
+      {% for log in logs %}
+        <div class="{% if log.level == 'ERROR' %}log-error{% elif log.level == 'WARNING' %}log-warning{% elif log.level == 'INFO' %}log-info{% else %}log-debug{% endif %}">
+          <span class="text-surface-200/40">{{ log.ts[:19] if log.ts else '' }}</span>
+          <span class="font-bold ml-2">[{{ log.level }}]</span>
+          <span class="ml-1 text-surface-200/60 dark:text-surface-200/50">{{ log.run_id[:8] if log.run_id else '—' }}</span>
+          <span class="ml-2">{{ log.message }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="py-16 text-center text-surface-700/50 dark:text-surface-200/40">
+      <svg class="w-12 h-12 mx-auto mb-3 text-surface-700/20 dark:text-surface-200/15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+      </svg>
+      <p class="font-sans text-sm">No logs match your filters.</p>
+    </div>
+  {% endif %}
+  {% with base_url="/logs", query_params=query_params %}
+    {% include "partials/pagination.html" %}
+  {% endwith %}
+</div>

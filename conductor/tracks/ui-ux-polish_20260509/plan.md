@@ -65,23 +65,23 @@
 ## Phase 3: Logs Page Overhaul
 <!-- depends: phase2 -->
 
-- [ ] Task 1: Server-side log filtering & pagination backend
+- [x] Task 1: Server-side log filtering & pagination backend
   <!-- files: src/ainews/api/routes/views.py -->
-  - [ ] Add query params: `level`, `search`, `run_id`, `page`, `per_page`
-  - [ ] Build SQLAlchemy query with conditional `.where()` clauses
-  - [ ] Compute level counts via `func.count` grouped by level
-  - [ ] Return pagination metadata in template context
-  - [ ] Write tests for filter combinations
+  - [x] Add query params: `level`, `search`, `run_id`, `page`, `per_page`
+  - [x] Build SQLAlchemy query with conditional `.where()` clauses
+  - [x] Compute level counts via `func.count` grouped by level
+  - [x] Return pagination metadata in template context
+  - [x] Write tests for filter combinations
 
-- [ ] Task 2: Logs page template redesign
+- [x] Task 2: Logs page template redesign
   <!-- files: src/ainews/api/templates/logs.html, src/ainews/api/templates/partials/logs_table.html -->
-  - [ ] Create toolbar with level-filter pills, search input, run-id filter
-  - [ ] Extract log entries into `partials/logs_table.html`
-  - [ ] Add summary bar showing counts per level
-  - [ ] Wire HTMX `hx-get` on filter changes with `hx-push-url`
-  - [ ] Add auto-refresh toggle (Alpine + HTMX conditional polling)
-  - [ ] Include pagination partial
-  - [ ] Dark mode parity
+  - [x] Create toolbar with level-filter pills, search input, run-id filter
+  - [x] Extract log entries into `partials/logs_table.html`
+  - [x] Add summary bar showing counts per level
+  - [x] Wire HTMX `hx-get` on filter changes with `hx-push-url`
+  - [x] Add auto-refresh toggle (Alpine + HTMX conditional polling)
+  - [x] Include pagination partial
+  - [x] Dark mode parity
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
 
