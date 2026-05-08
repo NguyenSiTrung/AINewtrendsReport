@@ -13,3 +13,8 @@ This file tracks all major tracks for the project.
 ---
 
 <!-- archived: langgraph-workflow_20260508 — Phase 3 LangGraph Workflow completed 2026-05-08 → conductor/archive/langgraph-workflow_20260508/ -->
+
+---
+
+## [ ] Track: Phase 4 — Exporters & Report Templates
+*Link: [./conductor/tracks/exporters-templates_20260508/](./conductor/tracks/exporters-templates_20260508/)*
