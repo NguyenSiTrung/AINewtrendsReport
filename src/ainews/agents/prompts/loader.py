@@ -19,6 +19,7 @@ _env = jinja2.Environment(
     autoescape=False,
     trim_blocks=True,
     lstrip_blocks=True,
+    keep_trailing_newline=True,
     undefined=jinja2.Undefined,
 )
 
@@ -36,7 +37,7 @@ def load_prompt(template_name: str, **context: Any) -> str:
     Returns
     -------
     str
-        Rendered prompt string.
+        Rendered prompt string (leading/trailing whitespace stripped).
 
     Raises
     ------
@@ -53,3 +54,39 @@ def load_prompt(template_name: str, **context: Any) -> str:
     template = _env.get_template(filename)
     rendered: str = template.render(**context)
     return rendered.strip()
+
+
+def render_template(template_name: str, **context: Any) -> str:
+    """Load and render a Jinja2 template, preserving whitespace.
+
+    Unlike :func:`load_prompt`, this function does **not** strip
+    leading/trailing whitespace, making it suitable for rendering
+    report templates where trailing newlines are significant.
+
+    Parameters
+    ----------
+    template_name
+        Template basename without extension (e.g. ``"report"``).
+    **context
+        Variables to pass to the template.
+
+    Returns
+    -------
+    str
+        Rendered template string with original whitespace preserved.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the template file does not exist.
+    """
+    filename = f"{template_name}.j2"
+    template_path = _TEMPLATE_DIR / filename
+
+    if not template_path.exists():
+        msg = f"Template not found: {template_name} (looked for {filename})"
+        raise FileNotFoundError(msg)
+
+    template = _env.get_template(filename)
+    rendered: str = template.render(**context)
+    return rendered

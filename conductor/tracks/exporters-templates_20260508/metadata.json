@@ -1,0 +1,32 @@
+{
+  "track_id": "exporters-templates_20260508",
+  "type": "feature",
+  "status": "new",
+  "priority": "high",
+  "depends_on": [],
+  "estimated_hours": 8,
+  "created_at": "2026-05-08T10:16:48+07:00",
+  "updated_at": "2026-05-08T10:19:00+07:00",
+  "description": "Phase 4 — Exporters & report templates: Jinja2 Markdown template, openpyxl xlsx builder, exporter graph node, Pydantic validation",
+  "beads_epic": "AINewtrendsReport-ifc",
+  "beads_tasks": {
+    "phase1": "AINewtrendsReport-ifc.1",
+    "phase1_task1": "AINewtrendsReport-ifc.1.1",
+    "phase1_task2": "AINewtrendsReport-ifc.1.2",
+    "phase1_task3": "AINewtrendsReport-ifc.1.3",
+    "phase2": "AINewtrendsReport-ifc.2",
+    "phase2_task1": "AINewtrendsReport-ifc.2.1",
+    "phase2_task2": "AINewtrendsReport-ifc.2.2",
+    "phase2_task3": "AINewtrendsReport-ifc.2.3",
+    "phase3": "AINewtrendsReport-ifc.3",
+    "phase3_task1": "AINewtrendsReport-ifc.3.1",
+    "phase3_task2": "AINewtrendsReport-ifc.3.2",
+    "phase4": "AINewtrendsReport-ifc.4",
+    "phase4_task1": "AINewtrendsReport-ifc.4.1",
+    "phase4_task2": "AINewtrendsReport-ifc.4.2",
+    "phase4_task3": "AINewtrendsReport-ifc.4.3",
+    "phase4_task4": "AINewtrendsReport-ifc.4.4",
+    "phase5": "AINewtrendsReport-ifc.5",
+    "phase5_task1": "AINewtrendsReport-ifc.5.1"
+  }
+}

@@ -22,6 +22,8 @@ class Report(Base):
     title: Mapped[str | None] = mapped_column(String, nullable=True)
     summary_md: Mapped[str | None] = mapped_column(String, nullable=True)
     html_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    full_md_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    xlsx_path: Mapped[str | None] = mapped_column(String, nullable=True)
     pdf_path: Mapped[str | None] = mapped_column(String, nullable=True)
     trends: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     token_usage: Mapped[Any | None] = mapped_column(JSON, nullable=True)

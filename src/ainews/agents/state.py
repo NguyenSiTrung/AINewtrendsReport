@@ -124,6 +124,7 @@ class GraphState(TypedDict):
     summaries: Annotated[list[Summary], operator.add]
     trends: Annotated[list[Trend], operator.add]
     report_md: str
+    xlsx_path: str
     errors: Annotated[list[NodeError], operator.add]
     metrics: Annotated[dict[str, Any], _merge_dicts]
     loop_count: int

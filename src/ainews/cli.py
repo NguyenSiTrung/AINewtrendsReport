@@ -104,6 +104,7 @@ def run_start(
         "summaries": [],
         "trends": [],
         "report_md": "",
+        "xlsx_path": "",
         "errors": [],
         "metrics": {},
         "loop_count": 0,
