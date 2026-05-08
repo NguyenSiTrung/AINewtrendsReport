@@ -22,6 +22,7 @@ class RunParams(TypedDict):
     timeframe_days: int
     topics: list[str]
     sites: list[str]
+    use_smart_planner: bool
 
 
 class SearchHit(TypedDict):

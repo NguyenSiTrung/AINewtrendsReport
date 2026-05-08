@@ -75,6 +75,19 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
                 if schedule.site_filter:
                     sites = sites or schedule.site_filter
 
+    # Fallback: if no sites are specified, use all sites from the database
+    if not sites:
+        from ainews.models.site import Site
+        from sqlalchemy import select
+        import urllib.parse
+
+        with get_db_session(engine) as session:
+            all_urls = session.execute(select(Site.url)).scalars().all()
+            # Extract just the domain from the URLs for Tavily
+            parsed_domains = [urllib.parse.urlparse(url).netloc for url in all_urls if url]
+            # Remove any empty strings and www. prefix for better matching
+            sites = list({d.removeprefix("www.") for d in parsed_domains if d})
+
     # ── Build and invoke graph ────────────────────────────
     try:
         from langgraph.checkpoint.sqlite import SqliteSaver
@@ -85,6 +98,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             timeframe_days=timeframe_days,
             topics=topics,
             sites=sites,
+            use_smart_planner=input_params.get("use_smart_planner", True),
         )
 
         initial_state: GraphState = {
