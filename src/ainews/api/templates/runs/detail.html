@@ -22,7 +22,10 @@
     {% endif %}
   </div>
 
-  <!-- Run metadata -->
+  {# ── Node Stepper (HTMX polling partial) ─────── #}
+  {% include "partials/run_stepper.html" %}
+
+  {# ── Run Metadata Cards ──────────────────────── #}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
     <div class="card">
       <div class="text-xs font-medium text-surface-700/60 dark:text-surface-200/50 uppercase">Triggered By</div>
@@ -30,34 +33,47 @@
     </div>
     <div class="card">
       <div class="text-xs font-medium text-surface-700/60 dark:text-surface-200/50 uppercase">Schedule</div>
-      <div class="mt-1 font-medium">{{ run.schedule_name or '—' }}</div>
+      <div class="mt-1 font-medium">{{ run.schedule_id or '—' }}</div>
     </div>
     <div class="card">
       <div class="text-xs font-medium text-surface-700/60 dark:text-surface-200/50 uppercase">Created</div>
-      <div class="mt-1 font-medium">{{ run.created_at or '—' }}</div>
+      <div class="mt-1 font-medium">{{ run.created_at[:19] if run.created_at else '—' }}</div>
     </div>
-    <div class="card">
-      <div class="text-xs font-medium text-surface-700/60 dark:text-surface-200/50 uppercase">Finished</div>
-      <div class="mt-1 font-medium">{{ run.finished_at or '—' }}</div>
+    <div class="card"
+         {% if run.status in ('pending', 'running') %}
+           x-data="{ elapsed: '', interval: null }"
+           x-init="
+             const start = new Date('{{ run.started_at or run.created_at }}');
+             function update() {
+               const now = new Date();
+               const diff = Math.floor((now - start) / 1000);
+               const m = Math.floor(diff / 60);
+               const s = diff % 60;
+               elapsed = m + 'm ' + s + 's';
+             }
+             update();
+             interval = setInterval(update, 1000);
+           "
+           x-effect="if ('{{ run.status }}' !== 'running' && '{{ run.status }}' !== 'pending') { clearInterval(interval); }"
+         {% endif %}>
+      <div class="text-xs font-medium text-surface-700/60 dark:text-surface-200/50 uppercase">
+        {% if run.status in ('pending', 'running') %}Elapsed{% else %}Duration{% endif %}
+      </div>
+      <div class="mt-1 font-medium">
+        {% if run.status in ('pending', 'running') %}
+          <span x-text="elapsed" class="text-info font-mono"></span>
+        {% elif run.finished_at and run.started_at %}
+          {{ run.finished_at[:19] }}
+        {% else %}
+          —
+        {% endif %}
+      </div>
     </div>
   </div>
 
-  <!-- Logs -->
+  {# ── Live Logs (HTMX polling partial) ────────── #}
   <div class="card">
-    <h2 class="text-lg font-semibold mb-4">Logs</h2>
-    {% if logs %}
-      <div class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-xs overflow-x-auto max-h-96 overflow-y-auto space-y-0.5">
-        {% for log in logs %}
-          <div class="{% if log.level == 'ERROR' %}log-error{% elif log.level == 'WARNING' %}log-warning{% elif log.level == 'INFO' %}log-info{% else %}log-debug{% endif %}">
-            <span class="text-surface-200/40">{{ log.ts[:19] if log.ts else '' }}</span>
-            <span class="font-bold ml-2">{{ log.level }}</span>
-            <span class="ml-2">{{ log.message }}</span>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="text-sm text-surface-700/50 dark:text-surface-200/40">No logs available for this run.</p>
-    {% endif %}
+    {% include "partials/run_logs.html" %}
   </div>
 </div>
 {% endblock %}

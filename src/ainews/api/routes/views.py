@@ -664,10 +664,15 @@ def run_detail(
         .scalars()
         .all()
     )
+    node_states = _derive_node_states(logs)
     return _render(
         request,
         "runs/detail.html",
-        {"run": run, "logs": logs},
+        {
+            "run": run,
+            "logs": logs,
+            "node_states": node_states,
+        },
     )
 
 
