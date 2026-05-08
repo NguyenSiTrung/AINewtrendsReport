@@ -112,18 +112,18 @@
 <!-- execution: sequential -->
 <!-- depends: phase4, phase5 -->
 
-- [ ] Task 1: Integration tests
-  - [ ] API → Service → Celery task chain test (with eager Celery mode)
-  - [ ] Full lifecycle: trigger → run transitions → query result
-  - [ ] Health endpoint with real SQLite, mocked Valkey
-  - [ ] CLI trigger-run end-to-end test
+- [x] Task 1: Integration tests <!-- a9f4c7a -->
+  - [x] API → Service → Celery task chain test (with eager Celery mode)
+  - [x] Full lifecycle: trigger → run transitions → query result
+  - [x] Health endpoint with real SQLite, mocked Valkey
+  - [x] CLI trigger-run end-to-end test
 
-- [ ] Task 2: Exit criteria validation
-  - [ ] `uvicorn ainews.api.main:app` starts cleanly
-  - [ ] `celery -A ainews.tasks.celery_app worker` connects
-  - [ ] `curl -XPOST /api/trigger` produces run row
-  - [ ] `/api/runs/{id}` shows status transitions
-  - [ ] `ainews trigger-run --schedule weekly-ai-news` works
-  - [ ] `ruff check . && mypy src/ && pytest --cov` all green with ≥ 80%
+- [x] Task 2: Exit criteria validation <!-- a9f4c7a -->
+  - [x] `uvicorn ainews.api.main:app` starts cleanly
+  - [x] `celery -A ainews.tasks.celery_app worker` connects
+  - [x] `curl -XPOST /api/trigger` produces run row
+  - [x] `/api/runs/{id}` shows status transitions
+  - [x] `ainews trigger-run --schedule weekly-ai-news` works
+  - [x] `ruff check . && mypy src/ && pytest --cov` all green with ≥ 80%
 
-- [ ] Task: Conductor - User Manual Verification 'End-to-End Verification' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'End-to-End Verification' (Protocol in workflow.md)
