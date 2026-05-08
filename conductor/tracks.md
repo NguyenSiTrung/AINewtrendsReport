@@ -32,5 +32,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [ ] Track: Pipeline Progress UI — Real-time node stepper, live logs, auto-refresh runs list
+## [~] Track: Pipeline Progress UI — Real-time node stepper, live logs, auto-refresh runs list
 *Link: [./conductor/tracks/progress-ui_20260508/](./conductor/tracks/progress-ui_20260508/)*
