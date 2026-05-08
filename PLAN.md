@@ -546,7 +546,7 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - `POST /api/trigger` enqueues; `cli.py trigger-run` shares the same path.
 - **Exit:** `curl -XPOST /api/trigger` produces a run row that completes via the worker; `/api/runs/{id}` shows status transitions.
 
-### Phase 6 — Admin UI (2–3 days)
+### Phase 6 — Admin UI ✅ (completed 2026-05-08)
 - Jinja2 base + Tailwind (standalone CLI, no Node) + HTMX + Alpine.
 - Pages per §4. Pydantic form validation; flash messages via cookie.
 - LLM Settings page: form for `base_url`, `api_key`, `model`, `temperature`, `max_tokens`, `timeout`, `extra_headers`, **Test connection**.
