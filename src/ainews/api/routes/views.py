@@ -123,8 +123,11 @@ def dashboard(
     if redirect:
         return redirect
 
+    from datetime import UTC, datetime, timedelta
+
     from sqlalchemy import func, select
 
+    from ainews.models.report import Report
     from ainews.models.run import Run
     from ainews.models.schedule import Schedule
     from ainews.models.site import Site
@@ -138,12 +141,54 @@ def dashboard(
     active_sites = session.scalar(select(func.count(Site.id))) or 0
     schedule_count = session.scalar(select(func.count(Schedule.id))) or 0
 
+    # Runs per day (last 7 days) for sparkline
+    today = datetime.now(tz=UTC).date()
+    runs_per_day = []
+    all_recent = (
+        session.execute(
+            select(Run.created_at).where(
+                Run.created_at >= (today - timedelta(days=6)).isoformat()
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for i in range(7):
+        day = today - timedelta(days=6 - i)
+        day_str = day.isoformat()
+        count = sum(1 for ts in all_recent if ts and ts[:10] == day_str)
+        runs_per_day.append(count)
+
+    sparkline_svg = _sparkline_svg(runs_per_day, width=120, height=40)
+    ring_svg = _ring_chart_svg(success_rate, size=64)
+
+    # Latest completed run with report
+    latest_report_run = session.execute(
+        select(Run)
+        .join(Report, Report.run_id == Run.id)
+        .where(Run.status == "completed")
+        .order_by(Run.created_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
     # Recent runs (last 10)
     recent_runs = (
         session.execute(select(Run).order_by(Run.created_at.desc()).limit(10))
         .scalars()
         .all()
     )
+
+    # Health ribbon data
+    health_data = _probe_health(session)
+
+    # Personalized greeting
+    hour = datetime.now(tz=UTC).hour
+    if hour < 12:
+        greeting = "Good morning"
+    elif hour < 18:
+        greeting = "Good afternoon"
+    else:
+        greeting = "Good evening"
 
     return _render(
         request,
@@ -156,7 +201,77 @@ def dashboard(
                 "schedule_count": schedule_count,
             },
             "recent_runs": recent_runs,
+            "sparkline_svg": sparkline_svg,
+            "ring_svg": ring_svg,
+            "latest_report_run": latest_report_run,
+            "health_ribbon": health_data,
+            "greeting": greeting,
         },
+    )
+
+
+def _sparkline_svg(data_points: list[int], width: int = 120, height: int = 40) -> str:
+    """Generate an inline SVG sparkline polyline from a list of values."""
+    if not data_points or max(data_points, default=0) == 0:
+        # Flat line at bottom
+        y = height - 4
+        return (
+            f'<svg viewBox="0 0 {width} {height}" fill="none" '
+            f'xmlns="http://www.w3.org/2000/svg" class="w-full h-full opacity-50">'
+            f'<polyline points="0,{y} {width},{y}" stroke="currentColor" '
+            f'stroke-width="1.5" stroke-linecap="round"/></svg>'
+        )
+
+    n = len(data_points)
+    max_val = max(data_points)
+    padding = 4
+    usable_h = height - padding * 2
+    usable_w = width - padding * 2
+
+    points = []
+    for i, v in enumerate(data_points):
+        x = padding + (i / (n - 1)) * usable_w if n > 1 else width / 2
+        y = padding + usable_h - (v / max_val) * usable_h
+        points.append(f"{x:.1f},{y:.1f}")
+
+    pts_str = " ".join(points)
+    # Build fill path (area under line)
+    first_x = points[0].split(",")[0]
+    last_x = points[-1].split(",")[0]
+    bottom = height - padding
+    fill_path = (
+        f"M{first_x},{bottom} "
+        + " ".join(f"L{p}" for p in points)
+        + f" L{last_x},{bottom} Z"
+    )
+
+    return (
+        f'<svg viewBox="0 0 {width} {height}" fill="none" '
+        f'xmlns="http://www.w3.org/2000/svg" class="w-full h-full">'
+        f'<path d="{fill_path}" fill="currentColor" opacity="0.15"/>'
+        f'<polyline points="{pts_str}" stroke="currentColor" '
+        f'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
+        f"</svg>"
+    )
+
+
+def _ring_chart_svg(percentage: int, size: int = 64) -> str:
+    """Generate an inline SVG donut ring chart for a percentage value."""
+    r = (size - 8) / 2
+    cx = cy = size / 2
+    circumference = 2 * 3.14159 * r
+    filled = circumference * percentage / 100
+    gap = circumference - filled
+
+    return (
+        f'<svg viewBox="0 0 {size} {size}" fill="none" '
+        f'xmlns="http://www.w3.org/2000/svg" class="w-full h-full -rotate-90">'
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" stroke="currentColor" '
+        f'stroke-width="4" opacity="0.15"/>'
+        f'<circle cx="{cx}" cy="{cy}" r="{r}" stroke="currentColor" '
+        f'stroke-width="4" stroke-dasharray="{filled:.2f} {gap:.2f}" '
+        f'stroke-linecap="round"/>'
+        f"</svg>"
     )
 
 

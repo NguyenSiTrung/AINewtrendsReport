@@ -92,21 +92,21 @@
 ## Phase 4: Dashboard Enhancement
 <!-- depends: phase1 -->
 
-- [ ] Task 1: SVG sparkline & ring chart helpers
+- [x] Task 1: SVG sparkline & ring chart helpers
   <!-- files: src/ainews/api/routes/views.py -->
-  - [ ] Create `_sparkline_svg(data_points, width, height)` helper returning SVG string
-  - [ ] Create `_ring_chart_svg(percentage, size)` helper returning SVG donut
-  - [ ] Compute runs-per-day for last 7 days from DB
-  - [ ] Pass SVG strings and chart data to dashboard template context
+  - [x] Create `_sparkline_svg(data_points, width, height)` helper returning SVG string
+  - [x] Create `_ring_chart_svg(percentage, size)` helper returning SVG donut
+  - [x] Compute runs-per-day for last 7 days from DB
+  - [x] Pass SVG strings and chart data to dashboard template context
 
-- [ ] Task 2: Dashboard template enhancements
+- [x] Task 2: Dashboard template enhancements
   <!-- files: src/ainews/api/templates/dashboard.html -->
-  - [ ] Add health ribbon at top (dot + label, HTMX-refreshed)
-  - [ ] Embed sparkline SVG in "Total Runs" card
-  - [ ] Embed ring chart SVG in "Success Rate" card
-  - [ ] Add "Latest Report" quick-access card
-  - [ ] Add personalized greeting with time-of-day context
-  - [ ] Dark mode parity
+  - [x] Add health ribbon at top (dot + label, HTMX-refreshed)
+  - [x] Embed sparkline SVG in "Total Runs" card
+  - [x] Embed ring chart SVG in "Success Rate" card
+  - [x] Add "Latest Report" quick-access card
+  - [x] Add personalized greeting with time-of-day context
+  - [x] Dark mode parity
 
 - [ ] Task: Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
 
