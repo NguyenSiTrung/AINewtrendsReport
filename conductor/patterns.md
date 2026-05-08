@@ -28,5 +28,14 @@ Reusable patterns discovered during development. Read this before starting new w
 ## Testing
 - **httpx mocking:** Use `respx.mock` decorator for httpx tests; `with respx.mock:` for CliRunner tests.
 
+## Admin UI / Frontend
+- **Tailwind v4 standalone:** Uses CSS-based `@theme` and `@source` directives instead of `tailwind.config.js`. `@custom-variant dark` replaces the old `darkMode: 'class'` config. (from: admin-ui_20260508, archived 2026-05-08)
+- **Starlette TemplateResponse API:** Use `TemplateResponse(request, name, context)` — not `(name, {request: ..., ...})`. (from: admin-ui_20260508, archived 2026-05-08)
+- **Jinja2Templates initialization:** Create in `create_app()`, not `lifespan()`, because test fixtures bypass lifespan by setting `app.state.engine` directly. (from: admin-ui_20260508, archived 2026-05-08)
+- **python-multipart dependency:** Required for `Form()` parameter parsing and CSRF middleware form access. Must be in `pyproject.toml`. (from: admin-ui_20260508, archived 2026-05-08)
+- **CSRF double-submit cookie:** Middleware must NOT consume `request.body()` or `request.form()` — this prevents downstream FastAPI `Form()` injection from working. Compare header/cookie values instead. (from: admin-ui_20260508, archived 2026-05-08)
+- **Auth gating pattern:** Use `_require_auth(request, session)` helper that returns `RedirectResponse` or sets `request.state.user`. All protected routes call this first. (from: admin-ui_20260508, archived 2026-05-08)
+- **RunLog timestamp field:** The field is `ts`, not `created_at`. Templates and queries must use `RunLog.ts`. (from: admin-ui_20260508, archived 2026-05-08)
+
 ---
-Last refreshed: 2026-05-08T10:55:08+07:00
+Last refreshed: 2026-05-08T13:44:00+07:00
