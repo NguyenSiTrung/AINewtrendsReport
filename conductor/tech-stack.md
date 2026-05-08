@@ -1,5 +1,7 @@
 # Tech Stack — AI News & Trends Report
 
+> Last refreshed: 2026-05-08T18:45:29+07:00
+
 ## Language & Runtime
 
 | Component | Version | License |

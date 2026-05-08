@@ -1,5 +1,7 @@
 # Development Workflow
 
+> Last refreshed: 2026-05-08T18:45:29+07:00
+
 ## Commit Strategy
 
 - **Frequency:** Commit after each completed task

@@ -1,8 +1,8 @@
 {
-  "last_refreshed": "2026-05-08T16:19:00+07:00",
+  "last_refreshed": "2026-05-08T18:45:29+07:00",
   "changes": [
-    "Confirmed tech-stack matches pyproject.toml",
-    "Confirmed 100% completion of v1 (Phases 0 through 9) in product.md and PLAN.md",
-    "Mass-closed 77 orphaned Beads issues to align with Conductor's completed tracks"
+    "Updated product.md to mark LLM decisions as decided",
+    "Verified all tracks are archived and 0 Beads issues are open",
+    "Added refresh markers to conductor context files"
   ]
 }

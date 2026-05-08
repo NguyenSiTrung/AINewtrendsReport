@@ -1,5 +1,7 @@
 # Product Guide — AI News & Trends Report
 
+> Last refreshed: 2026-05-08T18:45:29+07:00
+
 ## Vision
 
 An automated, self-hosted intelligence system that gathers, processes, and synthesizes AI industry news into structured, actionable reports — delivered on a configurable schedule with zero manual intervention after setup.
@@ -67,6 +69,6 @@ Keeping up with the rapidly evolving AI landscape requires monitoring dozens of 
 | Scheduler | Decided | cron triggers Celery tasks |
 | Cache/broker | Decided | Valkey (BSD-3) |
 | Dedup strategy | Decided (v1) | URL + simhash + Jaccard (deterministic, no embeddings) |
-| Local LLM server | **Open** | vLLM / Ollama / LM Studio / llama-server / TGI |
-| Default model | **Open** | qwen2.5-32b / llama3.1-70b / mistral-small-3.1 |
-| Tracing | **Open** | Langfuse self-hosted vs. none |
+| Local LLM server | Decided | Proxy endpoint (aresproxy.me) |
+| Default model | Decided | gemini-3-flash-preview |
+| Tracing | Decided | None |
