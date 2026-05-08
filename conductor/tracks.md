@@ -20,5 +20,6 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [x] Track: Phase 5 — Backend API + Celery
-*Link: [./conductor/tracks/backend-api-celery_20260508/](./conductor/tracks/backend-api-celery_20260508/)*
+<!-- archived: backend-api-celery_20260508 — Phase 5 Backend API + Celery completed 2026-05-08 → conductor/archive/backend-api-celery_20260508/ -->
+
+---
