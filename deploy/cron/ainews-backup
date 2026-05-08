@@ -1,0 +1,7 @@
+# /etc/cron.d/ainews-backup — Daily SQLite backup
+# Managed by install.sh — do not edit manually
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Daily database backup at 2:00 AM
+0 2 * * * ainews /opt/ainews/app/deploy/scripts/backup_db.sh >> /var/log/ainews/backup.log 2>&1

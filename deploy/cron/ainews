@@ -1,0 +1,10 @@
+# /etc/cron.d/ainews — AI News & Trends Report scheduled runs
+# Managed by install.sh — do not edit manually
+SHELL=/bin/bash
+PATH=/opt/ainews/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Weekly AI news digest — Monday 7:00 AM local time
+0 7 * * 1 ainews /opt/ainews/venv/bin/ainews trigger-run --schedule weekly-ai-news >> /var/log/ainews/cron.log 2>&1
+
+# Monthly AI trends report — 1st of month 8:00 AM local time
+0 8 1 * * ainews /opt/ainews/venv/bin/ainews trigger-run --schedule monthly-ai-trends >> /var/log/ainews/cron.log 2>&1

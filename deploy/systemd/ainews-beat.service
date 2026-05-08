@@ -1,0 +1,29 @@
+[Unit]
+Description=AI News & Trends Report — Celery Beat Scheduler
+Documentation=https://github.com/NguyenSiTrung/AINewtrendsReport
+After=network.target ainews-worker.service
+Wants=ainews-worker.service
+
+[Service]
+Type=exec
+User=ainews
+Group=ainews
+WorkingDirectory=/opt/ainews/app
+EnvironmentFile=/etc/ainews/ainews.env
+ExecStart=/opt/ainews/venv/bin/celery \
+    -A ainews.tasks.celery_app beat \
+    --loglevel info \
+    --logfile /var/log/ainews/beat.log \
+    --schedule /var/lib/ainews/celerybeat-schedule
+Restart=on-failure
+RestartSec=10
+
+# Security hardening
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+ReadWritePaths=/var/lib/ainews /var/log/ainews
+
+[Install]
+WantedBy=multi-user.target

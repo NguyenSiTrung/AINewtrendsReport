@@ -1,0 +1,34 @@
+[Unit]
+Description=AI News & Trends Report — Celery Worker
+Documentation=https://github.com/NguyenSiTrung/AINewtrendsReport
+After=network.target valkey-server.service redis-server.service
+Wants=valkey-server.service
+
+[Service]
+Type=exec
+User=ainews
+Group=ainews
+WorkingDirectory=/opt/ainews/app
+EnvironmentFile=/etc/ainews/ainews.env
+ExecStart=/opt/ainews/venv/bin/celery \
+    -A ainews.tasks.celery_app worker \
+    --queues default,scrape,llm \
+    --concurrency 4 \
+    --loglevel info \
+    --logfile /var/log/ainews/worker.log
+Restart=on-failure
+RestartSec=10
+
+# Security hardening
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+ReadWritePaths=/var/lib/ainews /var/log/ainews
+
+# Resource limits
+LimitNOFILE=65536
+MemoryMax=2G
+
+[Install]
+WantedBy=multi-user.target

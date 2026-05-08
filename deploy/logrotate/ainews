@@ -1,0 +1,15 @@
+# /etc/logrotate.d/ainews — AI News & Trends Report log rotation
+/var/log/ainews/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    missingok
+    create 0640 ainews ainews
+    sharedscripts
+    postrotate
+        # Signal Celery worker to reopen log files
+        systemctl kill --signal=HUP ainews-worker.service 2>/dev/null || true
+    endscript
+}
