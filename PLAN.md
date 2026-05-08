@@ -533,10 +533,12 @@ TLS via certbot, reverse proxy `https://admin.example.com → 127.0.0.1:8000`, b
 - Integration test: full graph on mock fixtures including SQLite checkpoint generation.
 - **Exit:** `ainews run start --topic AI --days 3` invokes compiled graph and produces a Markdown report end-to-end.
 
-### Phase 4 — Exporters & report templates (½–1 day)
-- Jinja2 Markdown template (Executive Summary, Top Stories, Trends, Sources, Methodology).
-- `openpyxl` workbook builder; freeze panes, autosize, hyperlinks back to source URLs.
-- **Exit:** outputs validated against a schema; xlsx opens in Excel/LibreOffice.
+### Phase 4 — Exporters & report templates ✅ (completed 2026-05-08)
+- Jinja2 Markdown template (Executive Summary, Top Stories, Trends, Sources, Methodology) and writer refactor.
+- Markdown exporter and `openpyxl` workbook builder (Summary, Stories, Sources, Trends); freeze panes, autosize, hyperlinks back to source URLs.
+- Pydantic validation schemas (`ReportOutput`, `XlsxOutput`).
+- Exporter node integrated into LangGraph, persisting files and updating `reports` DB table.
+- **Exit:** Outputs validated against schema; full test suite passes.
 
 ### Phase 5 — Backend API + Celery (1–2 days)
 - FastAPI app, routers per resource, dependency-injected DB session.
