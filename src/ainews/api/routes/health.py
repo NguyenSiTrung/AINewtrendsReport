@@ -1,4 +1,4 @@
-"""Health check router — probes DB and Valkey connectivity."""
+"""Health check router — probes DB, Valkey, and LLM connectivity."""
 
 from __future__ import annotations
 
@@ -42,6 +42,28 @@ def health_check(
     except Exception as exc:
         components["valkey"] = ComponentStatus(status="down", detail=str(exc))
 
+    # ── LLM probe ─────────────────────────────────────────
+    try:
+        from ainews.llm.config import LLMConfig
+        from ainews.llm.connectivity import check_llm_connection
+        from ainews.llm.factory import get_llm_config
+
+        settings = Settings()
+        llm_config = get_llm_config(settings)
+        result = check_llm_connection(llm_config)
+        if result.success:
+            components["llm"] = ComponentStatus(
+                status="ok",
+                detail=f"model={result.model_name}, latency={result.latency_ms:.0f}ms",
+            )
+        else:
+            components["llm"] = ComponentStatus(
+                status="down",
+                detail=result.error or "LLM unreachable",
+            )
+    except Exception as exc:
+        components["llm"] = ComponentStatus(status="down", detail=str(exc))
+
     # ── Overall status ────────────────────────────────────
     statuses = [c.status for c in components.values()]
     if all(s == "ok" for s in statuses):
@@ -52,3 +74,4 @@ def health_check(
         overall = "down"
 
     return HealthResponse(status=overall, components=components)
+

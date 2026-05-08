@@ -128,9 +128,22 @@ class TestHealthE2E:
         mock_redis_client.ping.return_value = True
         mock_redis_mod.from_url = MagicMock(return_value=mock_redis_client)  # type: ignore[attr-defined]
 
-        with patch.dict(sys.modules, {"redis": mock_redis_mod}):
+        # Mock LLM connectivity check to return success
+        mock_llm_result = MagicMock()
+        mock_llm_result.success = True
+        mock_llm_result.model_name = "test-model"
+        mock_llm_result.latency_ms = 10.0
+
+        with (
+            patch.dict(sys.modules, {"redis": mock_redis_mod}),
+            patch(
+                "ainews.llm.connectivity.check_llm_connection",
+                return_value=mock_llm_result,
+            ),
+        ):
             resp = client.get("/api/health")
 
         data = resp.json()
         assert data["status"] == "ok"
         assert data["components"]["valkey"]["status"] == "ok"
+        assert data["components"]["llm"]["status"] == "ok"

@@ -52,43 +52,43 @@
 <!-- execution: parallel -->
 <!-- depends: -->
 
-- [ ] Task 1: Per-domain scraper rate limiter
+- [x] Task 1: Per-domain scraper rate limiter _(commit: 168e752)_
   <!-- files: src/ainews/tools/rate_limiter.py, tests/tools/test_rate_limiter.py, src/ainews/agents/nodes/scraper.py -->
-  - [ ] Implement token-bucket rate limiter using Valkey (SETNX/INCR with TTL)
-  - [ ] Default: 2 req/sec/domain, configurable via `settings_kv`
-  - [ ] Integrate into Scraper node — check before each fetch, wait if throttled
-  - [ ] Unit tests with mock Valkey
+  - [x] Implement token-bucket rate limiter using Valkey (SETNX/INCR with TTL)
+  - [x] Default: 2 req/sec/domain, configurable via `settings_kv`
+  - [x] Integrate into Scraper node — check before each fetch, wait if throttled
+  - [x] Unit tests with mock Valkey
 
-- [ ] Task 2: Tavily monthly-quota guard
+- [x] Task 2: Tavily monthly-quota guard _(commit: 168e752)_
   <!-- files: src/ainews/tools/tavily_guard.py, tests/tools/test_tavily_guard.py, src/ainews/agents/nodes/retriever.py -->
-  - [ ] Track API call count in `settings_kv` (key: `tavily_calls_YYYY_MM`)
-  - [ ] Configurable monthly cap (default: 1000), read from `settings_kv`
-  - [ ] Guard in Retriever node: skip search if cap reached, log warning
-  - [ ] Auto-reset on new month
-  - [ ] Unit tests for counter increment, cap enforcement, monthly reset
+  - [x] Track API call count in `settings_kv` (key: `tavily_calls_YYYY_MM`)
+  - [x] Configurable monthly cap (default: 1000), read from `settings_kv`
+  - [x] Guard in Retriever node: skip search if cap reached, log warning
+  - [x] Auto-reset on new month
+  - [x] Unit tests for counter increment, cap enforcement, monthly reset
 
-- [ ] Task 3: LLM concurrency cap
+- [x] Task 3: LLM concurrency cap _(commit: 168e752)_
   <!-- files: src/ainews/llm/concurrency.py, tests/llm/test_concurrency.py, src/ainews/llm/factory.py -->
-  - [ ] Implement asyncio.Semaphore wrapper around LLM calls (default: 2)
-  - [ ] Configurable via `settings_kv` key `llm_max_concurrency`
-  - [ ] Integrate in `llm_factory()` or create `RateLimitedChatModel` wrapper
-  - [ ] Unit tests verifying semaphore blocks when limit reached
+  - [x] Implement asyncio.Semaphore wrapper around LLM calls (default: 2)
+  - [x] Configurable via `settings_kv` key `llm_max_concurrency`
+  - [x] Integrate in `llm_factory()` or create `RateLimitedChatModel` wrapper
+  - [x] Unit tests verifying semaphore blocks when limit reached
 
-- [ ] Task 4: Hard run caps
+- [x] Task 4: Hard run caps _(commit: 168e752)_
   <!-- files: src/ainews/core/run_caps.py, tests/core/test_run_caps.py, src/ainews/agents/graph.py -->
-  - [ ] Add `max_total_tokens` (default: 500,000), `max_wall_seconds` (default: 1800), `max_articles` (default: 200) to settings_kv defaults
-  - [ ] Create `RunCapChecker` utility: check caps at each node transition
-  - [ ] On cap exceeded: set run status to `capped`, write partial report via degrade path
-  - [ ] Unit tests for each cap type
+  - [x] Add `max_total_tokens` (default: 500,000), `max_wall_seconds` (default: 1800), `max_articles` (default: 200) to settings_kv defaults
+  - [x] Create `RunCapChecker` utility: check caps at each node transition
+  - [x] On cap exceeded: set run status to `capped`, write partial report via degrade path
+  - [x] Unit tests for each cap type
 
-- [ ] Task 5: Security hardening
+- [x] Task 5: Security hardening _(commit: 168e752)_
   <!-- files: src/ainews/api/middleware/csp.py, src/ainews/core/logging.py, tests/api/test_csp.py, tests/core/test_log_masking.py -->
-  - [ ] Add CSP middleware to FastAPI: `Content-Security-Policy` header on all responses
-  - [ ] Implement structlog processor to mask sensitive keys (`api_key`, `AINEWS_LLM_API_KEY`, `TAVILY_API_KEY`) in log output
-  - [ ] Add file-mode validation function to install.sh
-  - [ ] Unit tests for CSP header presence and log masking
+  - [x] Add CSP middleware to FastAPI: `Content-Security-Policy` header on all responses
+  - [x] Implement structlog processor to mask sensitive keys (`api_key`, `AINEWS_LLM_API_KEY`, `TAVILY_API_KEY`) in log output
+  - [x] Add file-mode validation function to install.sh
+  - [x] Unit tests for CSP header presence and log masking
 
-- [ ] Task: Conductor - User Manual Verification 'Operational Hardening' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Operational Hardening' _(51 tests passing)_
 
 ## Phase 3: E2E Validation & Smoke Test
 <!-- execution: sequential -->
