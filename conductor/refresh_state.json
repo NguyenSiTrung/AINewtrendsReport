@@ -1,8 +1,9 @@
 {
-  "last_refresh": "2026-05-08T22:42:00+07:00",
+  "last_refresh": "2026-05-08T23:38:00+07:00",
   "changes": [
-    "Updated product.md core capabilities to include real-time pipeline monitoring and node steppers from progress-ui track",
-    "Closed orphaned beads tasks"
+    "Updated product.md to include Report Preview and Downloads in Admin Web Interface",
+    "Updated tech-stack.md to include markdown dependency",
+    "Closed orphaned Beads tasks to sync with Conductor plan.md"
   ],
   "drift_detected": true
 }

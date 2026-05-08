@@ -1,6 +1,6 @@
 # Product Guide — AI News & Trends Report
 
-> Last refreshed: 2026-05-08T22:42:00+07:00
+> Last refreshed: 2026-05-08T23:38:00+07:00
 
 ## Vision
 
@@ -25,7 +25,7 @@ Keeping up with the rapidly evolving AI landscape requires monitoring dozens of 
 3. **Deterministic Deduplication** — URL canonicalization + simhash + Jaccard similarity (no embeddings required in v1)
 4. **LLM-Powered Analysis** — Relevance scoring, per-cluster summarization, cross-cutting trend extraction via a single self-hosted OpenAI-compatible endpoint
 5. **Structured Report Generation** — Markdown + Excel (.xlsx) output with Executive Summary, Top Stories, Trends, Source Index, and Methodology sections
-6. **Admin Web Interface** — Jinja2/HTMX dashboard for managing sites, schedules, LLM settings, triggering manual runs, and real-time pipeline monitoring with node steppers and live logging
+6. **Admin Web Interface** — Jinja2/HTMX dashboard for managing sites, schedules, LLM settings, triggering manual runs, real-time pipeline monitoring with node steppers and live logging, and report preview/download capabilities
 7. **Scheduled Automation** — Ubuntu cron + Celery workers for weekly/monthly report generation with retry/backoff resilience
 
 ## Non-Functional Requirements

@@ -1,6 +1,6 @@
 # Tech Stack — AI News & Trends Report
 
-> Last refreshed: 2026-05-08T22:42:00+07:00
+> Last refreshed: 2026-05-08T23:38:00+07:00
 
 ## Language & Runtime
 
@@ -79,6 +79,7 @@
 |-----------|---------|---------|
 | openpyxl | Excel (.xlsx) workbook generation | MIT |
 | Jinja2 | Markdown report templating | BSD-3 |
+| Markdown | Markdown rendering for admin preview | BSD-3 |
 
 ## Observability & Logging
 
