@@ -33,6 +33,7 @@ def _make_state(
         summaries=summaries or [],
         trends=trends or [],
         report_md="",
+        xlsx_path="",
         errors=errors or [],
         metrics={},
         loop_count=0,

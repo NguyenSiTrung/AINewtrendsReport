@@ -34,6 +34,7 @@ class TestRunCLI:
             "clusters": [],
             "summaries": [],
             "trends": [],
+            "xlsx_path": "",
             "errors": [],
             "metrics": {"planner": {"wall_seconds": 1.0}},
             "loop_count": 1,

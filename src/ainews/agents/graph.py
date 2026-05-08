@@ -1,6 +1,6 @@
 """LangGraph pipeline assembly.
 
-Wires all 8 node functions + 2 Send() sub-nodes into a ``StateGraph``,
+Wires all 9 node functions + 2 Send() sub-nodes into a ``StateGraph``,
 adds conditional edges for retry and degradation routing, and
 optionally integrates a ``SqliteSaver`` checkpointer.
 """
@@ -15,6 +15,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.types import Send
 
 from ainews.agents.nodes.dedup import dedup_node
+from ainews.agents.nodes.exporter import exporter_node
 from ainews.agents.nodes.filter import filter_node, filter_router
 from ainews.agents.nodes.planner import planner_node
 from ainews.agents.nodes.retriever import retrieve_dispatch, retrieve_one
@@ -96,6 +97,7 @@ def build_graph(
     builder.add_node("synthesize_one", synthesize_one)  # type: ignore[call-overload]
     builder.add_node("trender", trender_node)  # type: ignore[call-overload]
     builder.add_node("writer", writer_node)  # type: ignore[call-overload]
+    builder.add_node("exporter", exporter_node)  # type: ignore[call-overload]
 
     # ── Linear edges ─────────────────────────────────
     builder.add_edge(START, "planner")
@@ -137,8 +139,9 @@ def build_graph(
     # Trender → Writer
     builder.add_edge("trender", "writer")
 
-    # Writer → END
-    builder.add_edge("writer", END)
+    # Writer → Exporter → END
+    builder.add_edge("writer", "exporter")
+    builder.add_edge("exporter", END)
 
     # ── Compile ──────────────────────────────────────
     compiled = builder.compile(checkpointer=checkpointer)

@@ -168,10 +168,13 @@ def _auto_size_columns(ws: Worksheet, max_width: int = 80) -> None:
     """Auto-size columns based on content, capped at max_width."""
     for col_cells in ws.columns:
         max_length = 0
-        col_letter = get_column_letter(col_cells[0].column)  # type: ignore[union-attr]
+        first_col = col_cells[0].column
+        if first_col is None:
+            continue
+        col_letter = get_column_letter(first_col)
         for cell in col_cells:
-            if cell.value:  # type: ignore[union-attr]
-                length = len(str(cell.value))  # type: ignore[union-attr]
+            if cell.value:
+                length = len(str(cell.value))
                 max_length = max(max_length, length)
         adjusted = min(max_length + 2, max_width)
         ws.column_dimensions[col_letter].width = adjusted

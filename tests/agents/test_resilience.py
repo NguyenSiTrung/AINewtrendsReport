@@ -28,6 +28,7 @@ def _make_state(**overrides: Any) -> GraphState:
         "summaries": [],
         "trends": [],
         "report_md": "",
+        "xlsx_path": "",
         "errors": [],
         "metrics": {},
         "loop_count": 0,
