@@ -11,24 +11,32 @@
   cronHumanPreview: '{{ cron_human | safe }}',
   cronMode: 'advanced',
   simpleFreq: 'weekly',
-  simpleMinute: '0',
-  simpleHour: '7',
+  simpleTime: '07:00',
   simpleDay: '1',
   simpleDayOfMonth: '1',
   simpleIntervalDays: '2',
   
+  parseTime() {
+    const match = this.simpleTime.match(/^(\d{1,2}):(\d{2})$/);
+    if (match) {
+      return { h: parseInt(match[1], 10).toString(), m: parseInt(match[2], 10).toString() };
+    }
+    return { h: '0', m: '0' };
+  },
+  
   updateCron() {
     if (this.cronMode === 'simple') {
+      const { h, m } = this.parseTime();
       if (this.simpleFreq === 'hourly') {
-        this.cronExpr = `${this.simpleMinute} * * * *`;
+        this.cronExpr = `${m} * * * *`;
       } else if (this.simpleFreq === 'daily') {
-        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} * * *`;
+        this.cronExpr = `${m} ${h} * * *`;
       } else if (this.simpleFreq === 'weekly') {
-        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} * * ${this.simpleDay}`;
+        this.cronExpr = `${m} ${h} * * ${this.simpleDay}`;
       } else if (this.simpleFreq === 'monthly') {
-        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} ${this.simpleDayOfMonth} * *`;
+        this.cronExpr = `${m} ${h} ${this.simpleDayOfMonth} * *`;
       } else if (this.simpleFreq === 'interval') {
-        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} */${this.simpleIntervalDays} * *`;
+        this.cronExpr = `${m} ${h} */${this.simpleIntervalDays} * *`;
       }
       this.cronHumanPreview = 'Save to see updated translation';
     }
@@ -39,20 +47,23 @@
     const parts = this.cronExpr.split(' ').filter(p => p.trim() !== '');
     if (parts.length === 5) {
       const [m, h, d, mo, dw] = parts;
+      const buildTime = (hr, mn) => {
+        const hh = hr === '*' ? '00' : hr.padStart(2, '0');
+        const mm = mn.padStart(2, '0');
+        return `${hh}:${mm}`;
+      };
       if (d === '*' && mo === '*') {
         if (h === '*' && dw === '*') {
           this.simpleFreq = 'hourly';
-          this.simpleMinute = m;
+          this.simpleTime = buildTime('00', m);
           this.cronMode = 'simple';
         } else if (h !== '*' && dw === '*' && !h.includes(',') && !m.includes(',')) {
           this.simpleFreq = 'daily';
-          this.simpleMinute = m;
-          this.simpleHour = h;
+          this.simpleTime = buildTime(h, m);
           this.cronMode = 'simple';
         } else if (h !== '*' && dw !== '*' && !h.includes(',') && !m.includes(',') && !dw.includes(',')) {
           this.simpleFreq = 'weekly';
-          this.simpleMinute = m;
-          this.simpleHour = h;
+          this.simpleTime = buildTime(h, m);
           this.simpleDay = dw;
           this.cronMode = 'simple';
         }
@@ -60,14 +71,12 @@
         if (d.startsWith('*/')) {
           this.simpleFreq = 'interval';
           this.simpleIntervalDays = d.replace('*/', '');
-          this.simpleMinute = m;
-          this.simpleHour = h;
+          this.simpleTime = buildTime(h, m);
           this.cronMode = 'simple';
         } else if (!d.includes('*') && !d.includes(',') && !d.includes('/')) {
           this.simpleFreq = 'monthly';
           this.simpleDayOfMonth = d;
-          this.simpleMinute = m;
-          this.simpleHour = h;
+          this.simpleTime = buildTime(h, m);
           this.cronMode = 'simple';
         }
       }
@@ -211,25 +220,40 @@
                     <input type="number" x-model="simpleIntervalDays" @input="updateCron()" min="1" max="31" class="form-input text-sm py-2">
                   </div>
 
-                  <!-- Hour (Only for Daily/Weekly/Monthly/Interval) -->
-                  <div x-show="['daily', 'weekly', 'monthly', 'interval'].includes(simpleFreq)">
-                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Time</label>
-                    <select x-model="simpleHour" @change="updateCron()" class="form-input text-sm py-2">
-                      <template x-for="i in 24">
-                        <option :value="(i-1).toString()" x-text="(i-1).toString().padStart(2, '0') + ':00'"></option>
-                      </template>
-                    </select>
-                  </div>
-
-                  <!-- Minute (For all) -->
-                  <div x-show="simpleFreq === 'hourly'">
-                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Minute</label>
-                    <select x-model="simpleMinute" @change="updateCron()" class="form-input text-sm py-2">
-                      <option value="0">00 (Top of hour)</option>
-                      <option value="15">15 (Quarter past)</option>
-                      <option value="30">30 (Half past)</option>
-                      <option value="45">45 (Quarter to)</option>
-                    </select>
+                  <!-- Time (HH:MM) - for all frequencies -->
+                  <div>
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1" x-text="simpleFreq === 'hourly' ? 'Minute' : 'Time'"></label>
+                    <input type="text" x-model="simpleTime" @input="updateCron()" list="time-presets"
+                           class="form-input text-sm py-2 font-mono"
+                           :placeholder="simpleFreq === 'hourly' ? '00:15' : '07:30'"
+                           pattern="\d{1,2}:\d{2}">
+                    <datalist id="time-presets">
+                      <option value="00:00"></option>
+                      <option value="01:00"></option>
+                      <option value="02:00"></option>
+                      <option value="03:00"></option>
+                      <option value="04:00"></option>
+                      <option value="05:00"></option>
+                      <option value="06:00"></option>
+                      <option value="07:00"></option>
+                      <option value="08:00"></option>
+                      <option value="09:00"></option>
+                      <option value="10:00"></option>
+                      <option value="11:00"></option>
+                      <option value="12:00"></option>
+                      <option value="13:00"></option>
+                      <option value="14:00"></option>
+                      <option value="15:00"></option>
+                      <option value="16:00"></option>
+                      <option value="17:00"></option>
+                      <option value="18:00"></option>
+                      <option value="19:00"></option>
+                      <option value="20:00"></option>
+                      <option value="21:00"></option>
+                      <option value="22:00"></option>
+                      <option value="23:00"></option>
+                    </datalist>
+                    <p class="text-xs text-surface-500 mt-1" x-text="simpleFreq === 'hourly' ? 'Minute past the hour (e.g. 00:15 → :15)' : 'HH:MM format — type or pick from list'"></p>
                   </div>
                 </div>
                 
