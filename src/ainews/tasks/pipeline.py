@@ -171,17 +171,41 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         reports_dir = settings.db_path.parent / "reports"
         _persist_report(engine, run_id, result, reports_dir, log)
 
-        # ── Update Run on success ─────────────────────────
+        # ── Determine final status ────────────────────────
+        node_errors = result.get("errors", [])
+        if node_errors:
+            final_status = "completed_with_errors"
+            error_nodes = ", ".join(
+                {e.node for e in node_errors if hasattr(e, "node")}
+            )
+            error_summary = (
+                f"{len(node_errors)} node error(s) in: {error_nodes}"
+                if error_nodes
+                else f"{len(node_errors)} node error(s)"
+            )
+        else:
+            final_status = "completed"
+            error_summary = None
+
+        # ── Update Run ────────────────────────────────────
         with get_db_session(engine) as session:
             run = session.get(Run, run_id)
             if run is not None:
-                run.status = "completed"
+                run.status = final_status
                 run.finished_at = datetime.now(tz=UTC).isoformat()
                 run.stats = result.get("metrics", {})
+                if error_summary:
+                    run.error = error_summary
 
-        log_to_db(engine, run_id, "pipeline", "INFO", "Pipeline completed")
-        log.info("run_pipeline.completed")
-        return {"status": "completed", "run_id": run_id}
+        log_to_db(
+            engine,
+            run_id,
+            "pipeline",
+            "WARNING" if node_errors else "INFO",
+            f"Pipeline {final_status}" + (f" — {error_summary}" if error_summary else ""),
+        )
+        log.info("run_pipeline.completed", status=final_status)
+        return {"status": final_status, "run_id": run_id}
 
     except Exception as exc:
         tb = traceback.format_exc()

@@ -135,7 +135,12 @@ def dashboard(
     # Stats
     total_runs = session.scalar(select(func.count(Run.id))) or 0
     completed = (
-        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+        session.scalar(
+            select(func.count(Run.id)).where(
+                Run.status.in_(["completed", "completed_with_errors"])
+            )
+        )
+        or 0
     )
     success_rate = round(completed / total_runs * 100) if total_runs else 0
     active_sites = session.scalar(select(func.count(Site.id))) or 0
@@ -948,13 +953,18 @@ def trigger_page(
     # Quick stats for context sidebar
     total_runs = session.scalar(select(func.count(Run.id))) or 0
     completed = (
-        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+        session.scalar(
+            select(func.count(Run.id)).where(
+                Run.status.in_(["completed", "completed_with_errors"])
+            )
+        )
+        or 0
     )
     success_rate = round(completed / total_runs * 100) if total_runs else 0
 
     # Last completed run
     last_run = session.execute(
-        select(Run).where(Run.status == "completed").order_by(Run.created_at.desc()).limit(1)
+        select(Run).where(Run.status.in_(["completed", "completed_with_errors"])).order_by(Run.created_at.desc()).limit(1)
     ).scalar_one_or_none()
 
     # Active run check
@@ -1201,7 +1211,12 @@ def runs_list(
     # ── Aggregate metrics (unfiltered) ──
     count_total = session.scalar(select(func.count(Run.id))) or 0
     count_completed = (
-        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+        session.scalar(
+            select(func.count(Run.id)).where(
+                Run.status.in_(["completed", "completed_with_errors"])
+            )
+        )
+        or 0
     )
     count_failed = (
         session.scalar(select(func.count(Run.id)).where(Run.status == "failed")) or 0
@@ -1218,7 +1233,7 @@ def runs_list(
     finished_runs = (
         session.execute(
             select(Run.started_at, Run.finished_at)
-            .where(Run.status == "completed")
+            .where(Run.status.in_(["completed", "completed_with_errors"]))
             .where(Run.started_at.isnot(None))
             .where(Run.finished_at.isnot(None))
         )

@@ -7,7 +7,7 @@
    - If the run failed: renders empty and stops polling.
 #}
 <div id="report-card-slot"
-     {% if not report and run.status in ('pending', 'running', 'completed') %}
+     {% if not report and run.status in ('pending', 'running', 'completed', 'completed_with_errors') %}
        hx-get="/runs/{{ run.id }}/report-card"
        hx-trigger="every 3s"
        hx-swap="outerHTML"

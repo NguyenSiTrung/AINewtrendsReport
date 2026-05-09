@@ -30,6 +30,12 @@
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
                     </svg>
                   </div>
+                {% elif run.status == 'completed_with_errors' %}
+                  <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center shadow-sm">
+                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                  </div>
                 {% elif run.status == 'failed' %}
                   <div class="w-10 h-10 rounded-xl bg-rose-100 dark:bg-rose-900/20 flex items-center justify-center shadow-sm">
                     <svg class="w-5 h-5 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
@@ -55,6 +61,13 @@
                   {% if run.status == 'completed' %}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                       Completed
+                    </span>
+                  {% elif run.status == 'completed_with_errors' %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01"/>
+                      </svg>
+                      Partial
                     </span>
                   {% elif run.status == 'failed' %}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400">
@@ -162,10 +175,14 @@
                   {% endif %}
                 </div>
 
-                {# Error preview for failed runs #}
-                {% if run.status == 'failed' and run.error %}
-                  <div class="mt-2 px-3 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/30">
-                    <p class="text-xs text-rose-600 dark:text-rose-400 font-mono line-clamp-1">
+                {# Error preview for failed/partial runs #}
+                {% if run.status in ('failed', 'completed_with_errors') and run.error %}
+                  <div class="mt-2 px-3 py-1.5 rounded-lg
+                              {% if run.status == 'failed' %}bg-rose-50 dark:bg-rose-900/10 border border-rose-200 dark:border-rose-800/30
+                              {% else %}bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30{% endif %}">
+                    <p class="text-xs font-mono line-clamp-1
+                              {% if run.status == 'failed' %}text-rose-600 dark:text-rose-400
+                              {% else %}text-amber-600 dark:text-amber-400{% endif %}">
                       {{ run.error[:120] }}{% if run.error|length > 120 %}…{% endif %}
                     </p>
                   </div>
