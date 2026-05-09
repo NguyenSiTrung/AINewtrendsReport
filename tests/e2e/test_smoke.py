@@ -50,6 +50,49 @@ def _post(path: str, **kwargs) -> httpx.Response:
     return httpx.post(f"{BASE_URL}{path}", timeout=30, **kwargs)
 
 
+def _get_auth_cookies() -> dict[str, str]:
+    """Login and return cookies for authenticated API requests.
+
+    Uses AINEWS_ADMIN_EMAIL / AINEWS_ADMIN_PASSWORD env vars,
+    defaulting to admin@ainews.local / admin.
+    """
+    email = os.environ.get("AINEWS_ADMIN_EMAIL", "admin@ainews.local")
+    password = os.environ.get("AINEWS_ADMIN_PASSWORD", "admin")
+
+    with httpx.Client(base_url=BASE_URL, timeout=30, follow_redirects=False) as client:
+        # Get CSRF token from login page
+        login_page = client.get("/login")
+        csrf_cookie = login_page.cookies.get("csrf_token", "")
+
+        # POST login
+        resp = client.post(
+            "/login",
+            data={
+                "email": email,
+                "password": password,
+                "csrf_token": csrf_cookie,
+            },
+            cookies={"csrf_token": csrf_cookie},
+        )
+
+        # Extract JWT cookie from redirect response
+        jwt_token = resp.cookies.get("access_token")
+        if jwt_token:
+            return {"access_token": jwt_token}
+
+    return {}
+
+
+def _auth_get(path: str, cookies: dict[str, str], **kwargs) -> httpx.Response:
+    """GET with authentication cookies."""
+    return httpx.get(f"{BASE_URL}{path}", timeout=30, cookies=cookies, **kwargs)
+
+
+def _auth_post(path: str, cookies: dict[str, str], **kwargs) -> httpx.Response:
+    """POST with authentication cookies."""
+    return httpx.post(f"{BASE_URL}{path}", timeout=30, cookies=cookies, **kwargs)
+
+
 class TestHealthEndpoint:
     """Verify the /api/health endpoint returns structured status."""
 
@@ -98,19 +141,45 @@ class TestSecurityHeaders:
         assert resp.headers.get("x-frame-options") == "DENY"
 
 
+class TestAPIAuthentication:
+    """Verify API endpoints require authentication."""
+
+    def test_unauthenticated_runs_returns_401(self) -> None:
+        resp = _get("/api/runs")
+        assert resp.status_code == 401
+
+    def test_unauthenticated_sites_returns_401(self) -> None:
+        resp = _get("/api/sites")
+        assert resp.status_code == 401
+
+    def test_unauthenticated_schedules_returns_401(self) -> None:
+        resp = _get("/api/schedules")
+        assert resp.status_code == 401
+
+    def test_unauthenticated_trigger_returns_401(self) -> None:
+        resp = _post("/api/trigger", json={"schedule_name": "test"})
+        assert resp.status_code == 401
+
+
 class TestAPIEndpoints:
-    """Verify core API endpoints respond correctly."""
+    """Verify core API endpoints respond correctly with authentication."""
+
+    @pytest.fixture(autouse=True)
+    def _auth(self) -> None:
+        self.cookies = _get_auth_cookies()
+        if not self.cookies:
+            pytest.skip("Could not authenticate — check admin credentials")
 
     def test_list_runs(self) -> None:
-        resp = _get("/api/runs")
+        resp = _auth_get("/api/runs", self.cookies)
         assert resp.status_code == 200
 
     def test_list_sites(self) -> None:
-        resp = _get("/api/sites")
+        resp = _auth_get("/api/sites", self.cookies)
         assert resp.status_code == 200
 
     def test_list_schedules(self) -> None:
-        resp = _get("/api/schedules")
+        resp = _auth_get("/api/schedules", self.cookies)
         assert resp.status_code == 200
 
 
@@ -126,15 +195,17 @@ class TestPipelineTrigger:
         reason="Set AINEWS_E2E_RUN=1 to enable pipeline E2E tests",
     )
     def test_trigger_and_poll(self) -> None:
-        # Get CSRF token first
-        _get("/api/health")
+        cookies = _get_auth_cookies()
+        if not cookies:
+            pytest.skip("Could not authenticate — check admin credentials")
 
         # Trigger a run
-        trigger_resp = _post(
+        trigger_resp = _auth_post(
             "/api/trigger",
+            cookies,
             json={"schedule_name": "weekly-ai-news"},
         )
-        assert trigger_resp.status_code in (200, 202, 409)
+        assert trigger_resp.status_code in (201, 409)
 
         if trigger_resp.status_code == 409:
             pytest.skip("A run is already in progress")
@@ -145,11 +216,12 @@ class TestPipelineTrigger:
 
         # Poll for completion
         deadline = time.time() + TIMEOUT
+        status = "pending"
         while time.time() < deadline:
-            status_resp = _get(f"/api/runs/{run_id}")
+            status_resp = _auth_get(f"/api/runs/{run_id}", cookies)
             assert status_resp.status_code == 200
             run_data = status_resp.json()
-            status = run_data.get("status")
+            status = run_data.get("run", {}).get("status", "")
 
             if status in ("completed", "failed", "capped"):
                 break

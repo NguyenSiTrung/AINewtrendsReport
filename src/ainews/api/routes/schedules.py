@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from ainews.api.deps import get_db
+from ainews.api.deps import get_db, require_api_auth
 from ainews.models.schedule import Schedule
 from ainews.schemas.schedule import ScheduleCreate, ScheduleResponse, ScheduleUpdate
 
@@ -25,32 +25,27 @@ def _schedule_to_response(sched: Schedule) -> ScheduleResponse:
         site_filter=sched.site_filter,
         topics=sched.topics,
         model_override=sched.model_override,
+        use_smart_planner=bool(sched.use_smart_planner),
         enabled=bool(sched.enabled),
         created_at=sched.created_at,
     )
 
 
-@router.get("/schedules", response_model=list[ScheduleResponse])
+@router.get("/schedules", response_model=list[ScheduleResponse], dependencies=[Depends(require_api_auth)])
 def list_schedules(
     session: Session = Depends(get_db),  # noqa: B008
 ) -> list[ScheduleResponse]:
-    """Return all schedules.
-
-    # TODO: add auth dependency
-    """
+    """Return all schedules."""
     rows = session.execute(select(Schedule)).scalars().all()
     return [_schedule_to_response(s) for s in rows]
 
 
-@router.post("/schedules", response_model=ScheduleResponse, status_code=201)
+@router.post("/schedules", response_model=ScheduleResponse, status_code=201, dependencies=[Depends(require_api_auth)])
 def create_schedule(
     body: ScheduleCreate,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> ScheduleResponse:
-    """Create a new schedule.
-
-    # TODO: add auth dependency
-    """
+    """Create a new schedule."""
     sched = Schedule(
         name=body.name,
         cron_expr=body.cron_expr,
@@ -74,31 +69,25 @@ def create_schedule(
     return _schedule_to_response(sched)
 
 
-@router.get("/schedules/{schedule_id}", response_model=ScheduleResponse)
+@router.get("/schedules/{schedule_id}", response_model=ScheduleResponse, dependencies=[Depends(require_api_auth)])
 def get_schedule(
     schedule_id: int,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> ScheduleResponse:
-    """Return a single schedule by ID.
-
-    # TODO: add auth dependency
-    """
+    """Return a single schedule by ID."""
     sched = session.get(Schedule, schedule_id)
     if sched is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
     return _schedule_to_response(sched)
 
 
-@router.put("/schedules/{schedule_id}", response_model=ScheduleResponse)
+@router.put("/schedules/{schedule_id}", response_model=ScheduleResponse, dependencies=[Depends(require_api_auth)])
 def update_schedule(
     schedule_id: int,
     body: ScheduleUpdate,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> ScheduleResponse:
-    """Update an existing schedule (partial update).
-
-    # TODO: add auth dependency
-    """
+    """Update an existing schedule (partial update)."""
     sched = session.get(Schedule, schedule_id)
     if sched is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
@@ -122,15 +111,12 @@ def update_schedule(
     return _schedule_to_response(sched)
 
 
-@router.delete("/schedules/{schedule_id}", status_code=204)
+@router.delete("/schedules/{schedule_id}", status_code=204, dependencies=[Depends(require_api_auth)])
 def delete_schedule(
     schedule_id: int,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> None:
-    """Delete a schedule by ID.
-
-    # TODO: add auth dependency
-    """
+    """Delete a schedule by ID."""
     sched = session.get(Schedule, schedule_id)
     if sched is None:
         raise HTTPException(status_code=404, detail="Schedule not found")

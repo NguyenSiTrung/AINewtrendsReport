@@ -22,15 +22,30 @@ def engine() -> Any:
     return eng
 
 
+def _seed_admin_and_get_token(engine: Any) -> str:
+    """Create an admin user and return a valid JWT token."""
+    from ainews.api.auth import create_access_token, create_admin_user
+    from ainews.core.database import get_db_session
+
+    with get_db_session(engine) as session:
+        user = create_admin_user(session, "admin@test.com", "pass123")
+        session.commit()
+        user_id = user.id
+
+    return create_access_token(user_id, "admin@test.com")
+
+
 @pytest.fixture()
 def client(engine: Any) -> TestClient:
-    """FastAPI test client with overridden DB engine."""
+    """FastAPI test client with overridden DB engine and auth cookies."""
     from ainews.api.main import create_app
 
     app = create_app()
     app.state.engine = engine
 
-    return TestClient(app, raise_server_exceptions=False)
+    token = _seed_admin_and_get_token(engine)
+    tc = TestClient(app, raise_server_exceptions=False, cookies={"access_token": token})
+    return tc
 
 
 # ── Health ────────────────────────────────────────────────

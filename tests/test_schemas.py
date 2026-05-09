@@ -160,6 +160,7 @@ class TestScheduleSchemas:
             name="weekly",
             cron_expr="0 7 * * 1",
             timeframe_days=7,
+            use_smart_planner=False,
             enabled=True,
         )
         assert resp.id == 1

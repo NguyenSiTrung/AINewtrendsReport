@@ -6,7 +6,8 @@ JWT is stored in an HttpOnly cookie for browser-based access.
 
 from __future__ import annotations
 
-import secrets
+import logging
+import os
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -20,18 +21,44 @@ if TYPE_CHECKING:
 from ainews.models.user import User
 
 # ── Configuration ────────────────────────────────────────
-# In production, override via AINEWS_JWT_SECRET env var.
-JWT_SECRET = secrets.token_hex(32)
+# JWT secret MUST be set via AINEWS_JWT_SECRET env var for session stability
+# across restarts and multi-worker deployments.
 JWT_ALGORITHM = "HS256"
 JWT_COOKIE_NAME = "access_token"
 JWT_EXPIRE_HOURS = 24
 
+_jwt_secret_cache: str | None = None
+
 
 def _get_jwt_secret() -> str:
-    """Return JWT secret, preferring env var over process-level default."""
-    import os
+    """Return JWT secret from env var. Cached after first call.
 
-    return os.environ.get("AINEWS_JWT_SECRET", JWT_SECRET)
+    Raises a warning if AINEWS_JWT_SECRET is not set (sessions will not
+    survive process restarts).
+    """
+    global _jwt_secret_cache
+    if _jwt_secret_cache is not None:
+        return _jwt_secret_cache
+
+    secret = os.environ.get("AINEWS_JWT_SECRET", "")
+    if not secret:
+        logging.getLogger(__name__).warning(
+            "AINEWS_JWT_SECRET not set — using fallback. "
+            "Sessions will NOT survive restarts or work across workers."
+        )
+        # Deterministic fallback derived from DB path so at least all
+        # workers in the same deployment share the same secret.
+        import hashlib
+
+        from ainews.core.config import Settings
+
+        settings = Settings()
+        secret = hashlib.sha256(
+            f"ainews-fallback-{settings.db_path}".encode()
+        ).hexdigest()
+
+    _jwt_secret_cache = secret
+    return _jwt_secret_cache
 
 
 # ── Password utilities ───────────────────────────────────

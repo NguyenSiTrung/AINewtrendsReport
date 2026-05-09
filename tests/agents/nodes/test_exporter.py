@@ -82,16 +82,12 @@ def _make_state(
 class TestExporterNode:
     """Tests for exporter_node function."""
 
-    @patch("ainews.agents.nodes.exporter.get_db_session")
     @patch("ainews.agents.nodes.exporter._get_reports_dir")
     def test_calls_both_exporters(
-        self, mock_reports_dir: MagicMock, mock_db: MagicMock, tmp_path: Path
+        self, mock_reports_dir: MagicMock, tmp_path: Path
     ) -> None:
         """Exporter node produces both .md and .xlsx files."""
         mock_reports_dir.return_value = tmp_path
-        mock_session = MagicMock()
-        mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
-        mock_db.return_value.__exit__ = MagicMock(return_value=False)
 
         from ainews.agents.nodes.exporter import exporter_node
 
@@ -104,16 +100,12 @@ class TestExporterNode:
         assert md_path.exists()
         assert xlsx_path.exists()
 
-    @patch("ainews.agents.nodes.exporter.get_db_session")
     @patch("ainews.agents.nodes.exporter._get_reports_dir")
     def test_returns_xlsx_path_and_metrics(
-        self, mock_reports_dir: MagicMock, mock_db: MagicMock, tmp_path: Path
+        self, mock_reports_dir: MagicMock, tmp_path: Path
     ) -> None:
         """Exporter returns xlsx_path and metrics in partial state."""
         mock_reports_dir.return_value = tmp_path
-        mock_session = MagicMock()
-        mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
-        mock_db.return_value.__exit__ = MagicMock(return_value=False)
 
         from ainews.agents.nodes.exporter import exporter_node
 
@@ -124,37 +116,12 @@ class TestExporterNode:
         assert "metrics" in result
         assert result["xlsx_path"].endswith("report.xlsx")
 
-    @patch("ainews.agents.nodes.exporter.get_db_session")
-    @patch("ainews.agents.nodes.exporter._get_reports_dir")
-    def test_creates_db_report_row(
-        self, mock_reports_dir: MagicMock, mock_db: MagicMock, tmp_path: Path
-    ) -> None:
-        """Exporter creates a Report ORM row in the database."""
-        mock_reports_dir.return_value = tmp_path
-        mock_session = MagicMock()
-        mock_db.return_value.__enter__ = MagicMock(return_value=mock_session)
-        mock_db.return_value.__exit__ = MagicMock(return_value=False)
-
-        from ainews.agents.nodes.exporter import exporter_node
-
-        state = _make_state(tmp_path=tmp_path)
-        exporter_node.__wrapped__(state)  # type: ignore[attr-defined]
-
-        # Verify session.add was called with a Report
-        mock_session.add.assert_called_once()
-        report_obj = mock_session.add.call_args[0][0]
-        assert report_obj.run_id == "test-run-001"
-        assert report_obj.full_md_path is not None
-        assert report_obj.xlsx_path is not None
-
-    @patch("ainews.agents.nodes.exporter.get_db_session")
     @patch("ainews.agents.nodes.exporter._get_reports_dir")
     def test_resilient_decorator_handles_errors(
-        self, mock_reports_dir: MagicMock, mock_db: MagicMock, tmp_path: Path
+        self, mock_reports_dir: MagicMock, tmp_path: Path
     ) -> None:
         """@node_resilient catches export failures gracefully."""
-        mock_reports_dir.return_value = tmp_path
-        mock_db.side_effect = RuntimeError("DB connection failed")
+        mock_reports_dir.side_effect = RuntimeError("Config unavailable")
 
         from ainews.agents.nodes.exporter import exporter_node
 

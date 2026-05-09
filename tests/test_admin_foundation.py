@@ -169,13 +169,14 @@ class TestCSRF:
         assert resp.status_code != 403
 
     def test_api_routes_exempt_from_csrf(self, client: TestClient) -> None:
-        """POST to /api/* routes does NOT require CSRF."""
+        """POST to /api/* routes does NOT require CSRF (uses JWT auth instead)."""
         resp = client.post(
             "/api/sites",
             json={"url": "https://api-test.com"},
         )
-        # Should create successfully (201) — no CSRF block
-        assert resp.status_code == 201
+        # Should be 401 (auth required), NOT 403 (CSRF blocked)
+        # This proves the CSRF middleware correctly exempts /api/* routes.
+        assert resp.status_code == 401
 
 
 # ── Flash Messages ───────────────────────────────────────

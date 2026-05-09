@@ -1,7 +1,8 @@
-"""Exporter node — writes report files and registers them in the database.
+"""Exporter node — writes report files (Markdown + Excel).
 
-Calls both Markdown and Excel exporters, validates outputs via Pydantic,
-and persists the file paths in the ``reports`` DB table.
+Calls both Markdown and Excel exporters and validates outputs via Pydantic.
+Database registration of report paths is handled by the pipeline task
+(``_persist_report`` in ``tasks/pipeline.py``) to avoid duplication.
 """
 
 from __future__ import annotations
@@ -15,10 +16,8 @@ import structlog
 
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import GraphState
-from ainews.core.database import get_db_session
 from ainews.exporters.markdown import export_markdown
 from ainews.exporters.xlsx import export_xlsx
-from ainews.models.report import Report
 
 logger = structlog.get_logger(__name__)
 
@@ -73,14 +72,8 @@ def exporter_node(state: GraphState) -> dict[str, Any]:
     xlsx_path = export_xlsx(xlsx_data, run_id, reports_dir)
     logger.info("exporter_xlsx_done", path=str(xlsx_path))
 
-    # Register in database
-    _register_report(
-        run_id=run_id,
-        report_md=report_md,
-        md_path=md_path,
-        xlsx_path=xlsx_path,
-        trends=trends,
-    )
+    # NOTE: DB registration is handled by the pipeline task's
+    # _persist_report() to avoid duplicate Report rows.
 
     return {
         "xlsx_path": str(xlsx_path),
@@ -104,33 +97,3 @@ def _extract_executive_summary(report_md: str) -> str:
         return report_md[content_start:].strip()
 
     return report_md[content_start:next_idx].strip()
-
-
-def _register_report(
-    *,
-    run_id: str,
-    report_md: str,
-    md_path: Path,
-    xlsx_path: Path,
-    trends: list[dict[str, Any]],
-) -> None:
-    """Register report paths in the database."""
-    from ainews.core.config import Settings
-    from ainews.core.database import create_engine
-
-    settings = Settings()
-    engine = create_engine(settings.database_url)
-
-    with get_db_session(engine) as session:
-        report = Report(
-            run_id=run_id,
-            title="AI News & Trends Report",
-            summary_md=report_md[:500] if report_md else None,
-            full_md_path=str(md_path),
-            xlsx_path=str(xlsx_path),
-            trends=[t.get("name", "") for t in trends],
-            created_at=datetime.now(tz=UTC).isoformat(),
-        )
-        session.add(report)
-
-    logger.info("exporter_db_registered", run_id=run_id)
