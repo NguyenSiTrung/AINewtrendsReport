@@ -45,7 +45,7 @@ def _build_summary_sheet(ws: Worksheet, data: dict[str, Any]) -> None:
 
     meta_rows = [
         ("Report Date", data.get("generated_at", "")),
-        ("Topics", ", ".join(data.get("params", {}).get("topics", []))),
+        ("Topics", ", ".join(str(t) for t in data.get("params", {}).get("topics", []))),
         ("Timeframe (days)", data.get("params", {}).get("timeframe_days", "")),
         ("", ""),
         ("Executive Summary", data.get("executive_summary", "")),
@@ -78,7 +78,7 @@ def _build_stories_sheet(ws: Worksheet, summaries: list[dict[str, Any]]) -> None
         ws.cell(
             row=row_idx,
             column=2,
-            value="; ".join(summary.get("bullets", [])),
+            value="; ".join(str(b) for b in summary.get("bullets", [])),
         )
         ws.cell(row=row_idx, column=3, value=summary.get("why_it_matters", ""))
         ws.cell(
@@ -114,7 +114,7 @@ def _build_sources_sheet(ws: Worksheet, summaries: list[dict[str, Any]]) -> None
                 name="Calibri", size=11, color="0563C1", underline="single"
             )
             ws.cell(row=row_idx, column=2, value=headline)
-            ws.cell(row=row_idx, column=3, value=cluster_id)
+            ws.cell(row=row_idx, column=3, value=str(cluster_id) if cluster_id else "")
 
             for col in range(2, 4):
                 cell = ws.cell(row=row_idx, column=col)
@@ -139,7 +139,7 @@ def _build_trends_sheet(ws: Worksheet, trends: list[dict[str, Any]]) -> None:
         ws.cell(
             row=row_idx,
             column=3,
-            value=", ".join(trend.get("evidence_cluster_ids", [])),
+            value=", ".join(str(cid) for cid in trend.get("evidence_cluster_ids", [])),
         )
 
         for col in range(1, 4):

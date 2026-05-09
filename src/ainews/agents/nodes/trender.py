@@ -80,7 +80,9 @@ def trender_node(state: GraphState) -> dict[str, Any]:
                 Trend(
                     name=item.get("name", "Unnamed Trend"),
                     description=item.get("description", ""),
-                    evidence_cluster_ids=item.get("evidence_cluster_ids", []),
+                    evidence_cluster_ids=[
+                        str(cid) for cid in item.get("evidence_cluster_ids", [])
+                    ],
                 )
             )
 
