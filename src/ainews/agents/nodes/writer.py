@@ -48,6 +48,16 @@ def writer_node(state: GraphState) -> dict[str, Any]:
     errors = state.get("errors", [])
     params = state["params"]
 
+    # ── Enforce max-sources cap ────────────────────────────
+    max_sources = params.get("report_max_sources", 50)
+    if max_sources and len(summaries) > max_sources:
+        logger.info(
+            "writer_truncating_summaries",
+            original=len(summaries),
+            max_sources=max_sources,
+        )
+        summaries = summaries[:max_sources]
+
     now = datetime.now(tz=UTC).strftime("%Y-%m-%d %H:%M UTC")
 
     # Generate executive summary via LLM

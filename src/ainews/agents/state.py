@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Annotated, Any
 
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 # ── Supporting TypedDicts ────────────────────────────────
 
@@ -23,6 +23,7 @@ class RunParams(TypedDict):
     topics: list[str]
     sites: list[str]
     use_smart_planner: bool
+    report_max_sources: NotRequired[int]
 
 
 class SearchHit(TypedDict):

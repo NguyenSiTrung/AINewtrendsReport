@@ -110,11 +110,23 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
         checkpoint_db = str(settings.db_path.parent / f"checkpoint_{run_id}.db")
 
+        # Resolve report_max_sources (DB pipeline settings override env)
+        report_max_sources: int = settings.report_max_sources
+        from ainews.models.settings_kv import SettingsKV
+
+        with get_db_session(engine) as session:
+            pipeline_row = session.get(SettingsKV, "pipeline")
+            if pipeline_row and isinstance(pipeline_row.value, dict):
+                db_max = pipeline_row.value.get("report_max_sources")
+                if db_max is not None:
+                    report_max_sources = int(db_max)
+
         params = RunParams(
             timeframe_days=timeframe_days,
             topics=topics,
             sites=sites,
             use_smart_planner=input_params.get("use_smart_planner", True),
+            report_max_sources=report_max_sources,
         )
 
         initial_state: GraphState = {

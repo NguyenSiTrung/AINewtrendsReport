@@ -1529,6 +1529,18 @@ def settings_page(
         .limit(1)
     ).scalar_one_or_none()
 
+    from ainews.core.config import Settings
+    from ainews.models.settings_kv import SettingsKV
+
+    # Read pipeline settings from DB (falls back to env config defaults)
+    env_settings = Settings()
+    pipeline_row = session.get(SettingsKV, "pipeline")
+    pipeline_db = pipeline_row.value if pipeline_row and isinstance(pipeline_row.value, dict) else {}
+
+    pipeline_settings = {
+        "report_max_sources": pipeline_db.get("report_max_sources", env_settings.report_max_sources),
+    }
+
     return _render(
         request,
         "settings.html",
@@ -1540,6 +1552,7 @@ def settings_page(
                 "total_schedules": total_schedules,
                 "last_run_at": last_run_row,
             },
+            "pipeline_settings": pipeline_settings,
         },
     )
 
@@ -1560,6 +1573,50 @@ def settings_seed(
     msg = f"Seeded: {result.sites_created} sites, {result.schedules_created} schedules"
     resp = RedirectResponse(url="/settings", status_code=303)
     flash(resp, msg, "success")
+    return resp
+
+
+@router.post("/settings/pipeline")
+def settings_pipeline_save(
+    request: Request,
+    report_max_sources: int = Form(50),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Save pipeline configuration settings."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from datetime import UTC, datetime
+
+    from ainews.models.settings_kv import SettingsKV
+
+    data: dict[str, object] = {
+        "report_max_sources": max(0, min(report_max_sources, 500)),
+    }
+
+    row = session.get(SettingsKV, "pipeline")
+    if row:
+        from sqlalchemy.orm.attributes import flag_modified
+
+        # Must create a NEW dict — in-place mutation of JSON is not tracked
+        merged = dict(row.value or {})
+        merged.update(data)
+        row.value = merged
+        row.updated_at = datetime.now(tz=UTC).isoformat()
+        flag_modified(row, "value")
+    else:
+        session.add(
+            SettingsKV(
+                key="pipeline",
+                value=data,
+                updated_at=datetime.now(tz=UTC).isoformat(),
+            )
+        )
+    session.flush()
+
+    resp = RedirectResponse(url="/settings", status_code=303)
+    flash(resp, "Pipeline configuration saved", "success")
     return resp
 
 

@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     # ── Tavily search ─────────────────────────────────────
     tavily_api_key: str = ""
 
+    # ── Pipeline ──────────────────────────────────────────
+    report_max_sources: int = 50
+
     # ── Logging ───────────────────────────────────────────
     log_level: str = "INFO"
 
