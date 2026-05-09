@@ -1814,7 +1814,11 @@ def run_raw_log_partial(
     raw_content = ""
     if log_path.exists():
         try:
+            import re
+
             raw_content = log_path.read_text(encoding="utf-8")
+            # Strip ANSI escape codes (color/style sequences from structlog)
+            raw_content = re.sub(r"\x1b\[[0-9;]*m", "", raw_content)
         except Exception:
             raw_content = "Error reading log file."
 
