@@ -32,6 +32,7 @@
                class="w-full pl-10 pr-4 py-2 bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-700 rounded-xl text-sm shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-cyan-500 transition-shadow text-surface-900 dark:text-white"
                hx-get="/sites"
                hx-push-url="true"
+               hx-select="#sites-list-container"
                hx-target="#sites-list-container"
                hx-swap="outerHTML"
                hx-trigger="keyup changed delay:300ms"
