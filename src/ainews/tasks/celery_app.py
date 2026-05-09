@@ -42,7 +42,13 @@ def make_celery(settings: Settings | None = None) -> Celery:
             "llm": {"exchange": "llm", "routing_key": "llm"},
         },
         # Autodiscover tasks in ainews.tasks package
-        include=["ainews.tasks.pipeline"],
+        include=["ainews.tasks.pipeline", "ainews.tasks.beat"],
+        beat_schedule={
+            "check-schedules-every-minute": {
+                "task": "ainews.tasks.beat.check_schedules",
+                "schedule": 60.0,
+            },
+        },
     )
 
     return app

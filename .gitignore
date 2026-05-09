@@ -66,3 +66,6 @@ tools/tailwindcss
 
 # Worktrees
 .worktrees/
+
+# Celery
+celerybeat-schedule*
