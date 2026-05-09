@@ -801,11 +801,33 @@ def llm_settings_page(
         "temperature": effective.temperature,
         "max_tokens": effective.max_tokens,
     }
+
+    # ── Sidebar context: connection probe + config summary ──
+    has_api_key = bool(effective.api_key and effective.api_key.strip())
+    masked_key = effective.masked_api_key if has_api_key else ""
+
+    # Lightweight connectivity probe (reuses health check logic)
+    llm_status: dict[str, object] = {"connected": False, "latency_ms": 0, "error": ""}
+    try:
+        from ainews.llm.connectivity import check_llm_connection
+
+        result = check_llm_connection(effective)
+        llm_status = {
+            "connected": result.success,
+            "latency_ms": round(result.latency_ms),
+            "error": result.error or "",
+        }
+    except Exception:
+        llm_status["error"] = "Probe failed"
+
     return _render(
         request,
         "llm.html",
         {
             "settings": settings_data,
+            "has_api_key": has_api_key,
+            "masked_key": masked_key,
+            "llm_status": llm_status,
             "breadcrumbs": [
                 {"label": "Settings", "url": "/settings"},
                 {"label": "LLM Settings", "url": None},
