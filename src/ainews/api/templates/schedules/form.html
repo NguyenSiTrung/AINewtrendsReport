@@ -8,7 +8,71 @@
   enabled: {{ 'false' if schedule and not schedule.enabled else 'true' }}, 
   smartPlanner: {{ 'true' if schedule and schedule.use_smart_planner else 'false' }},
   cronExpr: '{{ schedule.cron_expr if schedule else "0 7 * * 1" }}',
-  cronHumanPreview: '{{ cron_human | safe }}'
+  cronHumanPreview: '{{ cron_human | safe }}',
+  cronMode: 'advanced',
+  simpleFreq: 'weekly',
+  simpleMinute: '0',
+  simpleHour: '7',
+  simpleDay: '1',
+  simpleDayOfMonth: '1',
+  simpleIntervalDays: '2',
+  
+  updateCron() {
+    if (this.cronMode === 'simple') {
+      if (this.simpleFreq === 'hourly') {
+        this.cronExpr = `${this.simpleMinute} * * * *`;
+      } else if (this.simpleFreq === 'daily') {
+        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} * * *`;
+      } else if (this.simpleFreq === 'weekly') {
+        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} * * ${this.simpleDay}`;
+      } else if (this.simpleFreq === 'monthly') {
+        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} ${this.simpleDayOfMonth} * *`;
+      } else if (this.simpleFreq === 'interval') {
+        this.cronExpr = `${this.simpleMinute} ${this.simpleHour} */${this.simpleIntervalDays} * *`;
+      }
+      this.cronHumanPreview = 'Save to see updated translation';
+    }
+  },
+  
+  init() {
+    // Attempt to parse existing cron into simple mode presets
+    const parts = this.cronExpr.split(' ').filter(p => p.trim() !== '');
+    if (parts.length === 5) {
+      const [m, h, d, mo, dw] = parts;
+      if (d === '*' && mo === '*') {
+        if (h === '*' && dw === '*') {
+          this.simpleFreq = 'hourly';
+          this.simpleMinute = m;
+          this.cronMode = 'simple';
+        } else if (h !== '*' && dw === '*' && !h.includes(',') && !m.includes(',')) {
+          this.simpleFreq = 'daily';
+          this.simpleMinute = m;
+          this.simpleHour = h;
+          this.cronMode = 'simple';
+        } else if (h !== '*' && dw !== '*' && !h.includes(',') && !m.includes(',') && !dw.includes(',')) {
+          this.simpleFreq = 'weekly';
+          this.simpleMinute = m;
+          this.simpleHour = h;
+          this.simpleDay = dw;
+          this.cronMode = 'simple';
+        }
+      } else if (dw === '*' && mo === '*' && !h.includes(',') && !m.includes('*')) {
+        if (d.startsWith('*/')) {
+          this.simpleFreq = 'interval';
+          this.simpleIntervalDays = d.replace('*/', '');
+          this.simpleMinute = m;
+          this.simpleHour = h;
+          this.cronMode = 'simple';
+        } else if (!d.includes('*') && !d.includes(',') && !d.includes('/')) {
+          this.simpleFreq = 'monthly';
+          this.simpleDayOfMonth = d;
+          this.simpleMinute = m;
+          this.simpleHour = h;
+          this.cronMode = 'simple';
+        }
+      }
+    }
+  }
 }">
 
   {# ── Hero Header ── #}
@@ -79,20 +143,112 @@
             </div>
 
             {# Cron Expression #}
-            <div>
-              <label for="cron_expr" class="flex items-center gap-2 text-sm font-semibold text-surface-900 dark:text-surface-100 mb-2">
-                <svg class="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Cron Expression
-              </label>
-              <input type="text" id="cron_expr" name="cron_expr" required
-                     x-model="cronExpr"
-                     @input="cronExpr !== '{{ schedule.cron_expr if schedule else '0 7 * * 1' }}' ? cronHumanPreview = 'Save to see updated translation' : cronHumanPreview = '{{ cron_human | safe }}'"
-                     class="form-input font-mono"
-                     placeholder="0 7 * * 1">
-              <p class="text-xs text-surface-500 mt-1.5">minute hour day month weekday</p>
-              <p class="text-xs font-semibold text-cyan-600 dark:text-cyan-400 mt-1" x-text="cronHumanPreview"></p>
+            <div class="col-span-1 md:col-span-2 space-y-4">
+              <div class="flex items-center justify-between mb-2">
+                <label class="flex items-center gap-2 text-sm font-semibold text-surface-900 dark:text-surface-100">
+                  <svg class="w-4 h-4 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  Schedule Timing
+                </label>
+                
+                <!-- Mode Toggle -->
+                <div class="flex items-center bg-surface-100 dark:bg-surface-800 rounded-lg p-1">
+                  <button type="button" @click="cronMode = 'simple'; updateCron()"
+                          class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                          :class="cronMode === 'simple' ? 'bg-white dark:bg-surface-600 shadow-sm text-surface-900 dark:text-white' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'">
+                    Visual Builder
+                  </button>
+                  <button type="button" @click="cronMode = 'advanced'"
+                          class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
+                          :class="cronMode === 'advanced' ? 'bg-white dark:bg-surface-600 shadow-sm text-surface-900 dark:text-white' : 'text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'">
+                    Raw Cron
+                  </button>
+                </div>
+              </div>
+
+              <!-- Hidden actual input for form submission -->
+              <input type="hidden" name="cron_expr" x-model="cronExpr">
+
+              <!-- Simple Builder Mode -->
+              <div x-show="cronMode === 'simple'" class="bg-surface-50 dark:bg-surface-800/50 rounded-xl border border-surface-200 dark:border-surface-700 p-4" x-cloak>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <!-- Frequency -->
+                  <div>
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Frequency</label>
+                    <select x-model="simpleFreq" @change="updateCron()" class="form-input text-sm py-2">
+                      <option value="hourly">Hourly</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="interval">Every N Days</option>
+                    </select>
+                  </div>
+
+                  <!-- Day of Week (Only for Weekly) -->
+                  <div x-show="simpleFreq === 'weekly'">
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Day of Week</label>
+                    <select x-model="simpleDay" @change="updateCron()" class="form-input text-sm py-2">
+                      <option value="0">Sunday</option>
+                      <option value="1">Monday</option>
+                      <option value="2">Tuesday</option>
+                      <option value="3">Wednesday</option>
+                      <option value="4">Thursday</option>
+                      <option value="5">Friday</option>
+                      <option value="6">Saturday</option>
+                    </select>
+                  </div>
+
+                  <!-- Day of Month (Only for Monthly) -->
+                  <div x-show="simpleFreq === 'monthly'">
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Day of Month</label>
+                    <input type="number" x-model="simpleDayOfMonth" @input="updateCron()" min="1" max="31" class="form-input text-sm py-2">
+                  </div>
+
+                  <!-- Interval Days (Only for Interval) -->
+                  <div x-show="simpleFreq === 'interval'">
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Number of Days</label>
+                    <input type="number" x-model="simpleIntervalDays" @input="updateCron()" min="1" max="31" class="form-input text-sm py-2">
+                  </div>
+
+                  <!-- Hour (Only for Daily/Weekly/Monthly/Interval) -->
+                  <div x-show="['daily', 'weekly', 'monthly', 'interval'].includes(simpleFreq)">
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Time</label>
+                    <select x-model="simpleHour" @change="updateCron()" class="form-input text-sm py-2">
+                      <template x-for="i in 24">
+                        <option :value="(i-1).toString()" x-text="(i-1).toString().padStart(2, '0') + ':00'"></option>
+                      </template>
+                    </select>
+                  </div>
+
+                  <!-- Minute (For all) -->
+                  <div x-show="simpleFreq === 'hourly'">
+                    <label class="block text-xs font-medium text-surface-700 dark:text-surface-300 mb-1">Minute</label>
+                    <select x-model="simpleMinute" @change="updateCron()" class="form-input text-sm py-2">
+                      <option value="0">00 (Top of hour)</option>
+                      <option value="15">15 (Quarter past)</option>
+                      <option value="30">30 (Half past)</option>
+                      <option value="45">45 (Quarter to)</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="mt-4 pt-3 border-t border-surface-200 dark:border-surface-700 flex items-center justify-between">
+                  <span class="text-xs text-surface-500">Generated Expression:</span>
+                  <code class="px-2 py-1 bg-surface-200 dark:bg-surface-700 rounded text-xs font-mono text-info dark:text-primary-400" x-text="cronExpr"></code>
+                </div>
+              </div>
+
+              <!-- Advanced Mode -->
+              <div x-show="cronMode === 'advanced'" x-cloak>
+                <input type="text" 
+                       x-model="cronExpr"
+                       @input="cronHumanPreview = 'Save to see updated translation'"
+                       class="form-input font-mono"
+                       placeholder="0 7 * * 1">
+                <p class="text-xs text-surface-500 mt-1.5">minute hour day month weekday</p>
+                <p class="text-xs font-semibold text-info mt-1" x-text="cronHumanPreview"></p>
+              </div>
             </div>
 
             {# Timeframe #}
