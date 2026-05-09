@@ -13,34 +13,34 @@
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-lg font-semibold">Live Logs</h2>
     {% if logs %}
-      <span class="text-xs text-surface-700/50 dark:text-surface-200/40">{{ logs|length }} entries</span>
+      <span class="text-xs text-surface-500 dark:text-surface-400">{{ logs|length }} entries</span>
     {% endif %}
   </div>
   {% if logs %}
     <div x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
-         class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-xs overflow-x-auto max-h-96 overflow-y-auto space-y-0.5">
+         class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-[13px] overflow-x-auto max-h-96 overflow-y-auto space-y-0.5">
       {% for log in logs %}
-        <div class="flex items-start gap-2 py-0.5
+        <div class="flex items-start gap-2.5 py-0.5
                     {% if log.level == 'ERROR' %}log-error
                     {% elif log.level == 'WARNING' %}log-warning
                     {% elif log.level == 'INFO' %}log-info
                     {% else %}log-debug{% endif %}">
-          <span class="text-surface-200/40 shrink-0 w-[140px]">{{ log.ts[:19] if log.ts else '' }}</span>
-          <span class="shrink-0 w-[80px]">
+          <span class="text-surface-400 dark:text-surface-500 shrink-0 w-[145px]">{{ log.ts[:19] if log.ts else '' }}</span>
+          <span class="shrink-0 w-[72px]">
             <span class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase
-                         {% if log.level == 'ERROR' %}bg-danger/20 text-danger
-                         {% elif log.level == 'WARNING' %}bg-warning/20 text-warning
-                         {% elif log.level == 'INFO' %}bg-info/20 text-info
-                         {% else %}bg-surface-700/20 text-surface-200/60{% endif %}">
+                         {% if log.level == 'ERROR' %}bg-red-500/20 text-red-400
+                         {% elif log.level == 'WARNING' %}bg-amber-500/20 text-amber-400
+                         {% elif log.level == 'INFO' %}bg-sky-500/20 text-sky-400
+                         {% else %}bg-surface-600/30 text-surface-400{% endif %}">
               {{ log.level }}
             </span>
           </span>
-          <span class="shrink-0 w-[90px] text-primary-400/70 font-semibold">{{ log.node }}</span>
-          <span class="flex-1">
+          <span class="shrink-0 w-[90px] text-cyan-400 font-semibold">{{ log.node }}</span>
+          <span class="flex-1 text-surface-100">
             {{ log.message }}
             {% if log.payload and log.payload is mapping %}
               {% for k, v in log.payload.items() if k != 'wall_seconds' %}
-                <span class="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-white/5 text-[10px] text-surface-200/50 font-normal">{{ k }}={{ v }}</span>
+                <span class="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-surface-300 font-normal">{{ k }}={{ v }}</span>
               {% endfor %}
             {% endif %}
           </span>
@@ -50,7 +50,7 @@
   {% else %}
     <div class="bg-surface-950 dark:bg-black rounded-lg p-8 text-center">
       {% if run.status in ('pending', 'running') %}
-        <div class="flex items-center justify-center gap-2 text-sm text-surface-200/50">
+        <div class="flex items-center justify-center gap-2 text-sm text-surface-400">
           <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
@@ -58,7 +58,7 @@
           Waiting for log entries…
         </div>
       {% else %}
-        <p class="text-sm text-surface-200/40">No logs available for this run.</p>
+        <p class="text-sm text-surface-400">No logs available for this run.</p>
       {% endif %}
     </div>
   {% endif %}

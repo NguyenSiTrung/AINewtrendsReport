@@ -100,10 +100,10 @@
 }
 
 /* ── Log level colours ────────────────────────────────── */
-.log-error { color: oklch(0.60 0.20 25); }
-.log-warning { color: oklch(0.75 0.15 75); }
-.log-info { color: oklch(0.62 0.15 250); }
-.log-debug { color: oklch(0.55 0.02 250); }
+.log-error { color: oklch(0.75 0.20 25); }
+.log-warning { color: oklch(0.82 0.14 75); }
+.log-info { color: oklch(0.80 0.10 250); }
+.log-debug { color: oklch(0.72 0.02 250); }
 
 /* ── Transition helpers ───────────────────────────────── */
 @utility fade-in {
