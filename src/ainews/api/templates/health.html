@@ -1,21 +1,52 @@
 {% extends "base.html" %}
 
-{% block title %}Health{% endblock %}
+{% block title %}System Health{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-  <h1 class="text-2xl font-bold tracking-tight">System Health</h1>
+  {# ── Header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight text-surface-900 dark:text-white">System Health</h1>
+      <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">Real-time status of pipeline components.</p>
+    </div>
+  </div>
 
   <div hx-get="/health/probes" hx-trigger="load, every 30s" hx-target="#health-grid" hx-indicator="#health-spinner">
-    <div id="health-spinner" class="htmx-indicator text-center py-4">
-      <div class="inline-flex items-center gap-2 text-sm text-surface-700/70 dark:text-surface-200/60">
-        <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-        Checking health…
+    
+    <!-- Skeleton Loader matching new design -->
+    <div id="health-spinner" class="htmx-indicator w-full animate-pulse space-y-8">
+      <!-- Overall Status Skeleton -->
+      <div class="bg-white dark:bg-surface-900 rounded-2xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 flex items-center justify-between">
+        <div>
+          <div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded mb-3"></div>
+          <div class="h-8 w-48 sm:w-64 bg-surface-300 dark:bg-surface-600 rounded"></div>
+        </div>
+        <div class="w-16 h-16 rounded-full bg-surface-200 dark:bg-surface-700"></div>
+      </div>
+      
+      <!-- Probes List Skeleton -->
+      <div class="bg-white dark:bg-surface-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 overflow-hidden">
+        <div class="px-6 py-5 border-b border-surface-100 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/20">
+          <div class="h-5 w-40 bg-surface-300 dark:bg-surface-600 rounded"></div>
+        </div>
+        <div class="divide-y divide-surface-100 dark:divide-surface-800/50">
+          {% for i in range(2) %}
+          <div class="p-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-surface-200 dark:bg-surface-700 shrink-0"></div>
+              <div>
+                <div class="h-4 w-24 bg-surface-300 dark:bg-surface-600 rounded mb-2"></div>
+                <div class="h-3 w-48 bg-surface-200 dark:bg-surface-700 rounded"></div>
+              </div>
+            </div>
+            <div class="h-8 w-20 bg-surface-200 dark:bg-surface-700 rounded-md"></div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
     </div>
+    
     <div id="health-grid">
       {% include "partials/health_grid.html" %}
     </div>
