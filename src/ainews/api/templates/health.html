@@ -39,12 +39,12 @@
 
 {% block content %}
 <div class="space-y-6" x-data="{
-  countdown: 30,
+  countdown: 120,
   init() {
-    setInterval(() => { this.countdown = this.countdown > 0 ? this.countdown - 1 : 30; }, 1000);
+    setInterval(() => { this.countdown = this.countdown > 0 ? this.countdown - 1 : 120; }, 1000);
     document.body.addEventListener('htmx:afterSwap', (e) => {
       if (e.detail.target.id === 'health-grid') {
-        this.countdown = 30;
+        this.countdown = 120;
         e.detail.target.classList.add('health-flash');
         setTimeout(() => e.detail.target.classList.remove('health-flash'), 300);
       }
@@ -100,7 +100,7 @@
   </div>
 
   {# ── HTMX-driven content ── #}
-  <div hx-get="/health/probes" hx-trigger="load, every 30s" hx-target="#health-grid" hx-indicator="#health-grid">
+  <div hx-get="/health/probes" hx-trigger="load, every 2m" hx-target="#health-grid" hx-indicator="#health-grid">
 
     <div id="health-grid" class="transition-opacity duration-200 [&.htmx-request]:opacity-50 [&.htmx-request]:pointer-events-none">
       {# Skeleton Loader #}
