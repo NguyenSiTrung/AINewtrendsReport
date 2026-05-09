@@ -184,16 +184,12 @@
                   {% endif %}
                 </td>
                 <td class="px-6 py-4">
-                  <div class="flex items-center gap-2" title="Priority: {{ site.priority }}/10">
+                  <div class="flex items-center gap-3" title="Priority: {{ site.priority }}/10">
                     <span class="font-mono text-xs font-bold text-surface-700 dark:text-surface-300 w-4 text-right">{{ site.priority }}</span>
-                    <div class="flex gap-0.5">
-                      {% for i in range(1, 11) %}
-                        <div class="w-1.5 h-3 rounded-full {% if i <= site.priority %}
-                          {% if site.priority >= 9 %}bg-cyan-500 dark:bg-cyan-400
-                          {% elif site.priority >= 6 %}bg-blue-500 dark:bg-blue-400
-                          {% else %}bg-slate-400 dark:bg-slate-500{% endif %}
-                        {% else %}bg-surface-200 dark:bg-surface-700{% endif %}"></div>
-                      {% endfor %}
+                    <div class="w-20 h-1.5 bg-surface-200 dark:bg-surface-800 rounded-full overflow-hidden shadow-inner">
+                      {% set prio = site.priority | int %}
+                      <div class="h-full rounded-full transition-all duration-500 {% if prio >= 9 %}bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]{% elif prio >= 6 %}bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]{% else %}bg-slate-400 dark:bg-slate-500{% endif %}" 
+                           style="width: {{ prio * 10 }}%"></div>
                     </div>
                   </div>
                 </td>
