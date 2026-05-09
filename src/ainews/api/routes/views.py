@@ -442,11 +442,12 @@ def _probe_health(session: Session) -> dict[str, Any]:
 def sites_list(
     request: Request,
     search: str = "",
+    category: str = "",
     page: int = 1,
     per_page: int = 25,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """List all sites with server-side search and pagination."""
+    """List all sites with server-side search, category filter, and pagination."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
@@ -455,9 +456,31 @@ def sites_list(
 
     from ainews.models.site import Site
 
+    # ── Aggregate stats (unfiltered) for hero header ─────
+    total_all = session.scalar(select(func.count(Site.id))) or 0
+    active_count = session.scalar(
+        select(func.count(Site.id)).where(Site.enabled == 1)
+    ) or 0
+    inactive_count = total_all - active_count
+
+    # Category breakdown (unfiltered)
+    cat_rows = (
+        session.execute(
+            select(Site.category, func.count(Site.id))
+            .group_by(Site.category)
+            .order_by(func.count(Site.id).desc())
+        )
+        .all()
+    )
+    all_categories = [row[0] for row in cat_rows if row[0]]
+    category_counts = {row[0]: row[1] for row in cat_rows if row[0]}
+
+    # ── Filtered query ───────────────────────────────────
     q = select(Site).order_by(Site.priority.desc())
     if search:
         q = q.where(Site.url.ilike(f"%{search}%") | Site.category.ilike(f"%{search}%"))
+    if category:
+        q = q.where(Site.category == category)
 
     total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -468,17 +491,25 @@ def sites_list(
     query_params: dict[str, str] = {}
     if search:
         query_params["search"] = search
+    if category:
+        query_params["category"] = category
     return _render(
         request,
         "sites/list.html",
         {
             "sites": sites,
             "search": search,
+            "category_filter": category,
             "page": page,
             "per_page": per_page,
             "total": total,
             "total_pages": total_pages,
             "query_params": query_params,
+            "total_all": total_all,
+            "active_count": active_count,
+            "inactive_count": inactive_count,
+            "all_categories": all_categories,
+            "category_counts": category_counts,
         },
     )
 
@@ -511,6 +542,9 @@ def site_create(
     url: str = Form(...),
     category: str = Form("tech"),
     priority: int = Form(5),
+    crawl_depth: int = Form(2),
+    enabled: str | None = Form(None),
+    js_render: str | None = Form(None),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Create a new site."""
@@ -520,7 +554,14 @@ def site_create(
 
     from ainews.models.site import Site
 
-    site = Site(url=url, category=category, priority=priority)
+    site = Site(
+        url=url, 
+        category=category, 
+        priority=priority,
+        crawl_depth=crawl_depth,
+        enabled=1 if enabled else 0,
+        js_render=1 if js_render else 0,
+    )
     session.add(site)
     session.flush()
 
@@ -565,6 +606,9 @@ def site_update(
     url: str = Form(...),
     category: str = Form("tech"),
     priority: int = Form(5),
+    crawl_depth: int = Form(2),
+    enabled: str | None = Form(None),
+    js_render: str | None = Form(None),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Update an existing site."""
@@ -579,6 +623,9 @@ def site_update(
         site.url = url
         site.category = category
         site.priority = priority
+        site.crawl_depth = crawl_depth
+        site.enabled = 1 if enabled else 0
+        site.js_render = 1 if js_render else 0
         session.flush()
 
     resp = RedirectResponse(url="/sites", status_code=303)
