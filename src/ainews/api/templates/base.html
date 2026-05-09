@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="/static/css/output.css">
 
   <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.14.9/dist/cdn.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
 
   <!-- HTMX -->
@@ -77,8 +78,8 @@
 
     <!-- Nav links — grouped with collapsible sections -->
     <nav class="flex-1 py-4 px-3 overflow-y-auto"
-         x-data="{
-           groups: JSON.parse(localStorage.getItem('sidebarGroups') || '{\"overview\":true,\"pipeline\":true,\"system\":true}'),
+        x-data="{
+           groups: JSON.parse(localStorage.getItem('sidebarGroups') || '{&quot;overview&quot;:true,&quot;pipeline&quot;:true,&quot;system&quot;:true}'),
            saveGroups() { localStorage.setItem('sidebarGroups', JSON.stringify(this.groups)); }
          }">
 
