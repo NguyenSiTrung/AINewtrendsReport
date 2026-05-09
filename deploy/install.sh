@@ -228,7 +228,7 @@ cp "$APP_DIR/deploy/systemd/ainews-worker.service" /etc/systemd/system/
 cp "$APP_DIR/deploy/systemd/ainews-beat.service" /etc/systemd/system/
 
 systemctl daemon-reload
-systemctl enable ainews-api ainews-worker 2>/dev/null
+systemctl enable ainews-api ainews-worker ainews-beat 2>/dev/null
 ok "Systemd units installed and enabled (not started — configure env first)"
 
 # ─── Step 10: Install cron files ──────────────────────────
@@ -282,7 +282,7 @@ fi
 # ─── Step 13: Restart services if running (upgrade path) ──
 if systemctl is-active --quiet ainews-api; then
     info "Restarting services for upgrade..."
-    systemctl restart ainews-api ainews-worker
+    systemctl restart ainews-api ainews-worker ainews-beat
     ok "Services restarted"
 fi
 
@@ -294,12 +294,13 @@ echo -e "${GREEN}═════════════════════
 echo ""
 echo "  Next steps:"
 echo "  1. Edit configuration:  sudo nano $ENV_FILE"
-echo "  2. Start services:      sudo systemctl start ainews-api ainews-worker"
+echo "  2. Start services:      sudo systemctl start ainews-api ainews-worker ainews-beat"
 echo "  3. Verify health:       curl http://localhost:8000/api/health"
 echo ""
 echo "  Service management:"
 echo "    systemctl status ainews-api"
 echo "    systemctl status ainews-worker"
+echo "    systemctl status ainews-beat"
 echo "    journalctl -u ainews-api -f"
 echo ""
 echo "  Log files:  $LOG_DIR/"

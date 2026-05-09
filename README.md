@@ -51,6 +51,9 @@ uv run uvicorn ainews.api.main:app --reload --port 8000
 # Open Terminal 2: Start background worker
 uv run celery -A ainews.tasks.celery_app worker --loglevel=info
 
+# Open Terminal 3: Start beat scheduler
+uv run celery -A ainews.tasks.celery_app beat --loglevel=info
+
 # Run tests
 uv run pytest
 ```
@@ -94,8 +97,8 @@ sudo nano /etc/ainews/ainews.env
 ### Start Services
 
 ```bash
-# Start API and worker
-sudo systemctl start ainews-api ainews-worker
+# Start API, worker, and scheduler
+sudo systemctl start ainews-api ainews-worker ainews-beat
 
 # Verify
 curl http://localhost:8000/api/health
@@ -110,7 +113,8 @@ sudo journalctl -u ainews-api -f
 |---------|-------------|
 | `systemctl status ainews-api` | API server status |
 | `systemctl status ainews-worker` | Celery worker status |
-| `systemctl restart ainews-api ainews-worker` | Restart services |
+| `systemctl status ainews-beat` | Celery scheduler status |
+| `systemctl restart ainews-api ainews-worker ainews-beat` | Restart services |
 | `journalctl -u ainews-api -f` | Follow API logs |
 
 ### Automated Schedules

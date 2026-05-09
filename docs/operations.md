@@ -78,7 +78,7 @@ AINEWS_LLM_BASE_URL=http://127.0.0.1:11434/v1   # e.g. Ollama
 AINEWS_LLM_MODEL=qwen2.5-32b-instruct
 
 # Restart services to pick up changes
-sudo systemctl restart ainews-api ainews-worker
+sudo systemctl restart ainews-api ainews-worker ainews-beat
 ```
 
 ### Verify connectivity
@@ -152,7 +152,7 @@ sudo nano /etc/ainews/ainews.env
 ### Step 2: Restart services
 
 ```bash
-sudo systemctl restart ainews-api ainews-worker
+sudo systemctl restart ainews-api ainews-worker ainews-beat
 ```
 
 ### Step 3: Verify
@@ -178,7 +178,7 @@ Daily backups run at 2:00 AM via cron:
 
 ```bash
 # 1. Stop services
-sudo systemctl stop ainews-api ainews-worker
+sudo systemctl stop ainews-api ainews-worker ainews-beat
 
 # 2. List available backups
 ls -la /var/backups/ainews/
@@ -191,7 +191,7 @@ sudo -u ainews cp /var/backups/ainews/ainews-2026-05-07.db \
 sudo -u ainews sqlite3 /var/lib/ainews/ainews.db "PRAGMA integrity_check;"
 
 # 5. Restart services
-sudo systemctl start ainews-api ainews-worker
+sudo systemctl start ainews-api ainews-worker ainews-beat
 
 # 6. Verify
 curl http://localhost:8000/api/health
@@ -272,14 +272,15 @@ Modifying schedule parameters in the DB/UI takes effect immediately — no cron 
 # Status
 sudo systemctl status ainews-api
 sudo systemctl status ainews-worker
+sudo systemctl status ainews-beat
 
 # Start / Stop / Restart
-sudo systemctl start ainews-api ainews-worker
-sudo systemctl stop ainews-api ainews-worker
-sudo systemctl restart ainews-api ainews-worker
+sudo systemctl start ainews-api ainews-worker ainews-beat
+sudo systemctl stop ainews-api ainews-worker ainews-beat
+sudo systemctl restart ainews-api ainews-worker ainews-beat
 
 # Enable on boot
-sudo systemctl enable ainews-api ainews-worker
+sudo systemctl enable ainews-api ainews-worker ainews-beat
 ```
 
 ### Checking Valkey
@@ -301,6 +302,9 @@ sudo journalctl -u ainews-api -f
 
 # Celery worker logs
 sudo journalctl -u ainews-worker -f
+
+# Celery scheduler logs
+sudo journalctl -u ainews-beat -f
 
 # Both combined
 sudo journalctl -u 'ainews-*' -f
