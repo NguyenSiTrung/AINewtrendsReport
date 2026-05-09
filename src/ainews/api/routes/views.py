@@ -504,6 +504,7 @@ def site_update(
 @router.get("/schedules", response_class=HTMLResponse)
 def schedules_list(
     request: Request,
+    search: str = "",
     page: int = 1,
     per_page: int = 25,
     session: Session = Depends(get_db),  # noqa: B008
@@ -518,22 +519,31 @@ def schedules_list(
     from ainews.models.schedule import Schedule
 
     q = select(Schedule).order_by(Schedule.name)
+    if search:
+        q = q.where(Schedule.name.ilike(f"%{search}%") | Schedule.cron_expr.ilike(f"%{search}%"))
+
     total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
     offset = (page - 1) * per_page
 
     schedules = session.execute(q.limit(per_page).offset(offset)).scalars().all()
+    
+    query_params: dict[str, str] = {}
+    if search:
+        query_params["search"] = search
+        
     return _render(
         request,
         "schedules/list.html",
         {
             "schedules": schedules,
+            "search": search,
             "page": page,
             "per_page": per_page,
             "total": total,
             "total_pages": total_pages,
-            "query_params": {},
+            "query_params": query_params,
         },
     )
 
