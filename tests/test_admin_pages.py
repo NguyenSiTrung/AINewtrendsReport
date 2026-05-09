@@ -256,7 +256,52 @@ class TestLogsPage:
         resp = client.get("/logs", cookies=cookies)
         assert resp.status_code == 200
         assert "Something broke" in resp.text
-        assert "log-error" in resp.text
+        assert "border-l-red-500" in resp.text
+
+    def test_logs_htmx_search_refreshes_filters_and_preserves_query(
+        self,
+        client: TestClient,
+        engine: Any,
+    ) -> None:
+        """HTMX log search returns the filter toolbar with current query state."""
+        with get_db_session(engine) as session:
+            session.add(Run(id="search-run", status="running"))
+            session.add_all(
+                [
+                    RunLog(
+                        run_id="search-run",
+                        node="writer",
+                        level="INFO",
+                        message="Pipeline matched needle",
+                        ts="2026-01-01T00:00:00Z",
+                    ),
+                    RunLog(
+                        run_id="search-run",
+                        node="planner",
+                        level="INFO",
+                        message="Unrelated startup event",
+                        ts="2026-01-01T00:00:01Z",
+                    ),
+                ]
+            )
+            session.commit()
+
+        cookies = _auth_cookies(client, engine)
+        resp = client.get(
+            "/logs?search=needle",
+            headers={"HX-Request": "true"},
+            cookies=cookies,
+        )
+
+        assert resp.status_code == 200
+        assert 'id="logs-content"' in resp.text
+        assert 'value="needle"' in resp.text
+        assert "Clear all" in resp.text
+        assert "Pipeline matched needle" in resp.text
+        assert "Unrelated startup event" not in resp.text
+        assert 'hx-get="/logs"' in resp.text
+        assert 'hx-include="#log-search,#run-id-filter,#level-filter"' in resp.text
+        assert "logs-auto-refresh-toggle" in resp.text
 
 
 # ── Settings ─────────────────────────────────────────────

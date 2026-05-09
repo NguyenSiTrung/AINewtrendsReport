@@ -1080,7 +1080,13 @@ def logs_page(
         query_params["run_id"] = run_id
 
     is_htmx = request.headers.get("HX-Request") == "true"
-    template = "partials/logs_table.html" if is_htmx else "logs.html"
+    htmx_target = request.headers.get("HX-Target", "")
+    if is_htmx and htmx_target in {"logs-table-container", "page-content"}:
+        template = "partials/logs_table.html"
+    elif is_htmx:
+        template = "partials/logs_content.html"
+    else:
+        template = "logs.html"
 
     return _render(
         request,
