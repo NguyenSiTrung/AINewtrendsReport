@@ -1557,20 +1557,25 @@ def settings_page(
     )
 
 
-@router.post("/settings/seed")
-def settings_seed(
+@router.post("/settings/reset-defaults")
+def settings_reset_defaults(
     request: Request,
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """Seed default sites and schedules."""
+    """Reset sites and schedules to factory defaults."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
 
-    from ainews.seed import seed_all
+    from ainews.seed import reset_all
 
-    result = seed_all(session)
-    msg = f"Seeded: {result.sites_created} sites, {result.schedules_created} schedules"
+    result = reset_all(session)
+    msg = (
+        f"Reset complete: removed {result.sites_deleted} sites"
+        f" & {result.schedules_deleted} schedules,"
+        f" restored {result.sites_created} default sites"
+        f" & {result.schedules_created} default schedules"
+    )
     resp = RedirectResponse(url="/settings", status_code=303)
     flash(resp, msg, "success")
     return resp

@@ -69,6 +69,7 @@ STARTER_SCHEDULES: list[dict[str, Any]] = [
         "name": "weekly-ai-news",
         "cron_expr": "0 7 * * 1",
         "timeframe_days": 7,
+        "topics": ["AI Trends", "AI News"],
     },
 ]
 
@@ -81,6 +82,42 @@ class SeedResult:
     sites_skipped: int
     schedules_created: int
     schedules_skipped: int
+
+
+@dataclass
+class ResetResult:
+    """Counts from a reset-to-defaults operation."""
+
+    sites_deleted: int
+    schedules_deleted: int
+    sites_created: int
+    schedules_created: int
+
+
+def reset_all(session: Session) -> ResetResult:
+    """Delete all sites and schedules, then re-seed with defaults.
+
+    This is a destructive operation — all user-created and modified
+    records are removed and replaced with the starter data.
+    """
+    from sqlalchemy import delete
+
+    sites_deleted = session.execute(delete(Site)).rowcount  # type: ignore[union-attr]
+    schedules_deleted = session.execute(delete(Schedule)).rowcount  # type: ignore[union-attr]
+
+    for data in STARTER_SITES:
+        session.add(Site(**data))
+    for data in STARTER_SCHEDULES:
+        session.add(Schedule(**data))
+
+    session.commit()
+
+    return ResetResult(
+        sites_deleted=sites_deleted,
+        schedules_deleted=schedules_deleted,
+        sites_created=len(STARTER_SITES),
+        schedules_created=len(STARTER_SCHEDULES),
+    )
 
 
 def seed_all(session: Session) -> SeedResult:
