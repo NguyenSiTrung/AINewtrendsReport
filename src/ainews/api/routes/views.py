@@ -331,7 +331,10 @@ def _probe_health(session: Session) -> dict[str, Any]:
     from datetime import datetime, timezone
     from zoneinfo import ZoneInfo
 
+    from ainews.core.config import Settings
     from sqlalchemy import text
+
+    settings = Settings()
 
     components: dict[str, dict[str, Any]] = {}
 
@@ -434,7 +437,7 @@ def _probe_health(session: Session) -> dict[str, Any]:
     return {
         "components": components,
         "overall": overall,
-        "checked_at": datetime.now(tz=ZoneInfo(request.app.state.templates.env.globals.get('app_timezone', 'UTC'))).strftime("%H:%M:%S %Z"),
+        "checked_at": datetime.now(tz=ZoneInfo(settings.timezone)).strftime("%H:%M:%S %Z"),
         "avg_latency": round(sum(latencies) / len(latencies), 1) if latencies else 0,
         "total_probes": len(components),
         "passing_probes": passing,
