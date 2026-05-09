@@ -97,7 +97,7 @@ class TestLoginFlow:
         """GET /login returns the login form."""
         resp = client.get("/login")
         assert resp.status_code == 200
-        assert "Sign in" in resp.text
+        assert "Terminal Login" in resp.text
         assert 'name="email"' in resp.text
 
     def test_login_invalid_credentials(self, client: TestClient, engine: Any) -> None:
