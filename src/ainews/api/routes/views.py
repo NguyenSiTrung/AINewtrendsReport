@@ -728,10 +728,25 @@ def llm_settings_page(
     if redirect:
         return redirect
 
+    from ainews.core.config import Settings
+    from ainews.llm.factory import get_llm_config
     from ainews.models.settings_kv import SettingsKV
 
     row = session.get(SettingsKV, "llm")
-    settings_data = row.value if row else {}
+    db_overrides = row.value if row else None
+
+    # Resolve effective config (env defaults merged with DB overrides) so the
+    # form always shows the values that would actually be used at runtime.
+    effective = get_llm_config(Settings(), db_overrides=db_overrides)
+    settings_data: dict[str, object] = {
+        "base_url": effective.base_url,
+        "model": effective.model,
+        # Never echo the API key back into the form; the placeholder text
+        # explains that leaving it blank preserves the existing key.
+        "api_key": "",
+        "temperature": effective.temperature,
+        "max_tokens": effective.max_tokens,
+    }
     return _render(
         request,
         "llm.html",
