@@ -668,14 +668,68 @@ def trigger_page(
     if redirect:
         return redirect
 
-    from sqlalchemy import select
+    import json
 
+    from sqlalchemy import func, select
+
+    from ainews.models.run import Run
     from ainews.models.schedule import Schedule
 
     schedules = (
         session.execute(select(Schedule).order_by(Schedule.name)).scalars().all()
     )
-    return _render(request, "trigger.html", {"schedules": schedules})
+
+    # Quick stats for context sidebar
+    total_runs = session.scalar(select(func.count(Run.id))) or 0
+    completed = (
+        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+    )
+    success_rate = round(completed / total_runs * 100) if total_runs else 0
+
+    # Last completed run
+    last_run = session.execute(
+        select(Run).where(Run.status == "completed").order_by(Run.created_at.desc()).limit(1)
+    ).scalar_one_or_none()
+
+    # Active run check
+    active_run = session.execute(
+        select(Run).where(Run.status.in_(["pending", "running"])).limit(1)
+    ).scalar_one_or_none()
+
+    # Compute last run duration
+    last_run_duration = "—"
+    if last_run and last_run.started_at and last_run.finished_at:
+        try:
+            from datetime import datetime
+
+            start = datetime.fromisoformat(last_run.started_at.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(last_run.finished_at.replace("Z", "+00:00"))
+            diff = int((end - start).total_seconds())
+            m, s = divmod(abs(diff), 60)
+            last_run_duration = f"{m}m {s}s"
+        except (ValueError, TypeError):
+            pass
+
+    # Serialize schedule data for JS auto-populate
+    schedules_json = json.dumps([
+        {
+            "name": s.name,
+            "topics": s.topics or [],
+            "timeframe_days": s.timeframe_days,
+            "use_smart_planner": bool(s.use_smart_planner),
+        }
+        for s in schedules
+    ])
+
+    return _render(request, "trigger.html", {
+        "schedules": schedules,
+        "schedules_json": schedules_json,
+        "total_runs": total_runs,
+        "success_rate": success_rate,
+        "last_run": last_run,
+        "last_run_duration": last_run_duration,
+        "active_run": active_run,
+    })
 
 
 @router.post("/trigger")
