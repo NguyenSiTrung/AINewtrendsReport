@@ -1,75 +1,128 @@
 <!DOCTYPE html>
-<html lang="en" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }"
-      x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))"
-      :class="{ 'dark': darkMode }">
+<html lang="en" x-data="{ darkMode: true }" class="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login — {{ app_name }}</title>
+  <title>Terminal Access — {{ app_name }}</title>
   <meta name="csrf-token" content="{{ request.state.csrf_token }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Using Space Grotesk and JetBrains Mono for the brutalist tech feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/css/output.css">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
+  <style>
+    body { font-family: 'Space Grotesk', sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    
+    /* Animations */
+    .stagger-1 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+    .stagger-2 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+    .stagger-3 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
+    .stagger-4 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
+    .stagger-5 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Ambient noise overlay */
+    .noise-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    }
+  </style>
 </head>
 
-<body class="bg-surface-50 text-surface-900 dark:bg-surface-950 dark:text-surface-100 font-sans antialiased min-h-screen flex items-center justify-center p-4">
+<body class="bg-[#050505] text-white antialiased min-h-screen overflow-hidden selection:bg-[#FF4400] selection:text-white">
+  <div class="noise-bg"></div>
 
-  <div class="w-full max-w-sm">
-    <!-- Logo -->
-    <div class="flex items-center justify-center gap-3 mb-8">
-      <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
-        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-        </svg>
-      </div>
-      <span class="font-bold text-2xl tracking-tight">{{ app_name }}</span>
-    </div>
-
-    <!-- Login card -->
-    <div class="card">
-      <h1 class="text-lg font-semibold text-center mb-6">Sign in to your account</h1>
-
-      {% if error %}
-        <div class="mb-4 rounded-lg bg-danger/10 border border-danger/20 px-4 py-3 text-sm text-danger fade-in">
-          {{ error }}
-        </div>
-      {% endif %}
-
-      <form method="POST" action="/login" class="space-y-4" x-data="{ loading: false }" @submit="loading = true">
-        <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-
-        <div>
-          <label for="email" class="block text-sm font-medium mb-1.5">Email</label>
-          <input type="email" id="email" name="email" required autofocus
-                 value="{{ email or '' }}"
-                 class="form-input"
-                 placeholder="admin@example.com">
-        </div>
-
-        <div>
-          <label for="password" class="block text-sm font-medium mb-1.5">Password</label>
-          <input type="password" id="password" name="password" required
-                 class="form-input"
-                 placeholder="••••••••">
-        </div>
-
-        <button type="submit" class="btn-primary w-full" :disabled="loading" :class="{ 'btn-loading': loading }">
-          <span x-text="loading ? 'Signing in…' : 'Sign in'"></span>
-        </button>
-      </form>
-    </div>
-
-    <!-- Dark mode toggle -->
-    <div class="mt-6 text-center">
-      <button @click="darkMode = !darkMode"
-              class="text-sm text-surface-700/50 dark:text-surface-200/40 hover:text-surface-700 dark:hover:text-surface-200 transition-colors">
-        <span x-text="darkMode ? '☀ Light Mode' : '🌙 Dark Mode'"></span>
-      </button>
-    </div>
+  <!-- Massive Background Typography -->
+  <div class="fixed inset-0 flex flex-col justify-center select-none pointer-events-none opacity-[0.03] mix-blend-screen z-0 overflow-hidden">
+    <h1 class="text-[25vw] font-bold leading-[0.8] tracking-tighter uppercase whitespace-nowrap ml-[-5vw]">
+      SIGNAL<br>NOISE<br>A.I.
+    </h1>
   </div>
 
+  <div class="relative min-h-screen flex w-full z-10">
+    <!-- Left side: Narrative/Branding (70%) -->
+    <div class="hidden lg:flex flex-col justify-between w-[65%] p-12 xl:p-16 border-r border-white/10 relative">
+      <div class="stagger-1">
+         <div class="w-14 h-14 bg-[#FF4400] flex items-center justify-center rounded-none relative">
+           <svg class="w-7 h-7 text-black relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+           </svg>
+         </div>
+      </div>
+      
+      <div class="mb-12 stagger-2">
+         <h2 class="text-6xl xl:text-7xl font-bold tracking-tighter mb-6 uppercase leading-[0.9]">AI News &<br>Trends Report</h2>
+         <div class="flex items-center gap-4 text-[#FF4400] font-mono text-sm uppercase tracking-widest">
+            <span class="w-2 h-2 bg-[#FF4400] animate-pulse"></span>
+            <span>Intelligence Pipeline Active</span>
+         </div>
+         <p class="text-lg text-neutral-500 max-w-md font-mono mt-8 border-l border-neutral-800 pl-4">
+            Authorized access only. Authenticate to enter the data synthesis terminal and monitor industry signals.
+         </p>
+      </div>
+    </div>
+
+    <!-- Right side: Login Form (35%) -->
+    <div class="w-full lg:w-[35%] flex flex-col justify-center bg-[#0a0a0a] relative shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
+       <div class="w-full max-w-md mx-auto px-8 sm:px-12">
+         <div class="stagger-3 mb-12">
+           <h3 class="text-3xl font-bold uppercase tracking-tighter mb-2">Terminal Login</h3>
+           <p class="text-neutral-500 font-mono text-sm">Enter your credentials below.</p>
+         </div>
+
+         {% if error %}
+          <div class="mb-8 p-4 bg-red-950/30 border border-red-900/50 text-red-500 font-mono text-sm stagger-3">
+            <span class="font-bold mr-2">ERR_AUTH_FAILED:</span> {{ error }}
+          </div>
+         {% endif %}
+
+         <form method="POST" action="/login" class="space-y-8 font-mono" x-data="{ loading: false }" @submit="loading = true">
+            <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
+
+            <div class="stagger-4 relative group">
+              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Identification (Email)</label>
+              <input type="email" name="email" required autofocus
+                     class="w-full bg-[#111] border border-neutral-800 px-4 py-4 text-white focus:border-[#FF4400] focus:ring-1 focus:ring-[#FF4400] outline-none rounded-none placeholder-neutral-700 transition-all text-sm"
+                     value="{{ email or '' }}"
+                     placeholder="operator@system.io">
+            </div>
+
+            <div class="stagger-4 relative group">
+              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Access Key (Password)</label>
+              <input type="password" name="password" required
+                     class="w-full bg-[#111] border border-neutral-800 px-4 py-4 text-white focus:border-[#FF4400] focus:ring-1 focus:ring-[#FF4400] outline-none rounded-none placeholder-neutral-700 transition-all text-sm"
+                     placeholder="••••••••">
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-white text-black font-bold uppercase tracking-widest py-4 mt-4 hover:bg-[#FF4400] hover:text-white transition-all flex justify-center items-center gap-3 group stagger-5 disabled:opacity-50 disabled:cursor-wait"
+                    :disabled="loading">
+               <span x-show="!loading" class="text-sm">Initiate Handshake</span>
+               <svg x-show="!loading" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+               </svg>
+               <span x-show="loading" class="animate-pulse text-sm">Authenticating...</span>
+            </button>
+         </form>
+         
+         <div class="mt-12 text-center stagger-5">
+           <p class="text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
+             V_0.1.0 // AINEWS.SYS
+           </p>
+         </div>
+       </div>
+    </div>
+  </div>
 </body>
 </html>
