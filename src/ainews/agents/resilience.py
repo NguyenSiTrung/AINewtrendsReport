@@ -105,12 +105,13 @@ def node_resilient(
 
             # Log node start
             if engine is not None and run_id:
+                start_detail = _summarize_node_input(node_name, state)
                 _safe_log(
                     engine,
                     run_id,
                     node_name,
                     "INFO",
-                    "Node started",
+                    start_detail,
                 )
 
             try:
@@ -121,16 +122,22 @@ def node_resilient(
                         node_name, state, start_time=start
                     )
 
-                # Log node completion
+                # Log node completion with rich summary
                 if engine is not None and run_id:
                     elapsed = round(time.time() - start, 2)
+                    summary, stats = _summarize_node_result(
+                        node_name, result, state,
+                    )
+                    payload: dict[str, Any] = {"wall_seconds": elapsed}
+                    if stats:
+                        payload.update(stats)
                     _safe_log(
                         engine,
                         run_id,
                         node_name,
                         "INFO",
-                        "Node completed",
-                        payload={"wall_seconds": elapsed},
+                        f"Completed in {elapsed}s — {summary}",
+                        payload=payload,
                     )
 
                 return result
@@ -215,6 +222,152 @@ def _extract_run_id(state: Any) -> str | None:
     if isinstance(state, dict):
         return state.get("run_id")
     return None
+
+
+def _summarize_node_input(node_name: str, state: Any) -> str:
+    """Build a human-readable start message from node input state.
+
+    Extracts context from the *incoming* state to show what data
+    the node will process (e.g. article count, query count).
+    """
+    if not isinstance(state, dict):
+        return "Started"
+
+    try:
+        if node_name == "planner":
+            topics = state.get("topics") or []
+            if topics:
+                return f"Planning queries for {len(topics)} topic(s)"
+            return "Planning search queries"
+
+        if node_name in ("retriever", "retrieve_one"):
+            queries = state.get("queries") or []
+            query = state.get("query", "")
+            if query:
+                return f"Searching: {query}"
+            return f"Dispatching {len(queries)} search(es)"
+
+        if node_name == "scraper":
+            articles = state.get("raw_articles") or []
+            return f"Scraping {len(articles)} raw article(s)"
+
+        if node_name == "filter":
+            articles = state.get("raw_articles") or []
+            return f"Filtering {len(articles)} article(s) by relevance"
+
+        if node_name == "dedup":
+            articles = state.get("filtered_articles") or []
+            return f"Deduplicating {len(articles)} article(s)"
+
+        if node_name in ("synthesizer", "synthesize_one"):
+            cluster = state.get("cluster")
+            if cluster and hasattr(cluster, "primary"):
+                title = getattr(cluster.primary, "title", "")
+                if title:
+                    short = title[:60] + ("…" if len(title) > 60 else "")
+                    return f"Summarizing: {short}"
+            clusters = state.get("clusters") or []
+            return f"Dispatching {len(clusters)} cluster(s) for synthesis"
+
+        if node_name == "trender":
+            summaries = state.get("summaries") or []
+            return f"Identifying trends across {len(summaries)} summaries"
+
+        if node_name == "writer":
+            summaries = state.get("summaries") or []
+            trends = state.get("trends") or []
+            return f"Writing report — {len(summaries)} stories, {len(trends)} trend(s)"
+
+        if node_name == "exporter":
+            return "Exporting report to Markdown & Excel"
+
+    except Exception:
+        pass  # Fall through to default
+
+    return "Started"
+
+
+def _summarize_node_result(
+    node_name: str,
+    result: dict[str, Any],
+    state: Any,
+) -> tuple[str, dict[str, Any]]:
+    """Build a human-readable completion summary from node output.
+
+    Returns
+    -------
+    (message, stats_dict)
+        message: string like "15 clusters, 5 removed"
+        stats_dict: JSON-serializable dict for the payload column
+    """
+    stats: dict[str, Any] = {}
+
+    try:
+        if node_name == "planner":
+            queries = result.get("queries") or []
+            stats["query_count"] = len(queries)
+            return f"{len(queries)} search queries generated", stats
+
+        if node_name in ("retriever", "retrieve_one"):
+            raw = result.get("raw_articles") or []
+            query = (state or {}).get("query", "") if isinstance(state, dict) else ""
+            stats["hit_count"] = len(raw)
+            if query:
+                stats["query"] = query
+                return f"{len(raw)} results for '{query}'", stats
+            return f"{len(raw)} raw article(s) collected", stats
+
+        if node_name == "scraper":
+            raw = result.get("raw_articles") or []
+            stats["output_count"] = len(raw)
+            return f"{len(raw)} article(s) scraped", stats
+
+        if node_name == "filter":
+            kept = result.get("filtered_articles") or []
+            input_c = len((state or {}).get("raw_articles", [])) if isinstance(state, dict) else 0
+            removed = max(0, input_c - len(kept))
+            stats["kept"] = len(kept)
+            stats["removed"] = removed
+            return f"{len(kept)} kept, {removed} removed", stats
+
+        if node_name == "dedup":
+            clusters = result.get("clusters") or []
+            input_c = len((state or {}).get("filtered_articles", [])) if isinstance(state, dict) else 0
+            removed = max(0, input_c - len(clusters))
+            stats["cluster_count"] = len(clusters)
+            stats["deduped"] = removed
+            return f"{len(clusters)} clusters, {removed} duplicate(s) removed", stats
+
+        if node_name in ("synthesizer", "synthesize_one"):
+            summaries = result.get("summaries") or []
+            if summaries and len(summaries) == 1:
+                title = summaries[0].get("title", "") if isinstance(summaries[0], dict) else ""
+                if title:
+                    short = title[:50] + ("…" if len(title) > 50 else "")
+                    stats["title"] = short
+                    return f"Summary ready: {short}", stats
+            stats["summary_count"] = len(summaries)
+            return f"{len(summaries)} summary(ies) generated", stats
+
+        if node_name == "trender":
+            trends = result.get("trends") or []
+            stats["trend_count"] = len(trends)
+            return f"{len(trends)} trend(s) identified", stats
+
+        if node_name == "writer":
+            report = result.get("report_md") or ""
+            stats["report_length"] = len(report)
+            word_count = len(report.split()) if report else 0
+            stats["word_count"] = word_count
+            return f"Report drafted ({word_count:,} words)", stats
+
+        if node_name == "exporter":
+            return "Reports exported successfully", stats
+
+    except Exception:
+        pass  # Fall through to default
+
+    return "done", stats
 
 
 def _safe_log(

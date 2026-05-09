@@ -36,7 +36,14 @@
             </span>
           </span>
           <span class="shrink-0 w-[90px] text-primary-400/70 font-semibold">{{ log.node }}</span>
-          <span class="flex-1">{{ log.message }}</span>
+          <span class="flex-1">
+            {{ log.message }}
+            {% if log.payload and log.payload is mapping %}
+              {% for k, v in log.payload.items() if k != 'wall_seconds' %}
+                <span class="inline-flex items-center ml-1 px-1.5 py-0.5 rounded bg-white/5 text-[10px] text-surface-200/50 font-normal">{{ k }}={{ v }}</span>
+              {% endfor %}
+            {% endif %}
+          </span>
         </div>
       {% endfor %}
     </div>
