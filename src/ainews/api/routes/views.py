@@ -1715,6 +1715,42 @@ def run_stepper_partial(
     )
 
 
+@router.get("/runs/{run_id}/report-card", response_class=HTMLResponse)
+def run_report_card_partial(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: report summary card for run detail page.
+
+    Polled by the report-card-slot when the run completes but
+    the report row hasn't been persisted yet.  Once the report
+    exists, the card renders and polling stops automatically.
+    """
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.models.report import Report
+    from ainews.models.run import Run
+
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
+    if not run:
+        return HTMLResponse("")
+
+    report = session.execute(
+        select(Report).where(Report.run_id == run_id)
+    ).scalar_one_or_none()
+
+    return _render(
+        request,
+        "partials/run_report_card.html",
+        {"run": run, "report": report},
+    )
+
+
 @router.get(
     "/runs/{run_id}/logs-partial",
     response_class=HTMLResponse,
