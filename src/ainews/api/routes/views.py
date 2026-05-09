@@ -1239,14 +1239,72 @@ def report_preview(
         return resp
 
     # Read markdown from disk and convert to HTML
+    import re
+
     report_html = ""
+    report_meta: dict[str, object] = {}
+    toc_entries: list[dict[str, str]] = []
     md_path = Path(report.full_md_path) if report.full_md_path else None
     if md_path and md_path.exists():
         raw_md = md_path.read_text(encoding="utf-8")
-        report_html = md_lib.markdown(
-            raw_md,
+
+        # ── Extract metadata from markdown header ──
+        lines = raw_md.split("\n")
+        meta_lines_to_strip = 0
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+            if i == 0 and stripped.startswith("# "):
+                meta_lines_to_strip = 1
+                continue
+            if stripped.startswith("*") and stripped.endswith("*"):
+                meta_lines_to_strip = i + 1
+                inner = stripped.strip("*").strip()
+                if inner.startswith("Generated:"):
+                    report_meta["generated"] = inner.replace("Generated:", "").strip()
+                elif inner.startswith("Topics:"):
+                    parts = inner.split("|")
+                    report_meta["topics"] = parts[0].replace("Topics:", "").strip()
+                    if len(parts) > 1:
+                        report_meta["window"] = parts[1].replace("Window:", "").strip()
+                continue
+            if not stripped:
+                if meta_lines_to_strip > 0:
+                    meta_lines_to_strip = i + 1
+                continue
+            break  # Stop at first non-metadata line
+
+        # Strip metadata from the markdown body (avoid duplicate title)
+        body_md = "\n".join(lines[meta_lines_to_strip:])
+
+        # Count stats from raw markdown
+        section_count = len(re.findall(r"^##\s+", raw_md, re.MULTILINE))
+        source_count = len(re.findall(
+            r"^- https?://", raw_md, re.MULTILINE
+        ))
+        story_count = len(re.findall(r"^###\s+\d+\.\s+", raw_md, re.MULTILINE))
+        report_meta["sections"] = section_count
+        report_meta["sources"] = source_count
+        report_meta["stories"] = story_count
+
+        # Convert body to HTML
+        md_instance = md_lib.Markdown(
             extensions=["tables", "fenced_code", "codehilite", "toc"],
         )
+        report_html = md_instance.convert(body_md)
+
+        # Extract TOC entries from rendered headings
+        for match in re.finditer(
+            r'<h([23])\s+id="([^"]+)"[^>]*>(.*?)</h\1>',
+            report_html,
+        ):
+            level, anchor, text = match.group(1), match.group(2), match.group(3)
+            # Strip HTML tags from heading text
+            clean_text = re.sub(r"<[^>]+>", "", text).strip()
+            toc_entries.append({
+                "level": level,
+                "anchor": anchor,
+                "text": clean_text,
+            })
     else:
         report_html = (
             "<p class='text-surface-700/60 "
@@ -1261,6 +1319,8 @@ def report_preview(
             "run": run,
             "report": report,
             "report_html": report_html,
+            "report_meta": report_meta,
+            "toc_entries": toc_entries,
             "breadcrumbs": [
                 {"label": "Runs", "url": "/runs"},
                 {"label": f"Run {run.id[:12]}", "url": f"/runs/{run_id}"},
