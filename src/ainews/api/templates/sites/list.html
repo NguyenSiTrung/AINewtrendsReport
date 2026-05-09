@@ -162,21 +162,22 @@
                 <td class="px-6 py-4">
                   {% if site.category %}
                     {% set cat_lower = site.category | lower %}
-                    {% set color_class = "bg-surface-100 text-surface-800 dark:bg-surface-800 dark:text-surface-300 border-surface-200 dark:border-surface-700" %}
+                    {% set dot_color = "bg-surface-400 dark:bg-surface-500" %}
                     
                     {% if cat_lower == 'industry' %}
-                      {% set color_class = "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800/50" %}
+                      {% set dot_color = "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" %}
                     {% elif cat_lower == 'research' %}
-                      {% set color_class = "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400 border-cyan-200 dark:border-cyan-800/50" %}
+                      {% set dot_color = "bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.5)]" %}
                     {% elif cat_lower == 'tech' %}
-                      {% set color_class = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/50" %}
+                      {% set dot_color = "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" %}
                     {% elif cat_lower == 'analysis' %}
-                      {% set color_class = "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50" %}
+                      {% set dot_color = "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" %}
                     {% elif cat_lower == 'newsletter' %}
-                      {% set color_class = "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400 border-rose-200 dark:border-rose-800/50" %}
+                      {% set dot_color = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" %}
                     {% endif %}
                     
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border {{ color_class }}">
+                    <span class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-surface-50 text-surface-600 dark:bg-surface-800/50 dark:text-surface-300 border border-surface-200 dark:border-surface-700/50 shadow-sm transition-colors hover:bg-surface-100 dark:hover:bg-surface-800">
+                      <span class="w-2 h-2 rounded-full {{ dot_color }}"></span>
                       {{ site.category }}
                     </span>
                   {% else %}
