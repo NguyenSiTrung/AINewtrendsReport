@@ -2,53 +2,139 @@
 
 {% block title %}System Health{% endblock %}
 
+{% block head %}
+<style>
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.15); opacity: 0.7; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.6; }
+    100% { transform: scale(1.8); opacity: 0; }
+  }
+  .health-heartbeat {
+    animation: heartbeat 2s ease-in-out infinite;
+  }
+  .health-slide-up {
+    animation: slideUp 0.4s ease-out both;
+  }
+  .health-slide-up:nth-child(2) { animation-delay: 0.05s; }
+  .health-slide-up:nth-child(3) { animation-delay: 0.1s; }
+  .health-pulse-ring {
+    animation: pulse-ring 2.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .health-heartbeat, .health-pulse-ring { animation: none; }
+    .health-slide-up { animation-duration: 0s; }
+  }
+  .health-flash {
+    animation: slideUp 0.3s ease-out;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="space-y-6">
-  {# ── Header ── #}
-  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-    <div>
-      <h1 class="text-3xl font-bold tracking-tight text-surface-900 dark:text-white">System Health</h1>
-      <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">Real-time status of pipeline components.</p>
+<div class="space-y-6" x-data="{
+  countdown: 30,
+  init() {
+    setInterval(() => { this.countdown = this.countdown > 0 ? this.countdown - 1 : 30; }, 1000);
+    document.body.addEventListener('htmx:afterSwap', (e) => {
+      if (e.detail.target.id === 'health-grid') {
+        this.countdown = 30;
+        e.detail.target.classList.add('health-flash');
+        setTimeout(() => e.detail.target.classList.remove('health-flash'), 300);
+      }
+    });
+  }
+}">
+
+  {# ── Dark Gradient Hero Header ── #}
+  <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)]">
+    {# Decorative grid #}
+    <div class="absolute inset-0 opacity-[0.03]" style="background-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect width=%2240%22 height=%2240%22 fill=%22none%22 stroke=%22white%22 stroke-width=%220.5%22/></svg>');"></div>
+    {# Glow accents #}
+    <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+
+    <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span class="text-xs font-semibold uppercase tracking-widest text-cyan-400/80">System Health</span>
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <span class="relative flex h-1.5 w-1.5">
+              <span class="health-pulse-ring absolute inline-flex h-full w-full rounded-full bg-emerald-400"></span>
+              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+            </span>
+            Live
+          </span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Vitality Core</h1>
+        <p class="text-sm text-slate-400 mt-1">Real-time diagnostics of pipeline infrastructure.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        {# Countdown indicator #}
+        <div class="text-xs text-slate-500 font-mono tabular-nums hidden sm:block">
+          Next check in <span class="text-slate-300" x-text="countdown + 's'"></span>
+        </div>
+        {# Manual refresh button #}
+        <button
+          hx-get="/health/probes"
+          hx-target="#health-grid"
+          hx-indicator="#health-spinner"
+          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+                 bg-white/10 text-white border border-white/10
+                 hover:bg-white/20 hover:border-white/20
+                 active:scale-95 transition-all duration-200 backdrop-blur-sm">
+          <svg class="w-4 h-4 htmx-indicator:animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Refresh Now
+        </button>
+      </div>
     </div>
   </div>
 
+  {# ── HTMX-driven content ── #}
   <div hx-get="/health/probes" hx-trigger="load, every 30s" hx-target="#health-grid" hx-indicator="#health-spinner">
-    
-    <!-- Skeleton Loader matching new design -->
-    <div id="health-spinner" class="htmx-indicator w-full animate-pulse space-y-8">
-      <!-- Overall Status Skeleton -->
-      <div class="bg-white dark:bg-surface-900 rounded-2xl p-6 sm:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 flex items-center justify-between">
-        <div>
-          <div class="h-4 w-24 bg-surface-200 dark:bg-surface-700 rounded mb-3"></div>
-          <div class="h-8 w-48 sm:w-64 bg-surface-300 dark:bg-surface-600 rounded"></div>
+
+    {# Skeleton Loader #}
+    <div id="health-spinner" class="htmx-indicator w-full animate-pulse space-y-6">
+      {# Metric cards skeleton #}
+      <div class="flex flex-col lg:flex-row gap-4 mb-6">
+        {% for i in range(3) %}
+        <div class="flex-1 bg-white dark:bg-surface-900 rounded-2xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800">
+          <div class="h-3 w-20 bg-surface-200 dark:bg-surface-700 rounded mb-3"></div>
+          <div class="h-8 w-16 bg-surface-300 dark:bg-surface-600 rounded"></div>
         </div>
-        <div class="w-16 h-16 rounded-full bg-surface-200 dark:bg-surface-700"></div>
+        {% endfor %}
       </div>
-      
-      <!-- Probes List Skeleton -->
+      {# Probes skeleton #}
       <div class="bg-white dark:bg-surface-900 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 overflow-hidden">
-        <div class="px-6 py-5 border-b border-surface-100 dark:border-surface-800 bg-surface-50/50 dark:bg-surface-800/20">
+        <div class="px-6 py-5 border-b border-surface-100 dark:border-surface-800">
           <div class="h-5 w-40 bg-surface-300 dark:bg-surface-600 rounded"></div>
         </div>
-        <div class="divide-y divide-surface-100 dark:divide-surface-800/50">
-          {% for i in range(2) %}
-          <div class="p-6 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 rounded-xl bg-surface-200 dark:bg-surface-700 shrink-0"></div>
-              <div>
-                <div class="h-4 w-24 bg-surface-300 dark:bg-surface-600 rounded mb-2"></div>
-                <div class="h-3 w-48 bg-surface-200 dark:bg-surface-700 rounded"></div>
-              </div>
+        {% for i in range(3) %}
+        <div class="p-5 flex items-center justify-between border-b border-surface-100 dark:border-surface-800 last:border-0">
+          <div class="flex items-center gap-4">
+            <div class="w-11 h-11 rounded-xl bg-surface-200 dark:bg-surface-700"></div>
+            <div>
+              <div class="h-4 w-24 bg-surface-300 dark:bg-surface-600 rounded mb-2"></div>
+              <div class="h-3 w-40 bg-surface-200 dark:bg-surface-700 rounded"></div>
             </div>
-            <div class="h-8 w-20 bg-surface-200 dark:bg-surface-700 rounded-md"></div>
           </div>
-          {% endfor %}
+          <div class="h-7 w-16 bg-surface-200 dark:bg-surface-700 rounded-md"></div>
         </div>
+        {% endfor %}
       </div>
     </div>
-    
+
     <div id="health-grid">
-      {% include "partials/health_grid.html" %}
+      {# Loaded via HTMX #}
     </div>
   </div>
 </div>

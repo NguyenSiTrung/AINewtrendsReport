@@ -178,9 +178,6 @@ def dashboard(
         .all()
     )
 
-    # Health ribbon data
-    health_data = _probe_health(session)
-
     # Personalized greeting
     hour = datetime.now(tz=UTC).hour
     if hour < 12:
@@ -204,7 +201,6 @@ def dashboard(
             "sparkline_svg": sparkline_svg,
             "ring_svg": ring_svg,
             "latest_report_run": latest_report_run,
-            "health_ribbon": health_data,
             "greeting": greeting,
         },
     )
@@ -285,8 +281,7 @@ def health_page(
     if redirect:
         return redirect
 
-    health_data = _probe_health(session)
-    return _render(request, "health.html", health_data)
+    return _render(request, "health.html")
 
 
 @router.get("/health/probes", response_class=HTMLResponse)
@@ -303,23 +298,60 @@ def health_probes(
     return _render(request, "partials/health_grid.html", health_data)
 
 
+@router.get("/health/ribbon", response_class=HTMLResponse)
+def health_ribbon(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: return just the health ribbon for dashboard load."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    health_data = _probe_health(session)
+    return _render(request, "partials/health_ribbon.html", {"health_ribbon": health_data})
+
+
 def _probe_health(session: Session) -> dict[str, Any]:
-    """Run health probes and return template context."""
+    """Run health probes and return template context.
+
+    Each component dict contains:
+        status   – "ok" | "degraded" | "down"
+        detail   – human-readable description (optional)
+        latency  – probe round-trip in milliseconds
+        icon     – heroicon path for the component type
+        subtitle – short description of the component
+    """
+    import time
+    from datetime import datetime, timezone
+
     from sqlalchemy import text
 
-    components: dict[str, dict[str, str]] = {}
+    components: dict[str, dict[str, Any]] = {}
 
-    # DB probe
+    # ── DB probe ──────────────────────────────────────────
+    t0 = time.monotonic()
     try:
         session.execute(text("SELECT 1"))
-        components["Database"] = {"status": "ok"}
+        latency = round((time.monotonic() - t0) * 1000, 1)
+        components["Database"] = {
+            "status": "ok",
+            "latency": latency,
+            "icon": "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+            "subtitle": "PostgreSQL",
+        }
     except Exception as exc:
+        latency = round((time.monotonic() - t0) * 1000, 1)
         components["Database"] = {
             "status": "down",
             "detail": str(exc),
+            "latency": latency,
+            "icon": "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+            "subtitle": "PostgreSQL",
         }
 
-    # Valkey probe
+    # ── Valkey probe ──────────────────────────────────────
+    t0 = time.monotonic()
     try:
         import redis
 
@@ -328,14 +360,60 @@ def _probe_health(session: Session) -> dict[str, Any]:
         settings = Settings()
         r: Any = redis.from_url(settings.valkey_url, socket_timeout=2)
         r.ping()
-        components["Valkey"] = {"status": "ok"}
+        latency = round((time.monotonic() - t0) * 1000, 1)
+        components["Valkey"] = {
+            "status": "ok",
+            "latency": latency,
+            "icon": "M13 10V3L4 14h7v7l9-11h-7z",
+            "subtitle": "Cache & Broker",
+        }
     except Exception as exc:
+        latency = round((time.monotonic() - t0) * 1000, 1)
         components["Valkey"] = {
             "status": "down",
             "detail": str(exc),
+            "latency": latency,
+            "icon": "M13 10V3L4 14h7v7l9-11h-7z",
+            "subtitle": "Cache & Broker",
         }
 
-    # Overall
+    # ── Celery worker probe ───────────────────────────────
+    t0 = time.monotonic()
+    try:
+        from ainews.tasks.celery_app import celery_app
+
+        inspector = celery_app.control.inspect(timeout=2)
+        active = inspector.active()
+        latency = round((time.monotonic() - t0) * 1000, 1)
+        if active is None:
+            components["Celery"] = {
+                "status": "down",
+                "detail": "No workers responding",
+                "latency": latency,
+                "icon": "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
+                "subtitle": "Task Workers",
+            }
+        else:
+            worker_count = len(active)
+            active_tasks = sum(len(t) for t in active.values())
+            components["Celery"] = {
+                "status": "ok",
+                "detail": f"{worker_count} worker(s), {active_tasks} active task(s)",
+                "latency": latency,
+                "icon": "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
+                "subtitle": "Task Workers",
+            }
+    except Exception as exc:
+        latency = round((time.monotonic() - t0) * 1000, 1)
+        components["Celery"] = {
+            "status": "down",
+            "detail": str(exc),
+            "latency": latency,
+            "icon": "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
+            "subtitle": "Task Workers",
+        }
+
+    # ── Summary metrics ───────────────────────────────────
     statuses = [c["status"] for c in components.values()]
     if all(s == "ok" for s in statuses):
         overall = "ok"
@@ -344,7 +422,17 @@ def _probe_health(session: Session) -> dict[str, Any]:
     else:
         overall = "down"
 
-    return {"components": components, "overall": overall}
+    latencies = [c.get("latency", 0) for c in components.values()]
+    passing = sum(1 for s in statuses if s == "ok")
+
+    return {
+        "components": components,
+        "overall": overall,
+        "checked_at": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+        "avg_latency": round(sum(latencies) / len(latencies), 1) if latencies else 0,
+        "total_probes": len(components),
+        "passing_probes": passing,
+    }
 
 
 # ── Sites CRUD ───────────────────────────────────────────

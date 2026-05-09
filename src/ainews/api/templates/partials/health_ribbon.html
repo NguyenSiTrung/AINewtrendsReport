@@ -1,0 +1,23 @@
+{% if health_ribbon %}
+<div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border backdrop-blur-md shadow-sm transition-colors duration-300
+            {% if health_ribbon.overall == 'ok' %}border-success/20 bg-success/10
+            {% elif health_ribbon.overall == 'degraded' %}border-warning/20 bg-warning/10
+            {% else %}border-danger/20 bg-danger/10{% endif %}">
+  <span class="relative flex h-2.5 w-2.5">
+    <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75
+                 {% if health_ribbon.overall == 'ok' %}bg-success
+                 {% elif health_ribbon.overall == 'degraded' %}bg-warning
+                 {% else %}bg-danger{% endif %}"></span>
+    <span class="relative inline-flex rounded-full h-2.5 w-2.5
+                 {% if health_ribbon.overall == 'ok' %}bg-success
+                 {% elif health_ribbon.overall == 'degraded' %}bg-warning
+                 {% else %}bg-danger{% endif %}"></span>
+  </span>
+  <span class="text-xs font-semibold tracking-wide
+              {% if health_ribbon.overall == 'ok' %}text-success-700 dark:text-success-400
+              {% elif health_ribbon.overall == 'degraded' %}text-warning-700 dark:text-warning-400
+              {% else %}text-danger-700 dark:text-danger-400{% endif %}">
+    System {{ health_ribbon.overall | title }}
+  </span>
+</div>
+{% endif %}
