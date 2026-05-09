@@ -30,6 +30,7 @@ dependencies = [
     "pyjwt>=2.8",
     "bcrypt>=4.2",
     "markdown>=3.7",
+    "tzlocal>=5.3.1",
 ]
 
 [project.optional-dependencies]

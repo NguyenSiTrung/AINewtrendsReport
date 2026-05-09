@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15'",
@@ -33,6 +33,7 @@ dependencies = [
     { name = "tenacity" },
     { name = "trafilatura" },
     { name = "typer" },
+    { name = "tzlocal" },
     { name = "uvicorn" },
 ]
 
@@ -80,6 +81,7 @@ requires-dist = [
     { name = "tenacity", specifier = ">=9.0" },
     { name = "trafilatura", specifier = ">=2.0" },
     { name = "typer", specifier = ">=0.15" },
+    { name = "tzlocal", specifier = ">=5.3.1" },
     { name = "uvicorn", specifier = ">=0.34" },
 ]
 provides-extras = ["playwright"]

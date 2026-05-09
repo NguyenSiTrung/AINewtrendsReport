@@ -329,6 +329,7 @@ def _probe_health(session: Session) -> dict[str, Any]:
     """
     import time
     from datetime import datetime, timezone
+    from zoneinfo import ZoneInfo
 
     from sqlalchemy import text
 
@@ -433,7 +434,7 @@ def _probe_health(session: Session) -> dict[str, Any]:
     return {
         "components": components,
         "overall": overall,
-        "checked_at": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+        "checked_at": datetime.now(tz=ZoneInfo(request.app.state.templates.env.globals.get('app_timezone', 'UTC'))).strftime("%H:%M:%S %Z"),
         "avg_latency": round(sum(latencies) / len(latencies), 1) if latencies else 0,
         "total_probes": len(components),
         "passing_probes": passing,
@@ -818,6 +819,7 @@ def schedule_create(
     enabled: str | None = Form(None),
     use_smart_planner: str | None = Form(None),
     model_override: str = Form(""),
+    timezone: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Create a new schedule."""
@@ -839,6 +841,7 @@ def schedule_create(
         enabled=1 if enabled else 0,
         use_smart_planner=1 if use_smart_planner else 0,
         model_override=model_override.strip() or None,
+        timezone=timezone.strip() or None,
         created_at=datetime.now(tz=UTC).isoformat(),
     )
     session.add(sched)
@@ -900,6 +903,7 @@ def schedule_update(
     enabled: str | None = Form(None),
     use_smart_planner: str | None = Form(None),
     model_override: str = Form(""),
+    timezone: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Update an existing schedule."""
@@ -919,6 +923,7 @@ def schedule_update(
         sched.enabled = 1 if enabled else 0
         sched.use_smart_planner = 1 if use_smart_planner else 0
         sched.model_override = model_override.strip() or None
+        sched.timezone = timezone.strip() or None
         session.flush()
 
     resp = RedirectResponse(url="/schedules", status_code=303)

@@ -12,6 +12,28 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def _detect_local_timezone() -> str:
+    """Detect the system's local timezone, falling back to UTC."""
+    try:
+        from tzlocal import get_localzone
+
+        return str(get_localzone())
+    except Exception:
+        import time
+
+        if time.timezone == 0:
+            return "UTC"
+        # Fallback: try reading /etc/timezone
+        try:
+            with open("/etc/timezone") as f:
+                tz = f.read().strip()
+                if tz:
+                    return tz
+        except FileNotFoundError:
+            pass
+        return "UTC"
+
+
 class Settings(BaseSettings):
     """Central configuration for the ainews pipeline."""
 
@@ -42,6 +64,9 @@ class Settings(BaseSettings):
 
     # ── Pipeline ──────────────────────────────────────────
     report_max_sources: int = 50
+
+    # ── Timezone ──────────────────────────────────────────
+    timezone: str = _detect_local_timezone()
 
     # ── Logging ───────────────────────────────────────────
     log_level: str = "INFO"

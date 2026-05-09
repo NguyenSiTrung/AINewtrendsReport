@@ -23,6 +23,7 @@ class Schedule(Base):
     site_filter     JSON list of site categories/urls to include; nullable.
     topics          JSON list of topic strings; nullable.
     model_override  Optional LLM model name override; nullable.
+    timezone        IANA timezone for this schedule; nullable (uses app default).
     enabled         1 = active, 0 = disabled; defaults to 1.
     created_at      ISO 8601 creation timestamp (TEXT); nullable.
     """
@@ -36,6 +37,7 @@ class Schedule(Base):
     site_filter: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     topics: Mapped[list[Any] | None] = mapped_column(JSON, nullable=True)
     model_override: Mapped[str | None] = mapped_column(String, nullable=True)
+    timezone: Mapped[str | None] = mapped_column(String, nullable=True)
     use_smart_planner: Mapped[int] = mapped_column(Integer, default=0)
     enabled: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)

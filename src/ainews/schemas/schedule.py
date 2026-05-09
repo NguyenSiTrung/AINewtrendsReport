@@ -28,6 +28,7 @@ class ScheduleCreate(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    timezone: str | None = Field(default=None, description="IANA timezone for this schedule. Uses app default if null.")
     use_smart_planner: bool = Field(default=False)
     enabled: bool = Field(default=True)
 
@@ -46,6 +47,7 @@ class ScheduleUpdate(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    timezone: str | None = None
     use_smart_planner: bool | None = None
     enabled: bool | None = None
 
@@ -67,6 +69,7 @@ class ScheduleResponse(BaseModel):
     site_filter: list[Any] | None = None
     topics: list[Any] | None = None
     model_override: str | None = None
+    timezone: str | None = None
     use_smart_planner: bool
     enabled: bool
     created_at: str | None = None

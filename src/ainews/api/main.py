@@ -28,11 +28,35 @@ _STATIC_DIR = _API_DIR / "static"
 
 def _create_templates() -> Jinja2Templates:
     """Create Jinja2Templates instance with global context variables."""
+    from zoneinfo import ZoneInfo
+
+    from ainews.core.config import Settings
+
+    settings = Settings()
+    local_tz = ZoneInfo(settings.timezone)
+
+    def _localtime_filter(value: str, fmt: str = "%Y-%m-%d %H:%M") -> str:
+        """Convert a UTC ISO 8601 string to the configured local timezone."""
+        if not value:
+            return "—"
+        try:
+            from datetime import datetime, timezone
+
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            # If naive (no tz info), assume UTC
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(local_tz).strftime(fmt)
+        except (ValueError, TypeError):
+            return value[:16] if len(value) > 16 else value
+
     templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
+    templates.env.filters["localtime"] = _localtime_filter
     templates.env.globals.update(
         app_name="AI News & Trends",
         app_version="0.1.0",
         current_year=datetime.now().year,
+        app_timezone=settings.timezone,
     )
     return templates
 

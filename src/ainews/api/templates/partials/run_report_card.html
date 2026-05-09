@@ -38,7 +38,7 @@
             </span>
             {% endif %}
             <span class="text-xs font-medium text-slate-400">
-              🕐 {{ report.created_at[:19] if report.created_at else '—' }}
+              🕐 {{ report.created_at|localtime if report.created_at else '—' }}
             </span>
           </div>
         </div>

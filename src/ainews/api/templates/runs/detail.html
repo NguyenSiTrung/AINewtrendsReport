@@ -133,7 +133,7 @@
           </svg>
         </div>
       </div>
-      <div class="text-xl font-bold tracking-tight text-surface-900 dark:text-white">{{ run.created_at[:19] if run.created_at else '—' }}</div>
+      <div class="text-xl font-bold tracking-tight text-surface-900 dark:text-white">{{ run.created_at|localtime('%Y-%m-%d %H:%M:%S') if run.created_at else '—' }}</div>
     </div>
     <div class="bg-white dark:bg-surface-900 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 hover:-translate-y-1 transition-transform duration-300"
          {% if run.status in ('pending', 'running') %}

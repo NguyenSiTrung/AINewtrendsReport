@@ -25,6 +25,7 @@ def _schedule_to_response(sched: Schedule) -> ScheduleResponse:
         site_filter=sched.site_filter,
         topics=sched.topics,
         model_override=sched.model_override,
+        timezone=sched.timezone,
         use_smart_planner=bool(sched.use_smart_planner),
         enabled=bool(sched.enabled),
         created_at=sched.created_at,

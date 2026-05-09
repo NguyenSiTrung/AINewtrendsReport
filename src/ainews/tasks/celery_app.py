@@ -31,7 +31,7 @@ def make_celery(settings: Settings | None = None) -> Celery:
         task_serializer="json",
         result_serializer="json",
         accept_content=["json"],
-        timezone="UTC",
+        timezone=settings.timezone,
         enable_utc=True,
         task_track_started=True,
         # Queue declarations

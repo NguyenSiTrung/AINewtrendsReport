@@ -241,7 +241,7 @@
         <p class="text-xs text-surface-500 dark:text-surface-400">
           Report generated for Run
           <a href="/runs/{{ run.id }}" class="font-mono text-primary-600 dark:text-cyan-400 hover:underline">{{ run.id[:12] }}</a>
-          {% if report.created_at %}· {{ report.created_at[:19] }}{% endif %}
+          {% if report.created_at %}· {{ report.created_at|localtime }}{% endif %}
         </p>
         <div class="flex gap-2 no-print">
           <a href="/runs/{{ run.id }}/report/download/md"

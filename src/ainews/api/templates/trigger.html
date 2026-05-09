@@ -260,7 +260,7 @@
             </div>
             <div class="flex items-center justify-between">
               <span class="text-surface-500 dark:text-surface-400">Created</span>
-              <span class="text-surface-600 dark:text-surface-400 text-xs">{{ last_run.created_at[:16] if last_run.created_at else '—' }}</span>
+              <span class="text-surface-600 dark:text-surface-400 text-xs">{{ last_run.created_at|localtime if last_run.created_at else '—' }}</span>
             </div>
             {% if last_run.input_params and last_run.input_params.topics %}
             <div class="pt-1">
