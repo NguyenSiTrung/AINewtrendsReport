@@ -67,7 +67,7 @@
             
             <form method="POST" action="/settings/seed" class="w-full sm:w-auto shrink-0" @submit="loadingSeed = true">
               <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
-              <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-surface-900 dark:bg-white text-white dark:text-surface-900 text-sm font-semibold rounded-lg shadow-sm hover:bg-surface-800 dark:hover:bg-surface-100 transition-colors focus:outline-none focus:ring-2 focus:ring-surface-900 dark:focus:ring-white focus:ring-offset-2 dark:focus:ring-offset-surface-900 disabled:opacity-70 disabled:cursor-not-allowed" :disabled="loadingSeed">
+              <button type="submit" class="btn-primary w-full sm:w-auto" :disabled="loadingSeed">
                 <template x-if="!loadingSeed">
                   <span>Seed Default Data</span>
                 </template>
@@ -105,27 +105,27 @@
         <div class="p-6 space-y-4">
           
           {# Purge Old Runs #}
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 bg-white dark:bg-surface-900">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-danger/20 dark:border-danger/30 bg-white dark:bg-surface-900">
             <div>
               <h3 class="font-semibold text-surface-900 dark:text-white">Purge Old Runs</h3>
               <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">
                 Permanently delete runs and their associated logs older than a specified duration.
               </p>
             </div>
-            <button type="button" @click="showPurge = true" class="w-full sm:w-auto shrink-0 inline-flex items-center justify-center px-4 py-2 border-2 border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-sm font-semibold rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:focus:ring-offset-surface-900">
+            <button type="button" @click="showPurge = true" class="w-full sm:w-auto shrink-0 inline-flex items-center justify-center px-4 py-2 border-2 border-danger/30 text-danger text-sm font-semibold rounded-lg hover:bg-danger/10 transition-colors focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2 dark:focus:ring-offset-surface-900">
               Purge Runs
             </button>
           </div>
 
           {# Clear All Logs #}
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-rose-200/50 dark:border-rose-900/30 bg-white dark:bg-surface-900">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-xl border border-danger/20 dark:border-danger/30 bg-white dark:bg-surface-900">
             <div>
               <h3 class="font-semibold text-surface-900 dark:text-white">Clear All Logs</h3>
               <p class="text-sm text-surface-500 dark:text-surface-400 mt-1">
                 Remove all detailed log entries while keeping the top-level run records intact.
               </p>
             </div>
-            <button type="button" @click="showClearLogs = true" class="w-full sm:w-auto shrink-0 inline-flex items-center justify-center px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:focus:ring-offset-surface-900">
+            <button type="button" @click="showClearLogs = true" class="btn-danger w-full sm:w-auto shrink-0">
               Clear Logs
             </button>
           </div>
