@@ -7,6 +7,7 @@ This task is enqueued by the shared service layer and picks up a Run by
 
 from __future__ import annotations
 
+import logging
 import traceback
 from datetime import UTC, datetime
 from pathlib import Path
@@ -48,6 +49,21 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
 
     # Share this engine with @node_resilient so all nodes can log
     set_logging_engine(engine)
+
+    # ── Capture raw worker output to file ─────────────────
+    raw_log_handler: logging.FileHandler | None = None
+    try:
+        logs_dir = settings.db_path.parent / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+        raw_log_path = logs_dir / f"{run_id}.log"
+        raw_log_handler = logging.FileHandler(str(raw_log_path), encoding="utf-8")
+        raw_log_handler.setLevel(logging.DEBUG)
+        raw_log_handler.setFormatter(
+            logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+        )
+        logging.getLogger().addHandler(raw_log_handler)
+    except Exception:
+        raw_log_handler = None  # Non-fatal; proceed without capture
 
     log = logger.bind(run_id=run_id)
     log.info("run_pipeline.start")
@@ -189,6 +205,13 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         return {"status": "failed", "run_id": run_id, "error": str(exc)}
 
     finally:
+        # Remove the per-run file handler
+        if raw_log_handler is not None:
+            try:
+                logging.getLogger().removeHandler(raw_log_handler)
+                raw_log_handler.close()
+            except Exception:
+                pass
         engine.dispose()
 
 

@@ -1,0 +1,31 @@
+{# HTMX partial: Raw worker log output (terminal-style).
+
+   Displays the full raw log captured from the Celery worker during
+   pipeline execution. Self-polls while the run is active.
+#}
+<div id="run-raw-log"
+     {% if run.status in ('pending', 'running') %}
+       hx-get="/runs/{{ run.id }}/raw-log"
+       hx-trigger="every 3s"
+       hx-swap="outerHTML"
+     {% endif %}>
+  {% if raw_content %}
+    <div x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
+         class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-xs overflow-x-auto max-h-[32rem] overflow-y-auto whitespace-pre-wrap text-surface-200/80 leading-relaxed">{{ raw_content }}</div>
+  {% else %}
+    <div class="bg-surface-950 dark:bg-black rounded-lg p-8 text-center">
+      {% if run.status in ('pending', 'running') %}
+        <div class="flex items-center justify-center gap-2 text-sm text-surface-200/50">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          Waiting for worker output…
+        </div>
+      {% else %}
+        <p class="text-sm text-surface-200/40">No raw log captured for this run.</p>
+        <p class="text-xs text-surface-200/30 mt-1">Raw log capture was introduced after this run completed.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>

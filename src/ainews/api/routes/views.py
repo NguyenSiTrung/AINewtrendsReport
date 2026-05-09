@@ -1789,6 +1789,67 @@ def run_logs_partial(
     )
 
 
+@router.get("/runs/{run_id}/raw-log", response_class=HTMLResponse)
+def run_raw_log_partial(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: raw worker log output for a run."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.core.config import Settings
+    from ainews.models.run import Run
+
+    run = session.execute(
+        __import__("sqlalchemy").select(Run).where(Run.id == run_id)
+    ).scalar_one_or_none()
+    if not run:
+        return HTMLResponse("")
+
+    settings = Settings()
+    log_path = settings.db_path.parent / "logs" / f"{run_id}.log"
+    raw_content = ""
+    if log_path.exists():
+        try:
+            raw_content = log_path.read_text(encoding="utf-8")
+        except Exception:
+            raw_content = "Error reading log file."
+
+    return _render(
+        request,
+        "partials/run_raw_log.html",
+        {"run": run, "raw_content": raw_content},
+    )
+
+
+@router.get("/runs/{run_id}/raw-log/download")
+def run_raw_log_download(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Download the raw worker log file."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.core.config import Settings
+
+    settings = Settings()
+    log_path = settings.db_path.parent / "logs" / f"{run_id}.log"
+    if not log_path.exists():
+        return JSONResponse({"detail": "Raw log not found"}, status_code=404)
+
+    return FileResponse(
+        path=str(log_path),
+        media_type="text/plain",
+        filename=f"worker_{run_id[:12]}.log",
+    )
+
+
 # ── Report Preview & Download ─────────────────────────────
 
 
