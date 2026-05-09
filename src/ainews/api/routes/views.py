@@ -895,18 +895,65 @@ def runs_list(
     request: Request,
     page: int = 1,
     per_page: int = 25,
+    status: str = "",
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
-    """List all pipeline runs with pagination."""
+    """List all pipeline runs with pagination and status filtering."""
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
+
+    from datetime import datetime as _dt
 
     from sqlalchemy import func, select
 
     from ainews.models.run import Run
 
+    # ── Aggregate metrics (unfiltered) ──
+    count_total = session.scalar(select(func.count(Run.id))) or 0
+    count_completed = (
+        session.scalar(select(func.count(Run.id)).where(Run.status == "completed")) or 0
+    )
+    count_failed = (
+        session.scalar(select(func.count(Run.id)).where(Run.status == "failed")) or 0
+    )
+    count_running = (
+        session.scalar(
+            select(func.count(Run.id)).where(Run.status.in_(["pending", "running"]))
+        )
+        or 0
+    )
+
+    # Average duration of completed runs
+    avg_duration_str = "—"
+    finished_runs = (
+        session.execute(
+            select(Run.started_at, Run.finished_at)
+            .where(Run.status == "completed")
+            .where(Run.started_at.isnot(None))
+            .where(Run.finished_at.isnot(None))
+        )
+        .all()
+    )
+    if finished_runs:
+        durations = []
+        for s, f in finished_runs:
+            try:
+                start = _dt.fromisoformat(s.replace("Z", "+00:00"))
+                end = _dt.fromisoformat(f.replace("Z", "+00:00"))
+                durations.append(int((end - start).total_seconds()))
+            except (ValueError, TypeError):
+                pass
+        if durations:
+            avg = sum(durations) // len(durations)
+            m, s = divmod(abs(avg), 60)
+            avg_duration_str = f"{m}m {s}s"
+
+    # ── Filtered query ──
     q = select(Run).order_by(Run.created_at.desc())
+    if status:
+        q = q.where(Run.status == status)
+
     total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
     total_pages = max(1, (total + per_page - 1) // per_page)
     page = max(1, min(page, total_pages))
@@ -914,17 +961,46 @@ def runs_list(
 
     runs = session.execute(q.limit(per_page).offset(offset)).scalars().all()
     has_active_runs = any(r.status in ("pending", "running") for r in runs)
+
+    # ── Per-run enrichment (duration string) ──
+    run_durations: dict[str, str] = {}
+    for run in runs:
+        if run.started_at and run.finished_at:
+            try:
+                start = _dt.fromisoformat(run.started_at.replace("Z", "+00:00"))
+                end = _dt.fromisoformat(run.finished_at.replace("Z", "+00:00"))
+                diff = int((end - start).total_seconds())
+                m, s = divmod(abs(diff), 60)
+                run_durations[run.id] = f"{m}m {s}s"
+            except (ValueError, TypeError):
+                run_durations[run.id] = "—"
+        else:
+            run_durations[run.id] = "—"
+
+    query_params: dict[str, str] = {}
+    if status:
+        query_params["status"] = status
+
     return _render(
         request,
         "runs/list.html",
         {
             "runs": runs,
             "has_active_runs": has_active_runs,
+            "run_durations": run_durations,
+            "status_filter": status,
             "page": page,
             "per_page": per_page,
             "total": total,
             "total_pages": total_pages,
-            "query_params": {},
+            "query_params": query_params,
+            "metrics": {
+                "total": count_total,
+                "completed": count_completed,
+                "failed": count_failed,
+                "running": count_running,
+                "avg_duration": avg_duration_str,
+            },
         },
     )
 
@@ -932,6 +1008,7 @@ def runs_list(
 @router.get("/runs/table", response_class=HTMLResponse)
 def runs_table_partial(
     request: Request,
+    status: str = "",
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """HTMX partial: runs table body with auto-refresh."""
@@ -939,17 +1016,41 @@ def runs_table_partial(
     if redirect:
         return redirect
 
+    from datetime import datetime as _dt
+
     from sqlalchemy import select
 
     from ainews.models.run import Run
 
-    runs = session.execute(select(Run).order_by(Run.created_at.desc())).scalars().all()
+    q = select(Run).order_by(Run.created_at.desc())
+    if status:
+        q = q.where(Run.status == status)
+    runs = session.execute(q).scalars().all()
     has_active_runs = any(r.status in ("pending", "running") for r in runs)
+
+    run_durations: dict[str, str] = {}
+    for run in runs:
+        if run.started_at and run.finished_at:
+            try:
+                start = _dt.fromisoformat(run.started_at.replace("Z", "+00:00"))
+                end = _dt.fromisoformat(run.finished_at.replace("Z", "+00:00"))
+                diff = int((end - start).total_seconds())
+                m, s = divmod(abs(diff), 60)
+                run_durations[run.id] = f"{m}m {s}s"
+            except (ValueError, TypeError):
+                run_durations[run.id] = "—"
+        else:
+            run_durations[run.id] = "—"
 
     return _render(
         request,
         "partials/runs_table.html",
-        {"runs": runs, "has_active_runs": has_active_runs},
+        {
+            "runs": runs,
+            "has_active_runs": has_active_runs,
+            "run_durations": run_durations,
+            "status_filter": status,
+        },
     )
 
 

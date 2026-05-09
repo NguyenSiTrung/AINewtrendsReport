@@ -5,7 +5,9 @@
     total_pages — total number of pages
     base_url    — URL path without query params (e.g. "/logs")
     query_params — dict of extra query params to preserve
+    target_id   — (optional) CSS selector for HTMX target and select (default: "#page-content")
 #}
+{% set _target = target_id | default('#page-content') %}
 {% if total_pages > 1 %}
 {% macro page_url(p) %}{{ base_url }}?page={{ p }}{% for k, v in (query_params or {}).items() if v %}&{{ k }}={{ v | urlencode }}{% endfor %}{% endmacro %}
 <nav class="flex items-center justify-between px-4 py-3 border-t border-surface-200 dark:border-surface-700"
@@ -19,8 +21,9 @@
       <a href="{{ page_url(page - 1) }}"
          hx-get="{{ page_url(page - 1) }}"
          hx-push-url="true"
-         hx-target="#page-content"
-         hx-swap="innerHTML"
+         hx-target="{{ _target }}"
+         hx-select="{{ _target }}"
+         hx-swap="outerHTML"
          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm font-medium
                 border border-surface-200 dark:border-surface-700
                 text-surface-700 dark:text-surface-200
@@ -45,7 +48,7 @@
 
     {% if start_page > 1 %}
       <a href="{{ page_url(1) }}"
-         hx-get="{{ page_url(1) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+         hx-get="{{ page_url(1) }}" hx-push-url="true" hx-target="{{ _target }}" hx-select="{{ _target }}" hx-swap="outerHTML"
          class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
                 border border-surface-200 dark:border-surface-700
                 text-surface-700 dark:text-surface-200
@@ -61,7 +64,7 @@
                      bg-primary-600 text-white">{{ p }}</span>
       {% else %}
         <a href="{{ page_url(p) }}"
-           hx-get="{{ page_url(p) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+           hx-get="{{ page_url(p) }}" hx-push-url="true" hx-target="{{ _target }}" hx-select="{{ _target }}" hx-swap="outerHTML"
            class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
                   border border-surface-200 dark:border-surface-700
                   text-surface-700 dark:text-surface-200
@@ -74,7 +77,7 @@
         <span class="px-1 text-surface-700/40 dark:text-surface-200/30">…</span>
       {% endif %}
       <a href="{{ page_url(total_pages) }}"
-         hx-get="{{ page_url(total_pages) }}" hx-push-url="true" hx-target="#page-content" hx-swap="innerHTML"
+         hx-get="{{ page_url(total_pages) }}" hx-push-url="true" hx-target="{{ _target }}" hx-select="{{ _target }}" hx-swap="outerHTML"
          class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium
                 border border-surface-200 dark:border-surface-700
                 text-surface-700 dark:text-surface-200
@@ -86,8 +89,9 @@
       <a href="{{ page_url(page + 1) }}"
          hx-get="{{ page_url(page + 1) }}"
          hx-push-url="true"
-         hx-target="#page-content"
-         hx-swap="innerHTML"
+         hx-target="{{ _target }}"
+         hx-select="{{ _target }}"
+         hx-swap="outerHTML"
          class="inline-flex items-center px-2.5 py-1.5 rounded-lg text-sm font-medium
                 border border-surface-200 dark:border-surface-700
                 text-surface-700 dark:text-surface-200

@@ -131,7 +131,7 @@
         {% endif %}
       </div>
     {% endif %}
-    {% with base_url="/sites", query_params=query_params %}
+    {% with base_url="/sites", query_params=query_params, target_id="#sites-list-container" %}
       {% include "partials/pagination.html" %}
     {% endwith %}
     </div> <!-- Close #sites-list-container -->
