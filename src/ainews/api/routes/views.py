@@ -1117,9 +1117,21 @@ def settings_page(
 
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
+    from ainews.models.schedule import Schedule
+    from ainews.models.site import Site
 
     total_runs = session.scalar(select(func.count(Run.id))) or 0
     total_logs = session.scalar(select(func.count(RunLog.id))) or 0
+    total_sites = session.scalar(select(func.count(Site.id))) or 0
+    total_schedules = session.scalar(select(func.count(Schedule.id))) or 0
+
+    # Last run time (most recent started_at)
+    last_run_row = session.execute(
+        select(Run.started_at)
+        .where(Run.started_at.isnot(None))
+        .order_by(Run.started_at.desc())
+        .limit(1)
+    ).scalar_one_or_none()
 
     return _render(
         request,
@@ -1128,6 +1140,9 @@ def settings_page(
             "stats": {
                 "total_runs": total_runs,
                 "total_logs": total_logs,
+                "total_sites": total_sites,
+                "total_schedules": total_schedules,
+                "last_run_at": last_run_row,
             },
         },
     )
