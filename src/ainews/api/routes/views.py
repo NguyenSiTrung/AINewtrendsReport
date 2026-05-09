@@ -894,19 +894,8 @@ def llm_settings_page(
     has_api_key = bool(effective.api_key and effective.api_key.strip())
     masked_key = effective.masked_api_key if has_api_key else ""
 
-    # Lightweight connectivity probe (reuses health check logic)
-    llm_status: dict[str, object] = {"connected": False, "latency_ms": 0, "error": ""}
-    try:
-        from ainews.llm.connectivity import check_llm_connection
-
-        result = check_llm_connection(effective)
-        llm_status = {
-            "connected": result.success,
-            "latency_ms": round(result.latency_ms),
-            "error": result.error or "",
-        }
-    except Exception:
-        llm_status["error"] = "Probe failed"
+    # Probe will be done asynchronously via HTMX to prevent UI blocking
+    llm_status: dict[str, object] = {"connected": None, "latency_ms": 0, "error": ""}
 
     return _render(
         request,
@@ -973,6 +962,40 @@ def llm_settings_save(
     resp = RedirectResponse(url="/llm", status_code=303)
     flash(resp, "LLM settings saved", "success")
     return resp
+
+
+@router.get("/llm/probe", response_class=HTMLResponse)
+def llm_probe(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: asynchronously check LLM connectivity."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return HTMLResponse("")
+
+    from ainews.core.config import Settings
+    from ainews.llm.factory import get_llm_config
+    from ainews.models.settings_kv import SettingsKV
+    from ainews.llm.connectivity import check_llm_connection
+
+    row = session.get(SettingsKV, "llm")
+    db_overrides = row.value if row else None
+    effective = get_llm_config(Settings(), db_overrides=db_overrides)
+
+    llm_status: dict[str, object] = {"connected": False, "latency_ms": 0, "error": ""}
+    try:
+        result = check_llm_connection(effective)
+        llm_status = {
+            "connected": result.success,
+            "latency_ms": round(result.latency_ms),
+            "error": result.error or "",
+        }
+    except Exception:
+        llm_status["error"] = "Probe failed"
+
+    return _render(request, "partials/llm_probe.html", {"llm_status": llm_status})
+
 
 
 # ── Runs ─────────────────────────────────────────────────
