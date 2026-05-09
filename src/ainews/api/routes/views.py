@@ -636,6 +636,72 @@ def site_update(
 # ── Schedules CRUD ───────────────────────────────────────
 
 
+def _cron_to_human(expr: str) -> str:
+    """Convert a cron expression to a human-readable string.
+
+    Handles common patterns; falls back to the raw expression for
+    anything too exotic.
+    """
+    parts = expr.strip().split()
+    if len(parts) != 5:
+        return expr
+
+    minute, hour, dom, month, dow = parts
+
+    # Day-of-week mapping
+    dow_names = {
+        "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed",
+        "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun",
+    }
+
+    def _fmt_time(h: str, m: str) -> str:
+        try:
+            hi, mi = int(h), int(m)
+            suffix = "AM" if hi < 12 else "PM"
+            h12 = hi % 12 or 12
+            return f"{h12}:{mi:02d} {suffix}"
+        except ValueError:
+            return f"{h}:{m}"
+
+    # Every minute
+    if all(p == "*" for p in parts):
+        return "Every minute"
+
+    # Every N minutes
+    if minute.startswith("*/") and hour == "*" and dom == "*" and month == "*" and dow == "*":
+        return f"Every {minute[2:]} minutes"
+
+    # Every hour at :MM
+    if hour == "*" and dom == "*" and month == "*" and dow == "*":
+        try:
+            return f"Every hour at :{int(minute):02d}"
+        except ValueError:
+            pass
+
+    # Daily at HH:MM
+    if dom == "*" and month == "*" and dow == "*" and hour != "*" and minute != "*":
+        return f"Daily at {_fmt_time(hour, minute)}"
+
+    # Specific weekday(s) at HH:MM
+    if dom == "*" and month == "*" and dow != "*" and hour != "*" and minute != "*":
+        time_str = _fmt_time(hour, minute)
+        if "," in dow:
+            days = [dow_names.get(d.strip(), d.strip()) for d in dow.split(",")]
+            return f"{', '.join(days)} at {time_str}"
+        if "-" in dow:
+            start, end = dow.split("-", 1)
+            return f"{dow_names.get(start, start)}–{dow_names.get(end, end)} at {time_str}"
+        day = dow_names.get(dow, dow)
+        return f"Every {day} at {time_str}"
+
+    # Specific day of month
+    if dom != "*" and month == "*" and dow == "*" and hour != "*" and minute != "*":
+        time_str = _fmt_time(hour, minute)
+        return f"Monthly on day {dom} at {time_str}"
+
+    return expr
+
+
 @router.get("/schedules", response_class=HTMLResponse)
 def schedules_list(
     request: Request,
@@ -653,6 +719,17 @@ def schedules_list(
 
     from ainews.models.schedule import Schedule
 
+    # ── Aggregate stats (unfiltered) for hero header ─────
+    total_all = session.scalar(select(func.count(Schedule.id))) or 0
+    active_count = session.scalar(
+        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
+    ) or 0
+    paused_count = total_all - active_count
+    smart_planner_count = session.scalar(
+        select(func.count(Schedule.id)).where(Schedule.use_smart_planner == 1)
+    ) or 0
+
+    # ── Filtered query ───────────────────────────────────
     q = select(Schedule).order_by(Schedule.name)
     if search:
         q = q.where(Schedule.name.ilike(f"%{search}%") | Schedule.cron_expr.ilike(f"%{search}%"))
@@ -663,11 +740,14 @@ def schedules_list(
     offset = (page - 1) * per_page
 
     schedules = session.execute(q.limit(per_page).offset(offset)).scalars().all()
-    
+
+    # Build human-readable cron map
+    cron_human: dict[int, str] = {s.id: _cron_to_human(s.cron_expr) for s in schedules}
+
     query_params: dict[str, str] = {}
     if search:
         query_params["search"] = search
-        
+
     return _render(
         request,
         "schedules/list.html",
@@ -679,6 +759,11 @@ def schedules_list(
             "total": total,
             "total_pages": total_pages,
             "query_params": query_params,
+            "total_all": total_all,
+            "active_count": active_count,
+            "paused_count": paused_count,
+            "smart_planner_count": smart_planner_count,
+            "cron_human": cron_human,
         },
     )
 
@@ -692,11 +777,24 @@ def schedule_new_form(
     redirect = _require_auth(request, session)
     if redirect:
         return redirect
+
+    from sqlalchemy import func, select
+
+    from ainews.models.schedule import Schedule
+
+    total_schedules = session.scalar(select(func.count(Schedule.id))) or 0
+    active_count = session.scalar(
+        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
+    ) or 0
+
     return _render(
         request,
         "schedules/form.html",
         {
             "schedule": None,
+            "cron_human": _cron_to_human("0 7 * * 1"),
+            "total_schedules": total_schedules,
+            "active_count": active_count,
             "breadcrumbs": [
                 {"label": "Schedules", "url": "/schedules"},
                 {"label": "New Schedule", "url": None},
@@ -711,6 +809,10 @@ def schedule_create(
     name: str = Form(...),
     cron_expr: str = Form(...),
     timeframe_days: int = Form(7),
+    topics: str = Form(""),
+    enabled: str | None = Form(None),
+    use_smart_planner: str | None = Form(None),
+    model_override: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Create a new schedule."""
@@ -718,12 +820,21 @@ def schedule_create(
     if redirect:
         return redirect
 
+    from datetime import UTC, datetime
+
     from ainews.models.schedule import Schedule
+
+    topics_list = [t.strip() for t in topics.split(",") if t.strip()] if topics.strip() else None
 
     sched = Schedule(
         name=name,
         cron_expr=cron_expr,
         timeframe_days=timeframe_days,
+        topics=topics_list,
+        enabled=1 if enabled else 0,
+        use_smart_planner=1 if use_smart_planner else 0,
+        model_override=model_override.strip() or None,
+        created_at=datetime.now(tz=UTC).isoformat(),
     )
     session.add(sched)
     session.flush()
@@ -744,16 +855,27 @@ def schedule_edit_form(
     if redirect:
         return redirect
 
+    from sqlalchemy import func, select
+
     from ainews.models.schedule import Schedule
 
     sched = session.get(Schedule, schedule_id)
     if not sched:
         return RedirectResponse(url="/schedules", status_code=303)
+
+    total_schedules = session.scalar(select(func.count(Schedule.id))) or 0
+    active_count = session.scalar(
+        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
+    ) or 0
+
     return _render(
         request,
         "schedules/form.html",
         {
             "schedule": sched,
+            "cron_human": _cron_to_human(sched.cron_expr),
+            "total_schedules": total_schedules,
+            "active_count": active_count,
             "breadcrumbs": [
                 {"label": "Schedules", "url": "/schedules"},
                 {"label": "Edit Schedule", "url": None},
@@ -769,6 +891,10 @@ def schedule_update(
     name: str = Form(...),
     cron_expr: str = Form(...),
     timeframe_days: int = Form(7),
+    topics: str = Form(""),
+    enabled: str | None = Form(None),
+    use_smart_planner: str | None = Form(None),
+    model_override: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Update an existing schedule."""
@@ -780,9 +906,14 @@ def schedule_update(
 
     sched = session.get(Schedule, schedule_id)
     if sched:
+        topics_list = [t.strip() for t in topics.split(",") if t.strip()] if topics.strip() else None
         sched.name = name
         sched.cron_expr = cron_expr
         sched.timeframe_days = timeframe_days
+        sched.topics = topics_list
+        sched.enabled = 1 if enabled else 0
+        sched.use_smart_planner = 1 if use_smart_planner else 0
+        sched.model_override = model_override.strip() or None
         session.flush()
 
     resp = RedirectResponse(url="/schedules", status_code=303)
