@@ -259,11 +259,11 @@ def _summarize_node_input(node_name: str, state: Any) -> str:
             return f"Dispatching {len(queries)} search(es)"
 
         if node_name == "scraper":
-            articles = state.get("raw_articles") or []
-            return f"Scraping {len(articles)} raw article(s)"
+            articles = state.get("raw_results") or []
+            return f"Scraping {len(articles)} raw result(s)"
 
         if node_name == "filter":
-            articles = state.get("raw_articles") or []
+            articles = state.get("fetched_articles") or []
             return f"Filtering {len(articles)} article(s) by relevance"
 
         if node_name == "dedup":
@@ -320,23 +320,23 @@ def _summarize_node_result(
             return f"{len(queries)} search queries generated", stats
 
         if node_name in ("retriever", "retrieve_one"):
-            raw = result.get("raw_articles") or []
+            raw = result.get("raw_results") or []
             query = (state or {}).get("query", "") if isinstance(state, dict) else ""
             stats["hit_count"] = len(raw)
             if query:
                 stats["query"] = query
                 return f"{len(raw)} results for '{query}'", stats
-            return f"{len(raw)} raw article(s) collected", stats
+            return f"{len(raw)} raw result(s) collected", stats
 
         if node_name == "scraper":
-            raw = result.get("raw_articles") or []
+            raw = result.get("fetched_articles") or []
             stats["output_count"] = len(raw)
             return f"{len(raw)} article(s) scraped", stats
 
         if node_name == "filter":
             kept = result.get("filtered_articles") or []
             input_c = (
-                len((state or {}).get("raw_articles", []))
+                len((state or {}).get("fetched_articles", []))
                 if isinstance(state, dict)
                 else 0
             )

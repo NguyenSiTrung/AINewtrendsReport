@@ -115,19 +115,18 @@ class TestPipelineReportCreation:
 
         settings_with_path = Settings(valkey_url="redis://t:6379/0")
 
+        # Pre-create the report files at the deterministic paths
+        # that _persist_report expects (written by the exporter node)
+        report_dir = settings_with_path.db_path.parent / "reports" / "report-run-1"
+        report_dir.mkdir(parents=True, exist_ok=True)
+        (report_dir / "report.md").write_text("# AI News Report\n\nExec summary.")
+        (report_dir / "report.xlsx").write_bytes(b"fake xlsx")
+
         with (
             patch.object(pipeline, "get_settings", return_value=settings_with_path),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
             patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,
-            patch(
-                "ainews.tasks.pipeline.export_markdown",
-                return_value=tmp_path / "report-run-1" / "report.md",
-            ),
-            patch(
-                "ainews.tasks.pipeline.export_xlsx",
-                return_value=tmp_path / "report-run-1" / "report.xlsx",
-            ),
         ):
             mock_saver.from_conn_string.return_value.__enter__ = MagicMock(
                 return_value=MagicMock()

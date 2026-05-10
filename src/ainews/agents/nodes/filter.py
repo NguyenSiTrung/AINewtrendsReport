@@ -66,6 +66,12 @@ def filter_node(state: GraphState) -> dict[str, Any]:
     topics = state["params"]["topics"]
     loop_count = state.get("loop_count", 0)
 
+    # H5 fix: on retry, skip articles whose URLs we already kept
+    # in a previous filter pass to avoid operator.add duplicates.
+    already_filtered = state.get("filtered_articles", [])
+    seen_urls: set[str] = {a["url"] for a in already_filtered}
+    articles = [a for a in articles if a["url"] not in seen_urls]
+
     llm = _get_llm()
     kept: list[Article] = []
 
@@ -105,6 +111,7 @@ def filter_node(state: GraphState) -> dict[str, Any]:
         input_count=len(articles),
         kept_count=len(kept),
         loop_count=loop_count + 1,
+        skipped_duplicates=len(seen_urls),
     )
 
     return {

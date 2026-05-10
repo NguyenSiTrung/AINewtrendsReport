@@ -17,8 +17,6 @@ import structlog
 
 from ainews.core.config import get_settings
 from ainews.core.database import create_engine, get_db_session
-from ainews.exporters.markdown import export_markdown
-from ainews.exporters.xlsx import export_xlsx
 from ainews.models.report import Report
 from ainews.models.run import Run
 from ainews.tasks.celery_app import celery_app
@@ -245,22 +243,20 @@ def _persist_report(
     reports_dir: Path,
     log: Any,
 ) -> None:
-    """Export MD/XLSX and create a Report row in the database."""
+    """Create a Report DB row using paths written by the exporter node.
+
+    The exporter node already writes ``report.md`` and ``report.xlsx``
+    to ``reports_dir / run_id / ...``.  This function only constructs
+    the deterministic paths and persists the metadata row — no file I/O.
+    """
     try:
         report_md: str = result.get("report_md", "")
-        summaries: list[dict[str, Any]] = result.get("summaries", [])
         trends: list[dict[str, Any]] = result.get("trends", [])
 
-        # Export files
-        md_path = export_markdown(report_md, run_id, reports_dir)
-        xlsx_data = {
-            "summaries": summaries,
-            "trends": trends,
-            "executive_summary": report_md[:500] if report_md else "",
-            "params": {},
-            "generated_at": datetime.now(tz=UTC).isoformat(),
-        }
-        xlsx_path = export_xlsx(xlsx_data, run_id, reports_dir)
+        # Deterministic paths written by the exporter node
+        run_dir = reports_dir / run_id
+        md_path = run_dir / "report.md"
+        xlsx_path = run_dir / "report.xlsx"
 
         # Build title from first markdown heading or fallback
         title = _extract_title(report_md)
@@ -274,7 +270,7 @@ def _persist_report(
                 title=title,
                 summary_md=summary_md,
                 full_md_path=str(md_path),
-                xlsx_path=str(xlsx_path),
+                xlsx_path=str(xlsx_path) if xlsx_path.exists() else None,
                 trends=trends,
                 token_usage=result.get("metrics", {}).get("token_usage"),
                 created_at=datetime.now(tz=UTC).isoformat(),
