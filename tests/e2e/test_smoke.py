@@ -72,6 +72,7 @@ def _get_auth_cookies() -> dict[str, str]:
                 "password": password,
                 "csrf_token": csrf_cookie,
             },
+            headers={"x-csrf-token": csrf_cookie},
             cookies={"csrf_token": csrf_cookie},
         )
 

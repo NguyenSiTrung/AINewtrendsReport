@@ -111,6 +111,7 @@ class TestLoginFlow:
                 "password": "wrong",
                 "csrf_token": token,
             },
+            headers={"x-csrf-token": token},
             cookies={"csrf_token": token},
             follow_redirects=False,
         )
@@ -128,6 +129,7 @@ class TestLoginFlow:
                 "password": "secret123",
                 "csrf_token": token,
             },
+            headers={"x-csrf-token": token},
             cookies={"csrf_token": token},
             follow_redirects=False,
         )
@@ -147,6 +149,7 @@ class TestLoginFlow:
                 "password": "secret123",
                 "csrf_token": token,
             },
+            headers={"x-csrf-token": token},
             cookies={"csrf_token": token},
             follow_redirects=False,
         )
@@ -185,6 +188,7 @@ class TestAuthGating:
                 "password": "secret123",
                 "csrf_token": token,
             },
+            headers={"x-csrf-token": token},
             cookies={"csrf_token": token},
             follow_redirects=False,
         )
@@ -232,3 +236,79 @@ class TestCreateAdminUser:
             get_db_session(engine) as session,
         ):
             create_admin_user(session, "dup@admin.com", "pass2")
+
+
+# ── CSRF Middleware ─────────────────────────────────────
+
+
+class TestCSRFMiddleware:
+    """Tests for CSRF double-submit cookie middleware (C3 fix)."""
+
+    def test_mutating_request_without_header_is_rejected(
+        self, client: TestClient
+    ) -> None:
+        """POST without X-CSRF-Token header → 403."""
+        # Get a csrf cookie first
+        resp = client.get("/login")
+        csrf_cookie = resp.cookies.get("csrf_token", "")
+
+        # POST with cookie but NO header → must be rejected
+        resp = client.post(
+            "/login",
+            data={"email": "a@b.com", "password": "x"},
+            cookies={"csrf_token": csrf_cookie},
+            follow_redirects=False,
+        )
+        assert resp.status_code == 403
+
+    def test_mutating_request_with_valid_header_passes(
+        self, client: TestClient, engine: Any
+    ) -> None:
+        """POST with matching X-CSRF-Token header → not 403."""
+        _seed_admin(engine)
+        resp = client.get("/login")
+        csrf_cookie = resp.cookies.get("csrf_token", "")
+
+        resp = client.post(
+            "/login",
+            data={
+                "email": "admin@test.com",
+                "password": "secret123",
+                "csrf_token": csrf_cookie,
+            },
+            headers={"x-csrf-token": csrf_cookie},
+            cookies={"csrf_token": csrf_cookie},
+            follow_redirects=False,
+        )
+        # Should succeed (303 redirect) or render page, not 403
+        assert resp.status_code != 403
+
+    def test_mutating_request_with_mismatched_header_rejected(
+        self, client: TestClient
+    ) -> None:
+        """POST with wrong X-CSRF-Token header → 403."""
+        resp = client.get("/login")
+        csrf_cookie = resp.cookies.get("csrf_token", "")
+
+        resp = client.post(
+            "/login",
+            data={"email": "a@b.com", "password": "x"},
+            headers={"x-csrf-token": "wrong-token-value"},
+            cookies={"csrf_token": csrf_cookie},
+            follow_redirects=False,
+        )
+        assert resp.status_code == 403
+
+    def test_get_request_not_affected_by_csrf(self, client: TestClient) -> None:
+        """GET requests bypass CSRF check entirely."""
+        resp = client.get("/login")
+        assert resp.status_code == 200
+
+    def test_no_cookie_no_header_rejected(self, client: TestClient) -> None:
+        """POST with neither cookie nor header → 403."""
+        resp = client.post(
+            "/login",
+            data={"email": "a@b.com", "password": "x"},
+            follow_redirects=False,
+        )
+        assert resp.status_code == 403

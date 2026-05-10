@@ -178,7 +178,7 @@ def trigger_run(
         ainews trigger-run --schedule weekly-ai-news
         ainews trigger-run --topics "AI,ML" --days 7
     """
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.core.database import create_engine, get_db_session
     from ainews.services.pipeline import create_and_enqueue_run
 
@@ -188,7 +188,7 @@ def trigger_run(
     if days:
         params["timeframe_days"] = days
 
-    settings = Settings()
+    settings = get_settings()
     engine = create_engine(settings.database_url)
 
     try:
@@ -226,11 +226,11 @@ def llm_test() -> None:
     Resolves config from env/settings, displays it (with masked API key),
     issues a 1-token completion, and prints the result.
     """
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.llm.connectivity import check_llm_connection
     from ainews.llm.factory import get_llm_config
 
-    settings = Settings()
+    settings = get_settings()
     config = get_llm_config(settings)
 
     typer.echo("── Resolved LLM Config ──")
@@ -261,11 +261,11 @@ def seed(ctx: typer.Context) -> None:
     if ctx.invoked_subcommand is not None:
         return
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.core.database import create_engine, get_db_session
     from ainews.seed import seed_all
 
-    settings = Settings()
+    settings = get_settings()
     engine = create_engine(settings.database_url)
     with get_db_session(engine) as session:
         result = seed_all(session)
@@ -303,10 +303,10 @@ def seed_admin(
         ainews seed admin --email admin@example.com --password changeme
     """
     from ainews.api.auth import create_admin_user
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.core.database import create_engine, get_db_session
 
-    settings = Settings()
+    settings = get_settings()
     engine = create_engine(settings.database_url)
 
     try:

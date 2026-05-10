@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import structlog
@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 
-from ainews.core.config import Settings
+from ainews.core.config import get_settings
 from ainews.core.database import create_engine
 
 logger = structlog.get_logger(__name__)
@@ -30,9 +30,9 @@ def _create_templates() -> Jinja2Templates:
     """Create Jinja2Templates instance with global context variables."""
     from zoneinfo import ZoneInfo
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
 
-    settings = Settings()
+    settings = get_settings()
     local_tz = ZoneInfo(settings.timezone)
 
     def _localtime_filter(value: str, fmt: str = "%Y-%m-%d %H:%M") -> str:
@@ -40,12 +40,12 @@ def _create_templates() -> Jinja2Templates:
         if not value:
             return "—"
         try:
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
             # If naive (no tz info), assume UTC
             if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=timezone.utc)
+                dt = dt.replace(tzinfo=UTC)
             return dt.astimezone(local_tz).strftime(fmt)
         except (ValueError, TypeError):
             return value[:16] if len(value) > 16 else value
@@ -64,7 +64,7 @@ def _create_templates() -> Jinja2Templates:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Initialise the DB engine at startup; dispose at shutdown."""
-    settings = Settings()
+    settings = get_settings()
     engine = create_engine(settings.database_url)
     app.state.engine = engine
     logger.info("api.startup", db_url=settings.database_url)

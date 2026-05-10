@@ -7,6 +7,7 @@ from pathlib import Path
 from typer.testing import CliRunner
 
 from ainews.cli import app
+from ainews.core.config import clear_settings_cache
 from ainews.core.database import create_engine, get_db_session
 from ainews.models.base import Base
 from ainews.models.schedule import Schedule
@@ -27,6 +28,7 @@ def test_seed_creates_sites_and_schedules(tmp_path: Path) -> None:
     db_path = tmp_path / "test.db"
     _setup_db(db_path)
 
+    clear_settings_cache()
     result = runner.invoke(app, ["seed"], env={"AINEWS_DB_PATH": str(db_path)})
 
     assert result.exit_code == 0, result.output
@@ -46,7 +48,9 @@ def test_seed_idempotent_second_run_skips_all(tmp_path: Path) -> None:
     _setup_db(db_path)
 
     env = {"AINEWS_DB_PATH": str(db_path)}
+    clear_settings_cache()
     runner.invoke(app, ["seed"], env=env)
+    clear_settings_cache()
     result = runner.invoke(app, ["seed"], env=env)
 
     assert result.exit_code == 0, result.output

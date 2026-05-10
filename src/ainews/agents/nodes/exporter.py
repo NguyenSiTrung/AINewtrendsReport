@@ -24,9 +24,9 @@ logger = structlog.get_logger(__name__)
 
 def _get_reports_dir() -> Path:
     """Return the reports output directory from settings."""
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
 
-    settings = Settings()
+    settings = get_settings()
     # Reports live alongside the database
     return settings.db_path.parent / "reports"
 

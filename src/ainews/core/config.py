@@ -6,6 +6,7 @@ or a ``.env`` file (auto-discovered in the working directory).
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import field_validator
@@ -80,3 +81,23 @@ class Settings(BaseSettings):
     def database_url(self) -> str:
         """SQLAlchemy-compatible URL derived from db_path."""
         return f"sqlite+pysqlite:///{self.db_path.resolve()}"
+
+
+def get_settings() -> Settings:
+    """Return a cached ``Settings`` instance.
+
+    Uses ``functools.lru_cache`` so the ``.env`` file and environment
+    variables are parsed at most once per process.  Call
+    ``clear_settings_cache()`` in tests to reset.
+    """
+    return _get_settings_cached()
+
+
+def clear_settings_cache() -> None:
+    """Clear the cached ``Settings`` instance (for test isolation)."""
+    _get_settings_cached.cache_clear()
+
+
+@lru_cache(maxsize=1)
+def _get_settings_cached() -> Settings:
+    return Settings()

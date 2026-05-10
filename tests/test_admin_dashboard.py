@@ -50,6 +50,7 @@ def _auth_cookies(client: TestClient, engine: Any) -> dict[str, str]:
             "password": "pass123",
             "csrf_token": csrf,
         },
+        headers={"x-csrf-token": csrf},
         cookies={"csrf_token": csrf},
         follow_redirects=False,
     )

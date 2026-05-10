@@ -160,3 +160,62 @@ class TestShouldDegrade:
         ]
         state = _make_state(errors=errors)
         assert should_degrade(state, error_threshold=3) is True
+
+
+class TestLoggingEngineContextVar:
+    """Verify ContextVar-based engine isolation (C4 fix)."""
+
+    def test_set_and_get_engine(self) -> None:
+        """set_logging_engine stores engine retrievable by _get_logging_engine."""
+        from ainews.agents.resilience import (
+            _get_logging_engine,
+            _logging_engine_var,
+            set_logging_engine,
+        )
+
+        sentinel = object()
+        old = _logging_engine_var.get()
+        try:
+            set_logging_engine(sentinel)
+            assert _get_logging_engine() is sentinel
+        finally:
+            _logging_engine_var.set(old)
+
+    def test_concurrent_tasks_isolated(self) -> None:
+        """Concurrent threads each get their own engine via ContextVar."""
+        import contextvars
+        import threading
+
+        from ainews.agents.resilience import (
+            _get_logging_engine,
+            _logging_engine_var,
+            set_logging_engine,
+        )
+
+        results: dict[str, Any] = {}
+        old = _logging_engine_var.get()
+
+        def task(name: str, engine: object) -> None:
+            # Each thread gets a fresh context copy
+            ctx = contextvars.copy_context()
+
+            def run() -> None:
+                set_logging_engine(engine)
+                results[name] = _get_logging_engine()
+
+            ctx.run(run)
+
+        engine_a = object()
+        engine_b = object()
+
+        t1 = threading.Thread(target=task, args=("a", engine_a))
+        t2 = threading.Thread(target=task, args=("b", engine_b))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+        assert results["a"] is engine_a
+        assert results["b"] is engine_b
+        # Main thread not affected
+        assert _logging_engine_var.get() is old

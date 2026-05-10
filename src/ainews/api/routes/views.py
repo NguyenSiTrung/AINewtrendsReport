@@ -314,7 +314,9 @@ def health_ribbon(
         return redirect
 
     health_data = _probe_health(session)
-    return _render(request, "partials/health_ribbon.html", {"health_ribbon": health_data})
+    return _render(
+        request, "partials/health_ribbon.html", {"health_ribbon": health_data}
+    )
 
 
 def _probe_health(session: Session) -> dict[str, Any]:
@@ -328,13 +330,14 @@ def _probe_health(session: Session) -> dict[str, Any]:
         subtitle – short description of the component
     """
     import time
-    from datetime import datetime, timezone
+    from datetime import datetime
     from zoneinfo import ZoneInfo
 
-    from ainews.core.config import Settings
     from sqlalchemy import text
 
-    settings = Settings()
+    from ainews.core.config import get_settings
+
+    settings = get_settings()
 
     components: dict[str, dict[str, Any]] = {}
 
@@ -364,9 +367,9 @@ def _probe_health(session: Session) -> dict[str, Any]:
     try:
         import redis
 
-        from ainews.core.config import Settings
+        from ainews.core.config import get_settings
 
-        settings = Settings()
+        settings = get_settings()
         r: Any = redis.from_url(settings.valkey_url, socket_timeout=2)
         r.ping()
         latency = round((time.monotonic() - t0) * 1000, 1)
@@ -437,7 +440,9 @@ def _probe_health(session: Session) -> dict[str, Any]:
     return {
         "components": components,
         "overall": overall,
-        "checked_at": datetime.now(tz=ZoneInfo(settings.timezone)).strftime("%H:%M:%S %Z"),
+        "checked_at": datetime.now(tz=ZoneInfo(settings.timezone)).strftime(
+            "%H:%M:%S %Z"
+        ),
         "avg_latency": round(sum(latencies) / len(latencies), 1) if latencies else 0,
         "total_probes": len(components),
         "passing_probes": passing,
@@ -467,20 +472,17 @@ def sites_list(
 
     # ── Aggregate stats (unfiltered) for hero header ─────
     total_all = session.scalar(select(func.count(Site.id))) or 0
-    active_count = session.scalar(
-        select(func.count(Site.id)).where(Site.enabled == 1)
-    ) or 0
+    active_count = (
+        session.scalar(select(func.count(Site.id)).where(Site.enabled == 1)) or 0
+    )
     inactive_count = total_all - active_count
 
     # Category breakdown (unfiltered)
-    cat_rows = (
-        session.execute(
-            select(Site.category, func.count(Site.id))
-            .group_by(Site.category)
-            .order_by(func.count(Site.id).desc())
-        )
-        .all()
-    )
+    cat_rows = session.execute(
+        select(Site.category, func.count(Site.id))
+        .group_by(Site.category)
+        .order_by(func.count(Site.id).desc())
+    ).all()
     all_categories = [row[0] for row in cat_rows if row[0]]
     category_counts = {row[0]: row[1] for row in cat_rows if row[0]}
 
@@ -564,8 +566,8 @@ def site_create(
     from ainews.models.site import Site
 
     site = Site(
-        url=url, 
-        category=category, 
+        url=url,
+        category=category,
         priority=priority,
         crawl_depth=crawl_depth,
         enabled=1 if enabled else 0,
@@ -659,8 +661,14 @@ def _cron_to_human(expr: str) -> str:
 
     # Day-of-week mapping
     dow_names = {
-        "0": "Sun", "1": "Mon", "2": "Tue", "3": "Wed",
-        "4": "Thu", "5": "Fri", "6": "Sat", "7": "Sun",
+        "0": "Sun",
+        "1": "Mon",
+        "2": "Tue",
+        "3": "Wed",
+        "4": "Thu",
+        "5": "Fri",
+        "6": "Sat",
+        "7": "Sun",
     }
 
     def _fmt_time(h: str, m: str) -> str:
@@ -677,7 +685,13 @@ def _cron_to_human(expr: str) -> str:
         return "Every minute"
 
     # Every N minutes
-    if minute.startswith("*/") and hour == "*" and dom == "*" and month == "*" and dow == "*":
+    if (
+        minute.startswith("*/")
+        and hour == "*"
+        and dom == "*"
+        and month == "*"
+        and dow == "*"
+    ):
         return f"Every {minute[2:]} minutes"
 
     # Every hour at :MM
@@ -699,7 +713,9 @@ def _cron_to_human(expr: str) -> str:
             return f"{', '.join(days)} at {time_str}"
         if "-" in dow:
             start, end = dow.split("-", 1)
-            return f"{dow_names.get(start, start)}–{dow_names.get(end, end)} at {time_str}"
+            return (
+                f"{dow_names.get(start, start)}–{dow_names.get(end, end)} at {time_str}"
+            )
         day = dow_names.get(dow, dow)
         return f"Every {day} at {time_str}"
 
@@ -730,18 +746,24 @@ def schedules_list(
 
     # ── Aggregate stats (unfiltered) for hero header ─────
     total_all = session.scalar(select(func.count(Schedule.id))) or 0
-    active_count = session.scalar(
-        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
-    ) or 0
+    active_count = (
+        session.scalar(select(func.count(Schedule.id)).where(Schedule.enabled == 1))
+        or 0
+    )
     paused_count = total_all - active_count
-    smart_planner_count = session.scalar(
-        select(func.count(Schedule.id)).where(Schedule.use_smart_planner == 1)
-    ) or 0
+    smart_planner_count = (
+        session.scalar(
+            select(func.count(Schedule.id)).where(Schedule.use_smart_planner == 1)
+        )
+        or 0
+    )
 
     # ── Filtered query ───────────────────────────────────
     q = select(Schedule).order_by(Schedule.name)
     if search:
-        q = q.where(Schedule.name.ilike(f"%{search}%") | Schedule.cron_expr.ilike(f"%{search}%"))
+        q = q.where(
+            Schedule.name.ilike(f"%{search}%") | Schedule.cron_expr.ilike(f"%{search}%")
+        )
 
     total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
     total_pages = max(1, (total + per_page - 1) // per_page)
@@ -792,9 +814,10 @@ def schedule_new_form(
     from ainews.models.schedule import Schedule
 
     total_schedules = session.scalar(select(func.count(Schedule.id))) or 0
-    active_count = session.scalar(
-        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
-    ) or 0
+    active_count = (
+        session.scalar(select(func.count(Schedule.id)).where(Schedule.enabled == 1))
+        or 0
+    )
 
     return _render(
         request,
@@ -834,7 +857,9 @@ def schedule_create(
 
     from ainews.models.schedule import Schedule
 
-    topics_list = [t.strip() for t in topics.split(",") if t.strip()] if topics.strip() else None
+    topics_list = (
+        [t.strip() for t in topics.split(",") if t.strip()] if topics.strip() else None
+    )
 
     sched = Schedule(
         name=name,
@@ -875,9 +900,10 @@ def schedule_edit_form(
         return RedirectResponse(url="/schedules", status_code=303)
 
     total_schedules = session.scalar(select(func.count(Schedule.id))) or 0
-    active_count = session.scalar(
-        select(func.count(Schedule.id)).where(Schedule.enabled == 1)
-    ) or 0
+    active_count = (
+        session.scalar(select(func.count(Schedule.id)).where(Schedule.enabled == 1))
+        or 0
+    )
 
     return _render(
         request,
@@ -918,7 +944,11 @@ def schedule_update(
 
     sched = session.get(Schedule, schedule_id)
     if sched:
-        topics_list = [t.strip() for t in topics.split(",") if t.strip()] if topics.strip() else None
+        topics_list = (
+            [t.strip() for t in topics.split(",") if t.strip()]
+            if topics.strip()
+            else None
+        )
         sched.name = name
         sched.cron_expr = cron_expr
         sched.timeframe_days = timeframe_days
@@ -972,7 +1002,10 @@ def trigger_page(
 
     # Last completed run
     last_run = session.execute(
-        select(Run).where(Run.status.in_(["completed", "completed_with_errors"])).order_by(Run.created_at.desc()).limit(1)
+        select(Run)
+        .where(Run.status.in_(["completed", "completed_with_errors"]))
+        .order_by(Run.created_at.desc())
+        .limit(1)
     ).scalar_one_or_none()
 
     # Active run check
@@ -995,25 +1028,31 @@ def trigger_page(
             pass
 
     # Serialize schedule data for JS auto-populate
-    schedules_json = json.dumps([
-        {
-            "name": s.name,
-            "topics": s.topics or [],
-            "timeframe_days": s.timeframe_days,
-            "use_smart_planner": bool(s.use_smart_planner),
-        }
-        for s in schedules
-    ])
+    schedules_json = json.dumps(
+        [
+            {
+                "name": s.name,
+                "topics": s.topics or [],
+                "timeframe_days": s.timeframe_days,
+                "use_smart_planner": bool(s.use_smart_planner),
+            }
+            for s in schedules
+        ]
+    )
 
-    return _render(request, "trigger.html", {
-        "schedules": schedules,
-        "schedules_json": schedules_json,
-        "total_runs": total_runs,
-        "success_rate": success_rate,
-        "last_run": last_run,
-        "last_run_duration": last_run_duration,
-        "active_run": active_run,
-    })
+    return _render(
+        request,
+        "trigger.html",
+        {
+            "schedules": schedules,
+            "schedules_json": schedules_json,
+            "total_runs": total_runs,
+            "success_rate": success_rate,
+            "last_run": last_run,
+            "last_run_duration": last_run_duration,
+            "active_run": active_run,
+        },
+    )
 
 
 @router.post("/trigger")
@@ -1066,7 +1105,7 @@ def llm_settings_page(
     if redirect:
         return redirect
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.llm.factory import get_llm_config
     from ainews.models.settings_kv import SettingsKV
 
@@ -1075,7 +1114,7 @@ def llm_settings_page(
 
     # Resolve effective config (env defaults merged with DB overrides) so the
     # form always shows the values that would actually be used at runtime.
-    effective = get_llm_config(Settings(), db_overrides=db_overrides)
+    effective = get_llm_config(get_settings(), db_overrides=db_overrides)
     settings_data: dict[str, object] = {
         "base_url": effective.base_url,
         "model": effective.model,
@@ -1170,14 +1209,14 @@ def llm_probe(
     if redirect:
         return HTMLResponse("")
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
+    from ainews.llm.connectivity import check_llm_connection
     from ainews.llm.factory import get_llm_config
     from ainews.models.settings_kv import SettingsKV
-    from ainews.llm.connectivity import check_llm_connection
 
     row = session.get(SettingsKV, "llm")
     db_overrides = row.value if row else None
-    effective = get_llm_config(Settings(), db_overrides=db_overrides)
+    effective = get_llm_config(get_settings(), db_overrides=db_overrides)
 
     llm_status: dict[str, object] = {"connected": False, "latency_ms": 0, "error": ""}
     try:
@@ -1191,7 +1230,6 @@ def llm_probe(
         llm_status["error"] = "Probe failed"
 
     return _render(request, "partials/llm_probe.html", {"llm_status": llm_status})
-
 
 
 # ── Runs ─────────────────────────────────────────────────
@@ -1238,15 +1276,12 @@ def runs_list(
 
     # Average duration of completed runs
     avg_duration_str = "—"
-    finished_runs = (
-        session.execute(
-            select(Run.started_at, Run.finished_at)
-            .where(Run.status.in_(["completed", "completed_with_errors"]))
-            .where(Run.started_at.isnot(None))
-            .where(Run.finished_at.isnot(None))
-        )
-        .all()
-    )
+    finished_runs = session.execute(
+        select(Run.started_at, Run.finished_at)
+        .where(Run.status.in_(["completed", "completed_with_errors"]))
+        .where(Run.started_at.isnot(None))
+        .where(Run.finished_at.isnot(None))
+    ).all()
     if finished_runs:
         durations = []
         for s, f in finished_runs:
@@ -1552,16 +1587,22 @@ def settings_page(
         .limit(1)
     ).scalar_one_or_none()
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.models.settings_kv import SettingsKV
 
     # Read pipeline settings from DB (falls back to env config defaults)
-    env_settings = Settings()
+    env_settings = get_settings()
     pipeline_row = session.get(SettingsKV, "pipeline")
-    pipeline_db = pipeline_row.value if pipeline_row and isinstance(pipeline_row.value, dict) else {}
+    pipeline_db = (
+        pipeline_row.value
+        if pipeline_row and isinstance(pipeline_row.value, dict)
+        else {}
+    )
 
     pipeline_settings = {
-        "report_max_sources": pipeline_db.get("report_max_sources", env_settings.report_max_sources),
+        "report_max_sources": pipeline_db.get(
+            "report_max_sources", env_settings.report_max_sources
+        ),
     }
 
     return _render(
@@ -1823,7 +1864,7 @@ def run_raw_log_partial(
     if redirect:
         return redirect
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
     from ainews.models.run import Run
 
     run = session.execute(
@@ -1832,7 +1873,7 @@ def run_raw_log_partial(
     if not run:
         return HTMLResponse("")
 
-    settings = Settings()
+    settings = get_settings()
     log_path = settings.db_path.parent / "logs" / f"{run_id}.log"
     raw_content = ""
     if log_path.exists():
@@ -1863,9 +1904,9 @@ def run_raw_log_download(
     if redirect:
         return redirect
 
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
 
-    settings = Settings()
+    settings = get_settings()
     log_path = settings.db_path.parent / "logs" / f"{run_id}.log"
     if not log_path.exists():
         return JSONResponse({"detail": "Raw log not found"}, status_code=404)
@@ -1951,9 +1992,7 @@ def report_preview(
 
         # Count stats from raw markdown
         section_count = len(re.findall(r"^##\s+", raw_md, re.MULTILINE))
-        source_count = len(re.findall(
-            r"^- https?://", raw_md, re.MULTILINE
-        ))
+        source_count = len(re.findall(r"^- https?://", raw_md, re.MULTILINE))
         story_count = len(re.findall(r"^###\s+\d+\.\s+", raw_md, re.MULTILINE))
         report_meta["sections"] = section_count
         report_meta["sources"] = source_count
@@ -1973,11 +2012,13 @@ def report_preview(
             level, anchor, text = match.group(1), match.group(2), match.group(3)
             # Strip HTML tags from heading text
             clean_text = re.sub(r"<[^>]+>", "", text).strip()
-            toc_entries.append({
-                "level": level,
-                "anchor": anchor,
-                "text": clean_text,
-            })
+            toc_entries.append(
+                {
+                    "level": level,
+                    "anchor": anchor,
+                    "text": clean_text,
+                }
+            )
     else:
         report_html = (
             "<p class='text-surface-700/60 "

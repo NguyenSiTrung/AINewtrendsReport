@@ -10,6 +10,7 @@ Provides 5 layers of error resilience:
 
 from __future__ import annotations
 
+import contextvars
 import time
 import traceback
 from collections.abc import Callable
@@ -126,7 +127,9 @@ def node_resilient(
                 if engine is not None and run_id:
                     elapsed = round(time.time() - start, 2)
                     summary, stats = _summarize_node_result(
-                        node_name, result, state,
+                        node_name,
+                        result,
+                        state,
                     )
                     payload: dict[str, Any] = {"wall_seconds": elapsed}
                     if stats:
@@ -178,7 +181,9 @@ def node_resilient(
 # ── Logging helpers for node_resilient ───────────────────
 
 _UNSET = object()  # sentinel to distinguish "not yet tried" from "tried and failed"
-_logging_engine_cache: Any = _UNSET
+_logging_engine_var: contextvars.ContextVar[Any] = contextvars.ContextVar(
+    "_logging_engine", default=_UNSET
+)
 
 
 def _get_logging_engine() -> Any:
@@ -186,22 +191,26 @@ def _get_logging_engine() -> Any:
 
     Returns ``None`` if engine cannot be created (e.g., during tests
     without a configured database).  Uses a sentinel so we only
-    attempt engine creation once per process.
+    attempt engine creation once per context (task / thread).
+
+    Uses ``contextvars.ContextVar`` so concurrent Celery tasks in the
+    same process each get an isolated engine reference.
     """
-    global _logging_engine_cache
-    if _logging_engine_cache is not _UNSET:
-        return _logging_engine_cache
+    cached = _logging_engine_var.get()
+    if cached is not _UNSET:
+        return cached
     try:
-        from ainews.core.config import Settings
+        from ainews.core.config import get_settings
         from ainews.core.database import create_engine as _create
 
-        settings = Settings()
-        _logging_engine_cache = _create(settings.database_url)
+        settings = get_settings()
+        engine = _create(settings.database_url)
+        _logging_engine_var.set(engine)
         logger.debug("logging_engine_created", url=settings.database_url)
-        return _logging_engine_cache
+        return engine
     except Exception:
         logger.warning("logging_engine_unavailable", exc_info=True)
-        _logging_engine_cache = None
+        _logging_engine_var.set(None)
         return None
 
 
@@ -212,9 +221,11 @@ def set_logging_engine(engine: Any) -> None:
     ``@node_resilient`` nodes share the task's DB engine instead of
     trying to create one from scratch (which may fail if env vars
     are not forwarded to the worker).
+
+    Uses ``contextvars.ContextVar`` so concurrent tasks each get
+    their own isolated reference.
     """
-    global _logging_engine_cache
-    _logging_engine_cache = engine
+    _logging_engine_var.set(engine)
 
 
 def _extract_run_id(state: Any) -> str | None:
@@ -324,7 +335,11 @@ def _summarize_node_result(
 
         if node_name == "filter":
             kept = result.get("filtered_articles") or []
-            input_c = len((state or {}).get("raw_articles", [])) if isinstance(state, dict) else 0
+            input_c = (
+                len((state or {}).get("raw_articles", []))
+                if isinstance(state, dict)
+                else 0
+            )
             removed = max(0, input_c - len(kept))
             stats["kept"] = len(kept)
             stats["removed"] = removed
@@ -332,7 +347,11 @@ def _summarize_node_result(
 
         if node_name == "dedup":
             clusters = result.get("clusters") or []
-            input_c = len((state or {}).get("filtered_articles", [])) if isinstance(state, dict) else 0
+            input_c = (
+                len((state or {}).get("filtered_articles", []))
+                if isinstance(state, dict)
+                else 0
+            )
             removed = max(0, input_c - len(clusters))
             stats["cluster_count"] = len(clusters)
             stats["deduped"] = removed
@@ -341,7 +360,11 @@ def _summarize_node_result(
         if node_name in ("synthesizer", "synthesize_one"):
             summaries = result.get("summaries") or []
             if summaries and len(summaries) == 1:
-                title = summaries[0].get("title", "") if isinstance(summaries[0], dict) else ""
+                title = (
+                    summaries[0].get("title", "")
+                    if isinstance(summaries[0], dict)
+                    else ""
+                )
                 if title:
                     short = title[:50] + ("…" if len(title) > 50 else "")
                     stats["title"] = short

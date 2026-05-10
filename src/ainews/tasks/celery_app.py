@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from celery import Celery
 
-from ainews.core.config import Settings
+from ainews.core.config import Settings, get_settings
 
 
 def make_celery(settings: Settings | None = None) -> Celery:
@@ -21,7 +21,7 @@ def make_celery(settings: Settings | None = None) -> Celery:
         Optional settings override; defaults to loading from env.
     """
     if settings is None:
-        settings = Settings()
+        settings = get_settings()
 
     app = Celery("ainews")
 

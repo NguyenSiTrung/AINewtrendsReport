@@ -21,9 +21,9 @@ logger = structlog.get_logger(__name__)
 def _get_tavily_tool() -> Any:
     """Lazy-load Tavily search tool."""
     from ainews.agents.tools.tavily_search import TavilySearchTool
-    from ainews.core.config import Settings
+    from ainews.core.config import get_settings
 
-    settings = Settings()
+    settings = get_settings()
     return TavilySearchTool(api_key=settings.tavily_api_key)
 
 

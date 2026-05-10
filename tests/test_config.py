@@ -87,3 +87,37 @@ class TestSettingsEnvFile:
         s = Settings(_env_file=env_file)  # type: ignore[call-arg]
         assert s.log_level == "WARNING"
         assert s.llm_model == "test-model"
+
+
+class TestGetSettingsCached:
+    """Tests for get_settings() singleton cache (H4 fix)."""
+
+    def test_returns_settings_instance(self) -> None:
+        """get_settings() returns a Settings object."""
+        from ainews.core.config import clear_settings_cache, get_settings
+
+        clear_settings_cache()
+        s = get_settings()
+        assert isinstance(s, Settings)
+        clear_settings_cache()
+
+    def test_returns_same_instance(self) -> None:
+        """Multiple calls return the same cached instance."""
+        from ainews.core.config import clear_settings_cache, get_settings
+
+        clear_settings_cache()
+        s1 = get_settings()
+        s2 = get_settings()
+        assert s1 is s2
+        clear_settings_cache()
+
+    def test_clear_cache_resets(self) -> None:
+        """clear_settings_cache() forces re-creation."""
+        from ainews.core.config import clear_settings_cache, get_settings
+
+        clear_settings_cache()
+        s1 = get_settings()
+        clear_settings_cache()
+        s2 = get_settings()
+        assert s1 is not s2
+        clear_settings_cache()

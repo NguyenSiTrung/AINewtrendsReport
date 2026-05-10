@@ -10,7 +10,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ainews.api.deps import get_db
-from ainews.core.config import Settings
+from ainews.core.config import get_settings
 from ainews.schemas.health import ComponentStatus, HealthResponse
 
 router = APIRouter(tags=["health"])
@@ -35,7 +35,7 @@ def health_check(
     try:
         import redis
 
-        settings = Settings()
+        settings = get_settings()
         r: Any = redis.from_url(settings.valkey_url, socket_timeout=2)
         r.ping()
         components["valkey"] = ComponentStatus(status="ok")
@@ -47,7 +47,7 @@ def health_check(
         from ainews.llm.connectivity import check_llm_connection
         from ainews.llm.factory import get_llm_config
 
-        settings = Settings()
+        settings = get_settings()
         llm_config = get_llm_config(settings)
         result = check_llm_connection(llm_config)
         if result.success:

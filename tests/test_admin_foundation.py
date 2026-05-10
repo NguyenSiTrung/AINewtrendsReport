@@ -50,6 +50,7 @@ def _login(client: TestClient, engine: Any) -> dict[str, str]:
             "password": "pass123",
             "csrf_token": csrf,
         },
+        headers={"x-csrf-token": csrf},
         cookies={"csrf_token": csrf},
         follow_redirects=False,
     )
@@ -163,6 +164,7 @@ class TestCSRF:
                 "password": "wrong",
                 "csrf_token": token,
             },
+            headers={"x-csrf-token": token},
             cookies={"csrf_token": token},
         )
         # Should not be 403 — CSRF passed (may be 200 with error)

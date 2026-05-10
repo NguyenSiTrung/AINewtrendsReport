@@ -15,7 +15,7 @@ from typing import Any
 
 import structlog
 
-from ainews.core.config import Settings
+from ainews.core.config import get_settings
 from ainews.core.database import create_engine, get_db_session
 from ainews.exporters.markdown import export_markdown
 from ainews.exporters.xlsx import export_xlsx
@@ -44,7 +44,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
     from ainews.agents.state import GraphState, RunParams
     from ainews.services.run_logger import log_to_db
 
-    settings = Settings()
+    settings = get_settings()
     engine = create_engine(settings.database_url)
 
     # Share this engine with @node_resilient so all nodes can log
@@ -175,9 +175,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         node_errors = result.get("errors", [])
         if node_errors:
             final_status = "completed_with_errors"
-            error_nodes = ", ".join(
-                {e.node for e in node_errors if hasattr(e, "node")}
-            )
+            error_nodes = ", ".join({e.node for e in node_errors if hasattr(e, "node")})
             error_summary = (
                 f"{len(node_errors)} node error(s) in: {error_nodes}"
                 if error_nodes
@@ -202,7 +200,8 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             run_id,
             "pipeline",
             "WARNING" if node_errors else "INFO",
-            f"Pipeline {final_status}" + (f" — {error_summary}" if error_summary else ""),
+            f"Pipeline {final_status}"
+            + (f" — {error_summary}" if error_summary else ""),
         )
         log.info("run_pipeline.completed", status=final_status)
         return {"status": final_status, "run_id": run_id}

@@ -50,6 +50,7 @@ def _auth_cookies(client: TestClient, engine: Any) -> dict[str, str]:
             "password": "pass123",
             "csrf_token": csrf,
         },
+        headers={"x-csrf-token": csrf},
         cookies={"csrf_token": csrf},
         follow_redirects=False,
     )
@@ -99,6 +100,7 @@ class TestSitesPages:
                 "priority": "7",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )
@@ -141,6 +143,7 @@ class TestSitesPages:
                 "priority": "9",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )
@@ -197,6 +200,7 @@ class TestSchedulesPages:
                 "timeframe_days": "1",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )
@@ -249,6 +253,7 @@ class TestSchedulesPages:
                 "timeframe_days": "14",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )

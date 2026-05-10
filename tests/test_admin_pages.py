@@ -51,6 +51,7 @@ def _auth_cookies(client: TestClient, engine: Any) -> dict[str, str]:
             "password": "pass123",
             "csrf_token": csrf,
         },
+        headers={"x-csrf-token": csrf},
         cookies={"csrf_token": csrf},
         follow_redirects=False,
     )
@@ -119,6 +120,7 @@ class TestLLMSettings:
                 "max_tokens": "8000",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )
@@ -161,6 +163,7 @@ class TestLLMSettings:
                 "max_tokens": "4096",
                 "csrf_token": cookies["csrf_token"],
             },
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )
@@ -322,6 +325,7 @@ class TestSettingsPage:
         resp = client.post(
             "/settings/seed",
             data={"csrf_token": cookies["csrf_token"]},
+            headers={"x-csrf-token": cookies["csrf_token"]},
             cookies=cookies,
             follow_redirects=False,
         )

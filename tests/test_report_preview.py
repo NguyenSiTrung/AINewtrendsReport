@@ -65,6 +65,7 @@ def _auth_cookies(client: TestClient, engine: Any) -> dict[str, str]:
             "password": "pass123",
             "csrf_token": csrf,
         },
+        headers={"x-csrf-token": csrf},
         cookies={"csrf_token": csrf},
         follow_redirects=False,
     )
@@ -115,7 +116,7 @@ class TestPipelineReportCreation:
         settings_with_path = Settings(valkey_url="redis://t:6379/0")
 
         with (
-            patch.object(pipeline, "Settings", return_value=settings_with_path),
+            patch.object(pipeline, "get_settings", return_value=settings_with_path),
             patch.object(pipeline, "create_engine", return_value=engine),
             patch("ainews.agents.graph.build_graph", return_value=mock_graph),
             patch("langgraph.checkpoint.sqlite.SqliteSaver") as mock_saver,
@@ -166,7 +167,7 @@ class TestPipelineReportCreation:
         with (
             patch.object(
                 pipeline,
-                "Settings",
+                "get_settings",
                 return_value=Settings(valkey_url="redis://t:6379/0"),
             ),
             patch.object(pipeline, "create_engine", return_value=engine),

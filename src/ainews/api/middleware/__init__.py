@@ -74,17 +74,12 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             cookie_token = request.cookies.get(CSRF_COOKIE_NAME)
             header_token = request.headers.get(CSRF_HEADER_NAME)
 
-            if cookie_token and header_token:
-                # Full double-submit validation: header must match cookie
-                if not hmac.compare_digest(header_token, cookie_token):
-                    return self._reject()
-            elif not cookie_token:
-                # No cookie at all → reject (first visit, no token set)
+            if not cookie_token or not header_token:
+                # Missing cookie or header → reject
                 return self._reject()
-            # If cookie exists but no header → allow through.
-            # The SameSite=Lax cookie prevents cross-site form posts.
-            # This path handles plain HTML form submissions where the
-            # browser doesn't send the X-CSRF-Token header.
+            if not hmac.compare_digest(header_token, cookie_token):
+                # Header/cookie mismatch → reject
+                return self._reject()
 
         response = await call_next(request)
 

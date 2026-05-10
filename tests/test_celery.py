@@ -70,7 +70,7 @@ class TestRunPipelineTask:
         with (
             patch.object(
                 pipeline,
-                "Settings",
+                "get_settings",
                 return_value=Settings(valkey_url="redis://t:6379/0"),
             ),
             patch.object(pipeline, "create_engine", return_value=engine),
@@ -104,7 +104,7 @@ class TestRunPipelineTask:
         with (
             patch.object(
                 pipeline,
-                "Settings",
+                "get_settings",
                 return_value=Settings(valkey_url="redis://t:6379/0"),
             ),
             patch.object(pipeline, "create_engine", return_value=engine),
@@ -145,7 +145,7 @@ class TestRunPipelineTask:
         with (
             patch.object(
                 pipeline,
-                "Settings",
+                "get_settings",
                 return_value=Settings(valkey_url="redis://t:6379/0"),
             ),
             patch.object(pipeline, "create_engine", return_value=engine),

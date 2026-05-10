@@ -50,9 +50,9 @@ def _get_jwt_secret() -> str:
         # workers in the same deployment share the same secret.
         import hashlib
 
-        from ainews.core.config import Settings
+        from ainews.core.config import get_settings
 
-        settings = Settings()
+        settings = get_settings()
         secret = hashlib.sha256(
             f"ainews-fallback-{settings.db_path}".encode()
         ).hexdigest()
