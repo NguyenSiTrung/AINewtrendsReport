@@ -1,6 +1,6 @@
 # Tech Stack — AI News & Trends Report
 
-> Last refreshed: 2026-05-08T23:38:00+07:00
+> Last refreshed: 2026-05-10T23:55:00+07:00
 
 ## Language & Runtime
 
@@ -33,6 +33,7 @@
 | langchain-tavily | Tavily integration for LangChain | MIT |
 | httpx | Async HTTP client for scraping fallback | BSD-3 |
 | trafilatura | Article content extraction from HTML | Apache-2.0 |
+| croniter | Cron expression parsing for schedule evaluation | MIT |
 | Playwright | JS-heavy site rendering (optional, per-site flag) | Apache-2.0 |
 
 ## Backend & API
@@ -50,6 +51,7 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | Celery | Distributed task queue (workers for scrape/llm/default queues) | BSD-3 |
+| Celery Beat | Periodic tick task for dynamic schedule evaluation from DB | BSD-3 (Celery built-in) |
 | Valkey | Message broker + Tavily response cache | BSD-3 |
 
 ## Database
@@ -86,6 +88,7 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | structlog | Structured JSON logging | MIT |
+| tzlocal | Local timezone detection for schedule evaluation | MIT |
 | Langfuse (optional) | LLM trace observability (self-hosted) | MIT |
 
 ## Infrastructure & Deployment
@@ -93,7 +96,7 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | Ubuntu 22.04 / 24.04 | Target OS | GPL (OS level) |
-| systemd | Process supervision (3 units: api, worker, beat) | LGPL |
+| systemd | Process supervision (4 units: api, worker, beat, celery-beat) | LGPL |
 | cron | Schedule-based run triggering | OS built-in |
 
 ## Dev Tooling

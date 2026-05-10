@@ -61,6 +61,9 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Lazy router imports:** For heavy or isolated dependencies (like `markdown` conversion), use the `import lib as lib_alias` lazy import pattern inside the specific route function to avoid bloating module load time. (from: report-preview_20260509, archived 2026-05-08)
 
 - **ContextVar for per-task state:** Use `contextvars.ContextVar` instead of module globals when Celery tasks may run concurrently in the same process. (from: bugfix-critical-high_20260510, archived 2026-05-10)
+- **Cached Settings via `lru_cache`:** Use `@lru_cache(maxsize=1)` on `_get_settings_cached()` to parse `.env` + env vars at most once per process. Expose `clear_settings_cache()` for test isolation. (from: bugfix-critical-high_20260510, 2026-05-10)
+- **After-commit Celery enqueue:** Use `event.listen(session, 'after_commit', ...)` to defer `run_pipeline.delay()` until the DB transaction commits, preventing workers from reading uncommitted rows. Store pending enqueues in `session.info` dict. (from: standalone, 2026-05-10)
+- **Celery Beat tick pattern:** A single `check_schedules` task runs every 60s via Celery Beat, queries enabled `Schedule` rows, evaluates `croniter.match()` per-schedule with timezone-aware `now`, and calls `create_and_enqueue_run()` for matches. (from: standalone, 2026-05-10)
 
 ---
-Last refreshed: 2026-05-09T00:00:00+07:00
+Last refreshed: 2026-05-10T23:55:00+07:00

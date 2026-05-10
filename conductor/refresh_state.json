@@ -1,9 +1,10 @@
 {
-  "last_refresh": "2026-05-08T23:38:00+07:00",
+  "last_refresh": "2026-05-10T23:55:00+07:00",
   "changes": [
-    "Updated product.md to include Report Preview and Downloads in Admin Web Interface",
-    "Updated tech-stack.md to include markdown dependency",
-    "Closed orphaned Beads tasks to sync with Conductor plan.md"
+    "Updated tech-stack.md: added tzlocal, croniter, Celery Beat, 4 systemd units",
+    "Updated product.md: dynamic scheduling, per-schedule timezone, smart planner, completed_with_errors status, raw output tab, visual cron builder, report_max_sources",
+    "Updated patterns.md: elevated 3 new patterns (lru_cache Settings, after-commit enqueue, Celery Beat tick)",
+    "Removed orphaned conductor/tracks/sites-ui-ux.md"
   ],
   "drift_detected": true
 }
