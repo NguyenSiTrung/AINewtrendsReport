@@ -13,6 +13,7 @@ from typing import Any
 
 import structlog
 
+from ainews.llm.concurrency import limited_invoke_sync
 from ainews.agents.prompts.loader import load_prompt
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import GraphState, Summary
@@ -83,7 +84,7 @@ def synthesize_one(state: dict[str, Any]) -> dict[str, Any]:
     prompt = load_prompt("synthesizer", articles=all_articles)
 
     llm = _get_llm()
-    response = llm.invoke(prompt)
+    response = limited_invoke_sync(llm, prompt)
     parsed = _parse_summary_response(response.content)
 
     if parsed:

@@ -13,6 +13,7 @@ from typing import Any
 
 import structlog
 
+from ainews.llm.concurrency import limited_invoke_sync
 from ainews.agents.prompts.loader import load_prompt
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import GraphState, Trend
@@ -70,7 +71,7 @@ def trender_node(state: GraphState) -> dict[str, Any]:
     prompt = load_prompt("trender", summaries=summaries)
 
     llm = _get_llm()
-    response = llm.invoke(prompt)
+    response = limited_invoke_sync(llm, prompt)
     parsed = _parse_trends_response(response.content)
 
     trends: list[Trend] = []

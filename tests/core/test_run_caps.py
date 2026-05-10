@@ -29,7 +29,7 @@ class TestRunCapChecker:
             )
         )
         state = {
-            "metrics": {"node1": {"tokens": 100}},
+            "metrics": {"node1": {"input_tokens": 50, "output_tokens": 50}},
             "fetched_articles": [{"title": "a"}] * 5,
         }
         assert checker.check(state) is None
@@ -38,8 +38,8 @@ class TestRunCapChecker:
         checker = RunCapChecker(config=RunCapConfig(max_total_tokens=100))
         state = {
             "metrics": {
-                "node1": {"tokens": 60},
-                "node2": {"tokens": 50},
+                "node1": {"input_tokens": 30, "output_tokens": 30},
+                "node2": {"input_tokens": 25, "output_tokens": 25},
             },
         }
         violation = checker.check(state)
@@ -96,7 +96,7 @@ class TestRunCapChecker:
             config=RunCapConfig(max_wall_seconds=1, max_total_tokens=10),
             start_time=time.time() - 100,
         )
-        state = {"metrics": {"a": {"tokens": 999}}}
+        state = {"metrics": {"a": {"input_tokens": 500, "output_tokens": 499}}}
         violation = checker.check(state)
         assert violation is not None
         assert violation.cap_type == "wall_time"

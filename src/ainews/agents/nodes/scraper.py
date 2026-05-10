@@ -76,12 +76,35 @@ def _scrape_url(url: str) -> str | None:
         from ainews.agents.tools.scraper import Scraper
 
         scraper = Scraper()
-        result = asyncio.run(scraper.scrape(url))
+        result = _run_async(scraper.scrape(url))
         if result:
             return result.content_md
     except Exception as exc:
         logger.warning("scraper_individual_error", url=url, error=str(exc))
     return None
+
+
+def _run_async(coro: Any) -> Any:
+    """Run an async coroutine from sync code, handling existing event loops.
+
+    - If no event loop is running, falls back to ``asyncio.run()``.
+    - If an event loop *is* running (e.g. inside Celery with
+      eventlet/gevent or Jupyter), creates a new thread to run the
+      coroutine to avoid 'RuntimeError: cannot run loop while another
+      loop is running'.
+    """
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        # No running loop — safe to use asyncio.run()
+        return asyncio.run(coro)
+
+    # Loop is running — spin up a temporary thread
+    import concurrent.futures
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        future = pool.submit(asyncio.run, coro)
+        return future.result(timeout=30)
 
 
 def _extract_domain(url: str) -> str:

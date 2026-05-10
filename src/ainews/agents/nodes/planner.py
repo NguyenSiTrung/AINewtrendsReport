@@ -14,6 +14,7 @@ from typing import Any
 
 import structlog
 
+from ainews.llm.concurrency import limited_invoke_sync
 from ainews.agents.prompts.loader import load_prompt
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import GraphState
@@ -86,7 +87,7 @@ def planner_node(state: GraphState) -> dict[str, Any]:
     )
 
     llm = _get_llm()
-    response = llm.invoke(prompt)
+    response = limited_invoke_sync(llm, prompt)
     raw_content: str = response.content
 
     queries = _extract_json_array(raw_content)

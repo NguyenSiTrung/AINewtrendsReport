@@ -91,7 +91,9 @@ class RunCapChecker:
         # Check total tokens
         metrics = state.get("metrics", {})
         total_tokens = sum(
-            m.get("tokens", 0) for m in metrics.values() if isinstance(m, dict)
+            m.get("input_tokens", 0) + m.get("output_tokens", 0)
+            for m in metrics.values()
+            if isinstance(m, dict)
         )
         if total_tokens > self.config.max_total_tokens:
             violation = CapViolation(

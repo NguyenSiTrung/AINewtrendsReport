@@ -11,6 +11,7 @@ from typing import Any
 
 import structlog
 
+from ainews.llm.concurrency import limited_invoke_sync
 from ainews.agents.prompts.loader import load_prompt, render_template
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import GraphState
@@ -117,7 +118,7 @@ def _generate_executive_summary(
             trends_text=trends_text,
         )
         llm = _get_llm()
-        response = llm.invoke(prompt)
+        response = limited_invoke_sync(llm, prompt)
         executive: str = response.content
         return executive.strip()
     except Exception as exc:

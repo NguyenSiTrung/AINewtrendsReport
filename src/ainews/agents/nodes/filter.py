@@ -13,6 +13,7 @@ from typing import Any
 
 import structlog
 
+from ainews.llm.concurrency import limited_invoke_sync
 from ainews.agents.prompts.loader import load_prompt
 from ainews.agents.resilience import node_resilient, track_metrics
 from ainews.agents.state import Article, GraphState
@@ -84,7 +85,7 @@ def filter_node(state: GraphState) -> dict[str, Any]:
         )
 
         try:
-            response = llm.invoke(prompt)
+            response = limited_invoke_sync(llm, prompt)
             parsed = _parse_filter_response(response.content)
 
             if parsed and parsed.get("keep", False):
