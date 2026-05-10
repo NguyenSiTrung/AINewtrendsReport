@@ -44,5 +44,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Critical & High Issue Fixes (C1–C4, H1–H6)
-*Link: [./conductor/tracks/bugfix-critical-high_20260510/](./conductor/tracks/bugfix-critical-high_20260510/)*
+<!-- archived: bugfix-critical-high_20260510 — Critical & High Issue Fixes (C1–C4, H1–H6) completed 2026-05-10 → conductor/archive/bugfix-critical-high_20260510/ -->

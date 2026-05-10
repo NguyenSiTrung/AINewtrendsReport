@@ -60,5 +60,7 @@ Reusable patterns discovered during development. Read this before starting new w
 - **FileResponse Content-Disposition:** Passing `filename="name.ext"` directly into `FileResponse` automatically sets the correct `Content-Disposition: attachment` header. (from: report-preview_20260509, archived 2026-05-08)
 - **Lazy router imports:** For heavy or isolated dependencies (like `markdown` conversion), use the `import lib as lib_alias` lazy import pattern inside the specific route function to avoid bloating module load time. (from: report-preview_20260509, archived 2026-05-08)
 
+- **ContextVar for per-task state:** Use `contextvars.ContextVar` instead of module globals when Celery tasks may run concurrently in the same process. (from: bugfix-critical-high_20260510, archived 2026-05-10)
+
 ---
 Last refreshed: 2026-05-09T00:00:00+07:00
