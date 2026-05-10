@@ -1,0 +1,28 @@
+{
+  "track_id": "bugfix-critical-high_20260510",
+  "type": "bugfix",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": [],
+  "estimated_hours": 8,
+  "created_at": "2026-05-10T16:16:00Z",
+  "updated_at": "2026-05-10T16:19:00Z",
+  "description": "Fix 4 Critical + 6 High severity issues from deep codebase analysis: duplicate report exports, SQLite locking, CSRF bypass, global engine race condition, asyncio.run() crash, RunCapChecker/LLM concurrency not wired, Settings re-instantiation, filter retry accumulation, logging key mismatch",
+  "beads_epic": "AINEWS-i29",
+  "beads_tasks": {
+    "phase1": "AINEWS-i29.1",
+    "phase1_task1": "AINEWS-i29.1.1",
+    "phase1_task2": "AINEWS-i29.1.2",
+    "phase1_task3": "AINEWS-i29.1.3",
+    "phase2": "AINEWS-i29.2",
+    "phase2_task1": "AINEWS-i29.2.1",
+    "phase2_task2": "AINEWS-i29.2.2",
+    "phase2_task3": "AINEWS-i29.2.3",
+    "phase3": "AINEWS-i29.3",
+    "phase3_task1": "AINEWS-i29.3.1",
+    "phase3_task2": "AINEWS-i29.3.2",
+    "phase3_task3": "AINEWS-i29.3.3",
+    "phase4": "AINEWS-i29.4",
+    "phase4_task1": "AINEWS-i29.4.1"
+  }
+}

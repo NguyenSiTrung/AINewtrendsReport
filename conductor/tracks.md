@@ -41,3 +41,8 @@ This file tracks all major tracks for the project.
 ---
 
 <!-- archived: ui-ux-polish_20260509 — Admin UI/UX Polish & Enhancement completed 2026-05-09 → conductor/archive/ui-ux-polish_20260509/ -->
+
+---
+
+## [ ] Track: Critical & High Issue Fixes (C1–C4, H1–H6)
+*Link: [./conductor/tracks/bugfix-critical-high_20260510/](./conductor/tracks/bugfix-critical-high_20260510/)*
