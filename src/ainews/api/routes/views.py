@@ -644,6 +644,224 @@ def site_update(
     return resp
 
 
+# ── Users CRUD ───────────────────────────────────────────
+
+
+@router.get("/users", response_class=HTMLResponse)
+def users_list(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """List all admin users (auth required)."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import func, select
+
+    from ainews.models.user import User
+
+    users = session.execute(select(User).order_by(User.id)).scalars().all()
+    total_users = len(users)
+
+    return _render(
+        request,
+        "users/list.html",
+        {
+            "users": users,
+            "total_users": total_users,
+            "current_user_id": request.state.user.id,
+        },
+    )
+
+
+@router.get("/users/new", response_class=HTMLResponse)
+def user_new_form(
+    request: Request,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show new user form."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+    return _render(
+        request,
+        "users/form.html",
+        {
+            "edit_user": None,
+            "form_error": None,
+            "form_email": "",
+            "breadcrumbs": [
+                {"label": "Users", "url": "/users"},
+                {"label": "New User", "url": None},
+            ],
+        },
+    )
+
+
+@router.post("/users/new")
+def user_create(
+    request: Request,
+    email: str = Form(...),
+    password: str = Form(...),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Create a new admin user."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.api.auth import create_admin_user
+
+    if len(password) < 6:
+        return _render(
+            request,
+            "users/form.html",
+            {
+                "edit_user": None,
+                "form_error": "Password must be at least 6 characters.",
+                "form_email": email,
+            },
+        )
+
+    try:
+        create_admin_user(session, email, password)
+        session.commit()
+    except ValueError as exc:
+        return _render(
+            request,
+            "users/form.html",
+            {
+                "edit_user": None,
+                "form_error": str(exc),
+                "form_email": email,
+            },
+        )
+
+    resp = RedirectResponse(url="/users", status_code=303)
+    flash(resp, f"User '{email}' created", "success")
+    return resp
+
+
+@router.get("/users/{user_id}/edit", response_class=HTMLResponse)
+def user_edit_form(
+    request: Request,
+    user_id: int,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Show edit form for a user."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.user import User
+
+    user = session.get(User, user_id)
+    if not user:
+        return RedirectResponse(url="/users", status_code=303)
+    return _render(
+        request,
+        "users/form.html",
+        {
+            "edit_user": user,
+            "form_error": None,
+            "form_email": "",
+            "breadcrumbs": [
+                {"label": "Users", "url": "/users"},
+                {"label": "Edit User", "url": None},
+            ],
+        },
+    )
+
+
+@router.post("/users/{user_id}")
+def user_update(
+    request: Request,
+    user_id: int,
+    email: str = Form(...),
+    password: str = Form(""),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Update an existing user's email and/or password."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from sqlalchemy import select
+
+    from ainews.api.auth import hash_password
+    from ainews.models.user import User
+
+    user = session.get(User, user_id)
+    if not user:
+        return RedirectResponse(url="/users", status_code=303)
+
+    # Check for email uniqueness (excluding current user)
+    existing = session.execute(
+        select(User).where(User.email == email, User.id != user_id)
+    ).scalar_one_or_none()
+    if existing:
+        return _render(
+            request,
+            "users/form.html",
+            {
+                "edit_user": user,
+                "form_error": f"Email '{email}' is already in use by another account.",
+                "form_email": email,
+            },
+        )
+
+    user.email = email
+    if password:
+        if len(password) < 6:
+            return _render(
+                request,
+                "users/form.html",
+                {
+                    "edit_user": user,
+                    "form_error": "Password must be at least 6 characters.",
+                    "form_email": email,
+                },
+            )
+        user.hashed_pw = hash_password(password)
+    session.flush()
+
+    resp = RedirectResponse(url="/users", status_code=303)
+    flash(resp, "User updated", "success")
+    return resp
+
+
+@router.post("/users/{user_id}/delete")
+def user_delete(
+    request: Request,
+    user_id: int,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Delete a user. Cannot delete yourself."""
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from ainews.models.user import User
+
+    # Prevent self-deletion
+    if user_id == request.state.user.id:
+        resp = RedirectResponse(url="/users", status_code=303)
+        flash(resp, "Cannot delete your own account", "error")
+        return resp
+
+    user = session.get(User, user_id)
+    if user:
+        email = user.email
+        session.delete(user)
+        session.flush()
+        resp = RedirectResponse(url="/users", status_code=303)
+        flash(resp, f"User '{email}' deleted", "success")
+        return resp
+
+    return RedirectResponse(url="/users", status_code=303)
+
+
 # ── Schedules CRUD ───────────────────────────────────────
 
 
