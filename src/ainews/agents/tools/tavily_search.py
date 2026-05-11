@@ -171,6 +171,56 @@ class TavilySearchTool:
 
         return results
 
+    def extract(self, url: str) -> str | None:
+        """Extract full content from a URL via Tavily Extract API.
+
+        Uses Tavily's cloud infrastructure to fetch and parse the page,
+        avoiding the need for direct outbound HTTP from this server.
+        Useful when firewalls block direct access to arbitrary domains.
+
+        Parameters
+        ----------
+        url
+            The URL to extract content from.
+
+        Returns
+        -------
+        str | None
+            Extracted text content, or ``None`` on failure.
+        """
+        try:
+            from langchain_tavily import TavilyExtract
+            from langchain_tavily._utilities import TavilyExtractAPIWrapper
+
+            tool = TavilyExtract(
+                extract_depth="basic",
+                apiwrapper=TavilyExtractAPIWrapper(
+                    tavily_api_key=self._api_key,
+                ),
+            )
+
+            raw = tool.invoke({"urls": [url]})
+
+            # Parse the response — can be dict, list, or str
+            if isinstance(raw, dict):
+                results = raw.get("results", [])
+                if results and isinstance(results, list):
+                    return results[0].get("raw_content") or results[0].get("text", "")
+            elif isinstance(raw, list) and raw:
+                item = raw[0]
+                if isinstance(item, dict):
+                    return item.get("raw_content") or item.get("text", "")
+                return str(item) if item else None
+            elif isinstance(raw, str) and raw.strip():
+                return raw
+
+            logger.info("tavily_extract_empty", url=url)
+            return None
+
+        except Exception as exc:
+            logger.warning("tavily_extract_error", url=url, error=str(exc))
+            return None
+
     @staticmethod
     def _parse_results(raw: object) -> list[SearchResult]:
         """Convert Tavily raw output to SearchResult list."""
