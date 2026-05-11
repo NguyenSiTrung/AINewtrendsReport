@@ -74,11 +74,21 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             cookie_token = request.cookies.get(CSRF_COOKIE_NAME)
             header_token = request.headers.get(CSRF_HEADER_NAME)
 
-            if not cookie_token or not header_token:
-                # Missing cookie or header → reject
+            # Fallback to form body for standard HTML form submissions
+            form_token = None
+            if not header_token and "application/x-www-form-urlencoded" in request.headers.get("content-type", ""):
+                body = await request.body()
+                from urllib.parse import parse_qs
+                parsed = parse_qs(body.decode("utf-8", errors="replace"))
+                form_token = parsed.get("csrf_token", [None])[0]
+
+            token_to_verify = header_token or form_token
+
+            if not cookie_token or not token_to_verify:
+                # Missing cookie or token → reject
                 return self._reject()
-            if not hmac.compare_digest(header_token, cookie_token):
-                # Header/cookie mismatch → reject
+            if not hmac.compare_digest(token_to_verify, cookie_token):
+                # Token mismatch → reject
                 return self._reject()
 
         response = await call_next(request)
