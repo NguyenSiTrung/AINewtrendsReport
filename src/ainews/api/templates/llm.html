@@ -361,7 +361,7 @@ function llmSettings() {
     loading: false,
     showKey: false,
     testing: false,
-    temperature: {{ settings.temperature or 0.3 }},
+    temperature: {{ settings.temperature if settings.temperature is not none else 0.3 }},
     maxTokens: {{ settings.max_tokens or 4096 }},
     testConnection() {
       this.testing = true;
