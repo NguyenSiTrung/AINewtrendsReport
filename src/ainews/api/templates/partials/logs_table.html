@@ -89,7 +89,7 @@
           <span class="font-medium text-surface-900 dark:text-white">{{ [(page * per_page), total] | min }}</span> of
           <span class="font-medium text-surface-900 dark:text-white">{{ total }}</span> events
         </div>
-        {% with base_url="/logs", query_params=query_params %}
+        {% with base_url="/logs", query_params=query_params, target_id="#logs-table-container" %}
           {% include "partials/pagination.html" %}
         {% endwith %}
       </div>
