@@ -350,7 +350,7 @@ def _probe_health(session: Session) -> dict[str, Any]:
             "status": "ok",
             "latency": latency,
             "icon": "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-            "subtitle": "PostgreSQL",
+            "subtitle": "SQLite",
         }
     except Exception as exc:
         latency = round((time.monotonic() - t0) * 1000, 1)
@@ -359,7 +359,7 @@ def _probe_health(session: Session) -> dict[str, Any]:
             "detail": str(exc),
             "latency": latency,
             "icon": "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-            "subtitle": "PostgreSQL",
+            "subtitle": "SQLite",
         }
 
     # ── Valkey probe ──────────────────────────────────────
