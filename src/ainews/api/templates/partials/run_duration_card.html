@@ -1,0 +1,50 @@
+{# HTMX partial: Duration/Elapsed time card for run detail page.
+
+   Shows a live-counting elapsed timer when the run is active (pending/running).
+   When the run reaches a terminal state, shows the final static duration.
+
+   Polls every 2s via hx-get when the run is active.
+   Polling stops automatically when the run reaches a terminal state.
+#}
+<div id="run-duration-card"
+     {% if run.status in ('pending', 'running') %}
+       hx-get="/runs/{{ run.id }}/duration"
+       hx-trigger="every 2s"
+       hx-swap="outerHTML"
+     {% endif %}
+     class="bg-white dark:bg-surface-900 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:border dark:border-surface-800 hover:-translate-y-1 transition-transform duration-300"
+     {% if run.status in ('pending', 'running') %}
+       x-data="{ elapsed: '' }"
+       x-init="
+         const start = new Date('{{ run.started_at or run.created_at }}');
+         function update() {
+           const now = new Date();
+           const diff = Math.floor((now - start) / 1000);
+           const m = Math.floor(diff / 60);
+           const s = diff % 60;
+           elapsed = m + 'm ' + s + 's';
+         }
+         update();
+         setInterval(update, 1000);
+       "
+     {% endif %}>
+  <div class="flex items-center justify-between mb-2">
+    <div class="text-sm font-medium text-surface-500 dark:text-surface-400">
+      {% if run.status in ('pending', 'running') %}Elapsed{% else %}Duration{% endif %}
+    </div>
+    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+    </div>
+  </div>
+  <div class="text-xl font-bold tracking-tight text-surface-900 dark:text-white">
+    {% if run.status in ('pending', 'running') %}
+      <span x-text="elapsed" class="text-info font-mono"></span>
+    {% elif run.finished_at and run.started_at %}
+      {{ duration_str }}
+    {% else %}
+      —
+    {% endif %}
+  </div>
+</div>

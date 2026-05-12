@@ -1997,6 +1997,51 @@ def run_stepper_partial(
     )
 
 
+@router.get("/runs/{run_id}/duration", response_class=HTMLResponse)
+def run_duration_partial(
+    request: Request,
+    run_id: str,
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """HTMX partial: duration/elapsed time card for run detail page.
+
+    Polled every 2s while the run is active (pending/running).
+    Once the run reaches a terminal state the response omits the
+    hx-trigger attribute, so polling stops automatically and the
+    card shows the final computed duration.
+    """
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from datetime import datetime
+
+    from sqlalchemy import select
+
+    from ainews.models.run import Run
+
+    run = session.execute(select(Run).where(Run.id == run_id)).scalar_one_or_none()
+    if not run:
+        return HTMLResponse("")
+
+    # Compute human-readable duration for completed/failed runs
+    duration_str = "—"
+    if run.started_at and run.finished_at:
+        try:
+            start = datetime.fromisoformat(run.started_at.replace("Z", "+00:00"))
+            end = datetime.fromisoformat(run.finished_at.replace("Z", "+00:00"))
+            diff = int((end - start).total_seconds())
+            m, s = divmod(abs(diff), 60)
+            duration_str = f"{m}m {s}s"
+        except (ValueError, TypeError):
+            pass
+
+    return _render(
+        request,
+        "partials/run_duration_card.html",
+        {"run": run, "duration_str": duration_str},
+    )
+
 @router.get("/runs/{run_id}/report-card", response_class=HTMLResponse)
 def run_report_card_partial(
     request: Request,
