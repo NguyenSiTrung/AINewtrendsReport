@@ -43,9 +43,13 @@ echo ""
 
 # ─── Step 1: Update Python dependencies ──────────────────
 info "Updating Python dependencies..."
-sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --quiet --upgrade pip
-sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --quiet -e "$APP_DIR"
-ok "Python dependencies updated"
+UV_BIN="/opt/ainews/.local/bin/uv"
+if [[ ! -x "$UV_BIN" ]]; then
+    UV_BIN="$(sudo -u "$APP_USER" bash -c 'command -v uv')"
+fi
+cd "$APP_DIR"
+sudo -u "$APP_USER" bash -c "UV_PROJECT_ENVIRONMENT=\"$VENV_DIR\" \"$UV_BIN\" sync"
+ok "Python dependencies updated via uv"
 
 # ─── Step 2: Run database migrations ─────────────────────
 info "Running database migrations..."

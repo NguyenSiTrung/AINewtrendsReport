@@ -71,10 +71,6 @@ export DEBIAN_FRONTEND=noninteractive
 apt-get update -qq
 
 PACKAGES=(
-    python3.12
-    python3.12-venv
-    python3.12-dev
-    python3-pip
     sqlite3
     build-essential
     libssl-dev
@@ -150,19 +146,25 @@ else
     ok "Application code deployed to $APP_DIR"
 fi
 
-# ─── Step 6: Create virtualenv and install ────────────────
-info "Setting up Python virtualenv..."
+# ─── Step 6: Create virtualenv and install with uv ────────
+info "Setting up Python dependencies with uv..."
 
-if [[ ! -d "$VENV_DIR" ]]; then
-    sudo -u "$APP_USER" python3.12 -m venv "$VENV_DIR"
-    ok "Virtualenv created at $VENV_DIR"
-else
-    ok "Virtualenv already exists at $VENV_DIR"
+# Ensure uv is installed for the user
+if ! sudo -u "$APP_USER" bash -c 'command -v uv' &>/dev/null; then
+    info "Installing uv..."
+    sudo -u "$APP_USER" bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
+    ok "uv installed"
 fi
 
-sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --quiet --upgrade pip
-sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --quiet -e "$APP_DIR"
-ok "Python dependencies installed"
+# Find uv binary path
+UV_BIN="$APP_HOME/.local/bin/uv"
+if [[ ! -x "$UV_BIN" ]]; then
+    UV_BIN="$(sudo -u "$APP_USER" bash -c 'command -v uv')"
+fi
+
+cd "$APP_DIR"
+sudo -u "$APP_USER" bash -c "UV_PROJECT_ENVIRONMENT=\"$VENV_DIR\" \"$UV_BIN\" sync"
+ok "Python dependencies installed via uv"
 
 # ─── Step 7: Environment file ────────────────────────────
 info "Checking environment file..."
