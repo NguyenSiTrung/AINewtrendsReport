@@ -65,6 +65,26 @@ def _require_auth(request: Request, session: Session) -> RedirectResponse | None
     return None
 
 
+def _parse_report_created_at(created_at: str | None) -> datetime:
+    """Parse the ``created_at`` ISO string from a Report row into a datetime.
+
+    Report.created_at is stored as an ISO-formatted string (not a native
+    datetime column), so we must parse it before calling ``.strftime()``.
+    Falls back to the current UTC time when the value is missing or invalid.
+    """
+    from datetime import UTC, datetime
+
+    if not created_at:
+        return datetime.now(tz=UTC)
+    try:
+        dt = datetime.fromisoformat(created_at)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        return dt
+    except (ValueError, TypeError):
+        return datetime.now(tz=UTC)
+
+
 # ── Auth routes (public) ─────────────────────────────────
 
 
@@ -660,7 +680,7 @@ def users_list(
     if redirect:
         return redirect
 
-    from sqlalchemy import func, select
+    from sqlalchemy import select
 
     from ainews.models.user import User
 
@@ -2045,6 +2065,7 @@ def run_duration_partial(
         {"run": run, "duration_str": duration_str},
     )
 
+
 @router.get("/runs/{run_id}/report-card", response_class=HTMLResponse)
 def run_report_card_partial(
     request: Request,
@@ -2331,12 +2352,13 @@ def report_download_md(
     if not report or not report.full_md_path:
         return JSONResponse({"detail": "Report not found"}, status_code=404)
 
-    file_path = Path(report.full_md_path)
+    file_path = Path(report.full_md_path).resolve()
     if not file_path.exists():
         return JSONResponse({"detail": "File not found on disk"}, status_code=404)
 
-    created_time_str = report.created_at.strftime("%Y%m%d_%H%M")
-    month_str = report.created_at.strftime("%B")
+    dt = _parse_report_created_at(report.created_at)
+    created_time_str = dt.strftime("%Y%m%d_%H%M")
+    month_str = dt.strftime("%B")
 
     return FileResponse(
         path=str(file_path),
@@ -2366,12 +2388,13 @@ def report_download_xlsx(
     if not report or not report.xlsx_path:
         return JSONResponse({"detail": "Report not found"}, status_code=404)
 
-    file_path = Path(report.xlsx_path)
+    file_path = Path(report.xlsx_path).resolve()
     if not file_path.exists():
         return JSONResponse({"detail": "File not found on disk"}, status_code=404)
 
-    created_time_str = report.created_at.strftime("%Y%m%d_%H%M")
-    month_str = report.created_at.strftime("%B")
+    dt = _parse_report_created_at(report.created_at)
+    created_time_str = dt.strftime("%Y%m%d_%H%M")
+    month_str = dt.strftime("%B")
 
     return FileResponse(
         path=str(file_path),
