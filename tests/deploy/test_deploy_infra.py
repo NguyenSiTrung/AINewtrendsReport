@@ -69,7 +69,7 @@ class TestSystemdUnits:
         cfg = _parse_unit("ainews-api.service")
         exec_start = cfg.get("Service", "ExecStart")
         assert "uvicorn" in exec_start
-        assert "--port 8000" in exec_start
+        assert "--port 1210" in exec_start
         assert "--workers 2" in exec_start
 
     def test_worker_exec_start_celery(self) -> None:

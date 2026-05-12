@@ -52,7 +52,7 @@ ok "Services restarted"
 info "Waiting for API to start..."
 sleep 3
 
-if curl -sf http://localhost:8000/api/health >/dev/null 2>&1; then
+if curl -sf http://localhost:1210/api/health >/dev/null 2>&1; then
     ok "Health check passed ✓"
 else
     warn "Health check failed — API may still be starting (check logs: sudo journalctl -u ainews-api -f)"

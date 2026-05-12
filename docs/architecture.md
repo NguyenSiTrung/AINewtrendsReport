@@ -51,7 +51,7 @@ A **multi-agent pipeline** that gathers AI news from configurable sources (Tavil
 
 | Unit | Binary | Purpose |
 |------|--------|---------|
-| `ainews-api.service` | uvicorn | FastAPI server (port 8000) |
+| `ainews-api.service` | uvicorn | FastAPI server (port 1210) |
 | `ainews-worker.service` | celery worker | Pipeline execution |
 | `ainews-beat.service` | celery beat | Optional scheduler |
 

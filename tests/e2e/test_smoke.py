@@ -9,7 +9,7 @@ Usage:
     pytest tests/e2e/test_smoke.py -v
 
     # Against deployed instance
-    AINEWS_BASE_URL=http://server:8000 pytest tests/e2e/test_smoke.py -v
+    AINEWS_BASE_URL=http://server:1210 pytest tests/e2e/test_smoke.py -v
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ import time
 import httpx
 import pytest
 
-BASE_URL = os.environ.get("AINEWS_BASE_URL", "http://127.0.0.1:8000")
+BASE_URL = os.environ.get("AINEWS_BASE_URL", "http://127.0.0.1:1210")
 TIMEOUT = int(os.environ.get("AINEWS_E2E_TIMEOUT", "600"))  # 10 min default
 
 

@@ -24,7 +24,7 @@
 
 ### Via Admin UI
 
-1. Open `http://<server>:8000/sites`
+1. Open `http://<server>:1210/sites`
 2. Click **Add Site**
 3. Fill in:
    - **Name**: Human-readable label (e.g. "MIT Technology Review")
@@ -39,7 +39,7 @@
 ### Via API
 
 ```bash
-curl -X POST http://localhost:8000/api/sites \
+curl -X POST http://localhost:1210/api/sites \
   -H "Content-Type: application/json" \
   -d '{
     "name": "MIT Technology Review",
@@ -60,7 +60,7 @@ The new site will be included in the next pipeline run that doesn't have a speci
 
 ### Option A: Via Admin UI (runtime, no restart)
 
-1. Open `http://<server>:8000/llm`
+1. Open `http://<server>:1210/llm`
 2. Update **Base URL**, **Model**, or other fields
 3. Click **Test Connection** to verify
 4. Click **Save**
@@ -88,7 +88,7 @@ sudo systemctl restart ainews-api ainews-worker ainews-beat
 /opt/ainews/venv/bin/ainews llm test
 
 # API test
-curl http://localhost:8000/api/health | python3 -m json.tool
+curl http://localhost:1210/api/health | python3 -m json.tool
 ```
 
 ### Supported LLM servers
@@ -108,10 +108,10 @@ Any server exposing the OpenAI `/v1/chat/completions` endpoint:
 
 ```bash
 # List recent runs
-curl http://localhost:8000/api/runs | python3 -m json.tool
+curl http://localhost:1210/api/runs | python3 -m json.tool
 
 # Get detail of a specific run
-curl http://localhost:8000/api/runs/<run-id> | python3 -m json.tool
+curl http://localhost:1210/api/runs/<run-id> | python3 -m json.tool
 ```
 
 Or view in the Admin UI at `/runs`.
@@ -123,7 +123,7 @@ Or view in the Admin UI at `/runs`.
 /opt/ainews/venv/bin/ainews trigger-run --schedule weekly-ai-news
 
 # Via API
-curl -X POST http://localhost:8000/api/trigger \
+curl -X POST http://localhost:1210/api/trigger \
   -H "Content-Type: application/json" \
   -d '{"schedule_name": "weekly-ai-news"}'
 ```
@@ -158,7 +158,7 @@ sudo systemctl restart ainews-api ainews-worker ainews-beat
 ### Step 3: Verify
 
 ```bash
-curl http://localhost:8000/api/health | python3 -m json.tool
+curl http://localhost:1210/api/health | python3 -m json.tool
 # Check that all components show "ok"
 ```
 
@@ -194,7 +194,7 @@ sudo -u ainews sqlite3 /var/lib/ainews/ainews.db "PRAGMA integrity_check;"
 sudo systemctl start ainews-api ainews-worker ainews-beat
 
 # 6. Verify
-curl http://localhost:8000/api/health
+curl http://localhost:1210/api/health
 ```
 
 ### Manual backup (ad-hoc)
@@ -210,7 +210,7 @@ sudo -u ainews sqlite3 /var/lib/ainews/ainews.db \
 
 ### Via Admin UI
 
-1. Open `http://<server>:8000/schedules`
+1. Open `http://<server>:1210/schedules`
 2. Click **Add Schedule** (or edit existing)
 3. Configure:
    - **Name**: Unique identifier (e.g. `weekly-ai-news`)
@@ -244,7 +244,7 @@ Modifying schedule parameters in the DB/UI takes effect immediately — no cron 
 
 ### From Admin UI
 
-1. Open `http://<server>:8000/trigger`
+1. Open `http://<server>:1210/trigger`
 2. Select a schedule template or enter custom parameters
 3. Click **Trigger Run**
 4. Monitor progress at `/runs`
@@ -315,7 +315,7 @@ tail -f /var/log/ainews/cron.log
 
 ### Admin UI log viewer
 
-Open `http://<server>:8000/logs` — supports filtering by run ID, node, and log level with SSE auto-refresh.
+Open `http://<server>:1210/logs` — supports filtering by run ID, node, and log level with SSE auto-refresh.
 
 ### Log rotation
 
@@ -328,7 +328,7 @@ Managed by logrotate (`/etc/logrotate.d/ainews`): daily rotation, 14-day retenti
 ### API endpoint
 
 ```bash
-curl http://localhost:8000/api/health | python3 -m json.tool
+curl http://localhost:1210/api/health | python3 -m json.tool
 ```
 
 Response shows status for each component:
@@ -347,7 +347,7 @@ Possible overall statuses: `ok`, `degraded` (partial), `down` (all failed).
 
 ### Admin UI health page
 
-`http://<server>:8000/health` — visual grid of component statuses.
+`http://<server>:1210/health` — visual grid of component statuses.
 
 ---
 

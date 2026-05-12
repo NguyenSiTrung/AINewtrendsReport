@@ -73,7 +73,7 @@ After=network.target valkey-server.service
 [Service]
 User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
-ExecStart=$UV_BIN run uvicorn ainews.api.main:app --host 0.0.0.0 --port 8000
+ExecStart=$UV_BIN run uvicorn ainews.api.main:app --host 0.0.0.0 --port 1210
 Restart=always
 RestartSec=5
 
