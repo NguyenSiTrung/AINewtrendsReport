@@ -1,0 +1,28 @@
+{% if run.status == 'completed' %}
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400">
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+    {{ run.status | title }}
+  </span>
+{% elif run.status == 'completed_with_errors' %}
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
+    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+    </svg>
+    Completed with errors
+  </span>
+{% elif run.status == 'failed' %}
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400">
+    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+    {{ run.status | title }}
+  </span>
+{% elif run.status == 'running' %}
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+    {{ run.status | title }}
+  </span>
+{% else %}
+  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-surface-100 text-surface-800 dark:bg-surface-800 dark:text-surface-300">
+    <span class="w-1.5 h-1.5 rounded-full bg-surface-500"></span>
+    {{ run.status | title }}
+  </span>
+{% endif %}

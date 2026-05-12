@@ -2038,7 +2038,7 @@ def run_duration_partial(
 
     return _render(
         request,
-        "partials/run_duration_card.html",
+        "partials/run_duration_with_badge.html",
         {"run": run, "duration_str": duration_str},
     )
 
