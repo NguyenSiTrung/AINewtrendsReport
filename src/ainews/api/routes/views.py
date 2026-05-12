@@ -2393,6 +2393,8 @@ def run_delete(
 
     from sqlalchemy import delete, select
 
+    from ainews.models.article import Article
+    from ainews.models.report import Report
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
 
@@ -2402,8 +2404,10 @@ def run_delete(
         flash(resp, "Run not found", "error")
         return resp
 
-    # Delete logs first (no FK cascade)
+    # Delete related records first (no FK cascade)
     log_count = session.execute(delete(RunLog).where(RunLog.run_id == run_id)).rowcount
+    session.execute(delete(Article).where(Article.run_id == run_id))
+    session.execute(delete(Report).where(Report.run_id == run_id))
     session.execute(delete(Run).where(Run.id == run_id))
     session.flush()
 
@@ -2427,6 +2431,8 @@ def settings_purge_runs(
 
     from sqlalchemy import delete, select
 
+    from ainews.models.article import Article
+    from ainews.models.report import Report
     from ainews.models.run import Run
     from ainews.models.run_log import RunLog
 
@@ -2438,10 +2444,12 @@ def settings_purge_runs(
     )
 
     if old_run_ids:
-        # Delete associated logs first
+        # Delete associated records first
         log_count = session.execute(
             delete(RunLog).where(RunLog.run_id.in_(old_run_ids))
         ).rowcount
+        session.execute(delete(Article).where(Article.run_id.in_(old_run_ids)))
+        session.execute(delete(Report).where(Report.run_id.in_(old_run_ids)))
         run_count = session.execute(delete(Run).where(Run.id.in_(old_run_ids))).rowcount
         session.flush()
         msg = (
