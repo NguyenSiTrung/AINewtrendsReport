@@ -69,6 +69,7 @@ After=network.target valkey-server.service
 [Service]
 User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
+EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run uvicorn ainews.api.main:app --host 0.0.0.0 --port 1210
 Restart=always
 RestartSec=5
@@ -85,6 +86,7 @@ After=network.target valkey-server.service
 [Service]
 User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
+EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app worker --loglevel=info
 Restart=always
 RestartSec=5
@@ -101,6 +103,7 @@ After=network.target valkey-server.service
 [Service]
 User=$CURRENT_USER
 WorkingDirectory=$APP_DIR
+EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app beat --loglevel=info
 Restart=always
 RestartSec=5
