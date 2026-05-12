@@ -31,9 +31,12 @@ def _render(
     context: dict | None = None,
 ) -> Any:
     """Render a Jinja2 template with common context."""
+    from datetime import UTC, datetime
+
     templates = request.app.state.templates
     ctx = {
         "get_flashed_messages": get_flashed_messages,
+        "server_now_iso": datetime.now(tz=UTC).isoformat(),
         **(context or {}),
     }
     return templates.TemplateResponse(request, template_name, ctx)

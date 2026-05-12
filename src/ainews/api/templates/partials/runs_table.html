@@ -117,13 +117,16 @@
                       <span class="font-mono font-semibold text-blue-600 dark:text-cyan-400"
                             x-data="{ elapsed: '' }"
                             x-init="
-                              const start = new Date('{{ run.started_at or run.created_at }}');
+                              const startStr = '{{ run.started_at or run.created_at }}';
+                              const serverNowStr = '{{ server_now_iso }}';
+                              const start = new Date(startStr.replace('Z', '+00:00'));
+                              const serverNow = new Date(serverNowStr.replace('Z', '+00:00'));
+                              let currentSeconds = Math.max(0, Math.floor((serverNow - start) / 1000));
                               function update() {
-                                const now = new Date();
-                                const diff = Math.floor((now - start) / 1000);
-                                const m = Math.floor(diff / 60);
-                                const s = diff % 60;
+                                const m = Math.floor(currentSeconds / 60);
+                                const s = currentSeconds % 60;
                                 elapsed = m + 'm ' + s + 's';
+                                currentSeconds++;
                               }
                               update();
                               setInterval(update, 1000);
@@ -140,14 +143,17 @@
                   <span class="inline-flex items-center gap-1.5"
                         x-data="{ relative: '' }"
                         x-init="
-                          const created = new Date('{{ run.created_at }}');
+                          const createdStr = '{{ run.created_at }}';
+                          const serverNowStr = '{{ server_now_iso }}';
+                          const created = new Date(createdStr.replace('Z', '+00:00'));
+                          const serverNow = new Date(serverNowStr.replace('Z', '+00:00'));
+                          let currentDiff = Math.max(0, Math.floor((serverNow - created) / 1000));
                           function update() {
-                            const now = new Date();
-                            const diff = Math.floor((now - created) / 1000);
-                            if (diff < 60) relative = 'just now';
-                            else if (diff < 3600) relative = Math.floor(diff/60) + 'm ago';
-                            else if (diff < 86400) relative = Math.floor(diff/3600) + 'h ago';
-                            else relative = Math.floor(diff/86400) + 'd ago';
+                            if (currentDiff < 60) relative = 'just now';
+                            else if (currentDiff < 3600) relative = Math.floor(currentDiff/60) + 'm ago';
+                            else if (currentDiff < 86400) relative = Math.floor(currentDiff/3600) + 'h ago';
+                            else relative = Math.floor(currentDiff/86400) + 'd ago';
+                            currentDiff += 60;
                           }
                           update();
                           setInterval(update, 60000);

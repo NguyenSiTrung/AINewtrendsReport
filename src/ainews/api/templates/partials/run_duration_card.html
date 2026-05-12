@@ -16,13 +16,16 @@
      {% if run.status in ('pending', 'running') %}
        x-data="{ elapsed: '' }"
        x-init="
-         const start = new Date('{{ run.started_at or run.created_at }}');
+         const startStr = '{{ run.started_at or run.created_at }}';
+         const serverNowStr = '{{ server_now_iso }}';
+         const start = new Date(startStr.replace('Z', '+00:00'));
+         const serverNow = new Date(serverNowStr.replace('Z', '+00:00'));
+         let currentSeconds = Math.max(0, Math.floor((serverNow - start) / 1000));
          function update() {
-           const now = new Date();
-           const diff = Math.floor((now - start) / 1000);
-           const m = Math.floor(diff / 60);
-           const s = diff % 60;
+           const m = Math.floor(currentSeconds / 60);
+           const s = currentSeconds % 60;
            elapsed = m + 'm ' + s + 's';
+           currentSeconds++;
          }
          update();
          setInterval(update, 1000);
