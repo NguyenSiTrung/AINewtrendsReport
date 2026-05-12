@@ -24,12 +24,9 @@ logger = structlog.get_logger(__name__)
 
 def _get_llm() -> Any:
     """Lazy-load LLM client from factory."""
-    from ainews.core.config import get_settings
-    from ainews.llm.factory import get_llm, get_llm_config
+    from ainews.llm.factory import get_default_llm
 
-    settings = get_settings()
-    config = get_llm_config(settings)
-    return get_llm(config)
+    return get_default_llm()
 
 
 def _extract_json_array(text: str) -> list[str] | None:

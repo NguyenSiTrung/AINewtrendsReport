@@ -105,3 +105,26 @@ def get_llm(config: LLMConfig) -> ChatOpenAI:
         kwargs["default_headers"] = config.extra_headers
 
     return ChatOpenAI(**kwargs)  # type: ignore[arg-type]
+
+
+def get_default_llm() -> ChatOpenAI:
+    """Convenience function to get an LLM client fully resolved from env and db.
+    
+    This correctly pulls runtime overrides (like Admin UI settings) from the
+    database, instead of relying purely on `.env` settings.
+    """
+    from sqlalchemy import select
+
+    from ainews.core.config import get_settings
+    from ainews.core.database import create_engine, get_db_session
+    from ainews.models.settings_kv import SettingsKV
+
+    settings = get_settings()
+    engine = create_engine(settings.database_url)
+    
+    with get_db_session(engine) as session:
+        row = session.get(SettingsKV, "llm")
+        db_overrides = row.value if row else None
+        
+    config = get_llm_config(settings, db_overrides=db_overrides)
+    return get_llm(config)
