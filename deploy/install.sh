@@ -12,10 +12,6 @@ NC='\033[0m'
 info()  { echo -e "${BLUE}[INFO]${NC}  $*"; }
 ok()    { echo -e "${GREEN}[OK]${NC}    $*"; }
 
-info "Installing system dependencies..."
-sudo apt-get update -qq
-sudo apt-get install -y -qq sqlite3 build-essential libssl-dev curl git fonts-liberation lsb-release gpg
-
 if ! command -v valkey-server &>/dev/null; then
     info "Adding Valkey repository and installing..."
     curl -fsSL https://serverless.industries/public.key | sudo gpg --dearmor -o /usr/share/keyrings/valkey.gpg
