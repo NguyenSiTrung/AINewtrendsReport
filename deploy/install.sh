@@ -91,22 +91,11 @@ info "Installing Valkey..."
 
 if command -v valkey-server &>/dev/null; then
     ok "Valkey already installed: $(valkey-server --version 2>/dev/null | head -1)"
+elif apt-get install -y -qq valkey-server 2>/dev/null; then
+    ok "Valkey installed from Ubuntu repository"
 else
-    # Install Valkey from official PPA
-    if curl -fsSL https://packages.valkey.io/gpg 2>/dev/null | gpg --dearmor -o /usr/share/keyrings/valkey-archive-keyring.gpg 2>/dev/null; then
-        echo "deb [signed-by=/usr/share/keyrings/valkey-archive-keyring.gpg] https://packages.valkey.io/deb stable main" \
-            > /etc/apt/sources.list.d/valkey.list
-        apt-get update -qq
-        if apt-get install -y -qq valkey-server 2>/dev/null; then
-            ok "Valkey installed from official PPA"
-        else
-            err "Failed to install Valkey from PPA."
-            exit 1
-        fi
-    else
-        err "Failed to add Valkey GPG key."
-        exit 1
-    fi
+    err "Failed to install Valkey from Ubuntu repository."
+    exit 1
 fi
 
 # Ensure the service is enabled and running
