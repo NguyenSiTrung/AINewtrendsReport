@@ -6,10 +6,24 @@
 #}
 <div id="run-logs"
      {% if run.status in ('pending', 'running') %}
+       hx-ext="morph"
        hx-get="/runs/{{ run.id }}/logs-partial"
        hx-trigger="every 2s"
-       hx-swap="outerHTML"
-     {% endif %}>
+       hx-swap="morph:outerHTML"
+     {% endif %}
+     x-data="{
+       wasAtBottom: true,
+       checkBottom() {
+         const c = this.$refs.logScroll;
+         if (c) this.wasAtBottom = (c.scrollHeight - c.scrollTop - c.clientHeight) < 40;
+       },
+       stickBottom() {
+         const c = this.$refs.logScroll;
+         if (c && this.wasAtBottom) c.scrollTop = c.scrollHeight;
+       }
+     }"
+     @htmx:before-swap="checkBottom()"
+     @htmx:after-swap="$nextTick(() => stickBottom())">
   <div class="flex items-center justify-between mb-3">
     <h2 class="text-lg font-semibold">Live Logs</h2>
     {% if logs %}
@@ -17,7 +31,8 @@
     {% endif %}
   </div>
   {% if logs %}
-    <div x-data x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
+    <div x-ref="logScroll"
+         x-init="$nextTick(() => $el.scrollTop = $el.scrollHeight)"
          class="bg-surface-950 dark:bg-black rounded-lg p-4 font-mono text-[13px] overflow-x-auto max-h-96 overflow-y-auto space-y-0.5">
       {% for log in logs %}
         <div class="flex items-start gap-2.5 py-0.5
