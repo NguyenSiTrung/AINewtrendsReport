@@ -1,6 +1,6 @@
 # Tech Stack — AI News & Trends Report
 
-> Last refreshed: 2026-05-10T23:55:00+07:00
+> Last refreshed: 2026-05-12T22:51:00+07:00
 
 ## Language & Runtime
 
@@ -31,8 +31,9 @@
 |-----------|---------|---------|
 | Tavily Search API | Web search with `include_raw_content` | Commercial API (key required) |
 | langchain-tavily | Tavily integration for LangChain | MIT |
-| httpx | Async HTTP client for scraping fallback | BSD-3 |
-| trafilatura | Article content extraction from HTML | Apache-2.0 |
+| httpx | Async HTTP client for scraping fallback (tier 3) | BSD-3 |
+| trafilatura | Article content extraction from HTML (tier 3) | Apache-2.0 |
+| Tavily Extract API | Cloud-based content extraction fallback (tier 2) | Commercial API |
 | croniter | Cron expression parsing for schedule evaluation | MIT |
 | Playwright | JS-heavy site rendering (optional, per-site flag) | Apache-2.0 |
 
@@ -41,7 +42,7 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | FastAPI | REST API framework | MIT |
-| Uvicorn | ASGI server | BSD-3 |
+| Uvicorn | ASGI server (default port: 1210) | BSD-3 |
 | Starlette | ASGI toolkit (FastAPI dependency) | BSD-3 |
 | pyjwt | JSON Web Token generation/validation | MIT |
 | bcrypt | Password hashing | Apache-2.0 |
@@ -96,8 +97,9 @@
 | Component | Purpose | License |
 |-----------|---------|---------|
 | Ubuntu 22.04 / 24.04 | Target OS | GPL (OS level) |
-| systemd | Process supervision (4 units: api, worker, beat, celery-beat) | LGPL |
+| systemd | Process supervision (3 units: ainews-api, ainews-worker, ainews-beat) | LGPL |
 | cron | Schedule-based run triggering | OS built-in |
+| deploy/ scripts | install.sh, update.sh, stop.sh — uv-sync-based Ubuntu deployment | Project |
 
 ## Dev Tooling
 

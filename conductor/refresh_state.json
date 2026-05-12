@@ -1,10 +1,9 @@
 {
-  "last_refresh": "2026-05-10T23:55:00+07:00",
+  "last_refresh": "2026-05-12T22:51:00+07:00",
   "changes": [
-    "Updated tech-stack.md: added tzlocal, croniter, Celery Beat, 4 systemd units",
-    "Updated product.md: dynamic scheduling, per-schedule timezone, smart planner, completed_with_errors status, raw output tab, visual cron builder, report_max_sources",
-    "Updated patterns.md: elevated 3 new patterns (lru_cache Settings, after-commit enqueue, Celery Beat tick)",
-    "Removed orphaned conductor/tracks/sites-ui-ux.md"
+    "Updated tech-stack.md: fixed systemd unit count (3 not 4), added default port 1210, added deploy/ scripts, added Tavily Extract API tier",
+    "Updated product.md: 3-tier scraper, multi-user admin CRUD, merged XLSX sheets (3 sheets), deploy scripts, moved multi-user from v2 to v1, worker diagnostics",
+    "Updated patterns.md: elevated 7 new patterns (3-tier scraper, Path.resolve, ISO string parsing, FK cascade deletes, async-in-sync thread fallback, get_default_llm factory, worker_ready diagnostics)"
   ],
   "drift_detected": true
 }

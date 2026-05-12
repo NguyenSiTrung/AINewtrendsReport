@@ -23,9 +23,11 @@ Reusable patterns discovered during development. Read this before starting new w
 - **LangGraph custom dict reducers:** When using a custom merge reducer for a `dict` field in `GraphState` (e.g., `metrics`), nodes should return only their specific updates (`return {"metrics": {"node": data}}`).
 - **LangGraph empty Send() behavior:** When a fan-out node returns an empty list of `Send()` objects, LangGraph skips the targeted sub-nodes entirely. Empty collection scenarios must be handled by conditional edges before the fan-out.
 - **LangGraph node decorator typing:** Decorators like `@node_resilient` that widen function signatures cause mypy errors when registering nodes. A `# type: ignore[call-overload]` is required on the `add_node()` calls.
+- **Async-in-sync thread fallback:** When calling async code from sync context inside a running event loop (e.g. Celery), use `concurrent.futures.ThreadPoolExecutor` to spawn `asyncio.run()` in a new thread. Check with `asyncio.get_running_loop()` first. (from: scraper.py, 2026-05-12)
 
 ## External Libraries
 - **ChatOpenAI kwargs:** Explicit attributes are `openai_api_base`, `model_name`, `temperature`, `max_tokens`, `request_timeout`, `default_headers`.
+- **`get_default_llm()` factory:** Use `get_default_llm()` from `ainews.llm.factory` to get an LLM client that resolves config from both env settings AND database overrides (Admin UI settings). Avoids stale `.env`-only config. (from: llm/factory.py, 2026-05-12)
 
 ## Testing
 - **httpx mocking:** Use `respx.mock` decorator for httpx tests; `with respx.mock:` for CliRunner tests.
@@ -60,10 +62,22 @@ Reusable patterns discovered during development. Read this before starting new w
 - **FileResponse Content-Disposition:** Passing `filename="name.ext"` directly into `FileResponse` automatically sets the correct `Content-Disposition: attachment` header. (from: report-preview_20260509, archived 2026-05-08)
 - **Lazy router imports:** For heavy or isolated dependencies (like `markdown` conversion), use the `import lib as lib_alias` lazy import pattern inside the specific route function to avoid bloating module load time. (from: report-preview_20260509, archived 2026-05-08)
 
+## Scraping & Content Extraction
+- **3-tier content extraction fallback:** Scraper uses Tavily `raw_content` (tier 1, free) → Tavily Extract API (tier 2, cloud/firewall-safe) → direct httpx + trafilatura (tier 3, last resort). Each article is tagged with `content_method` label for debugging. (from: scraper.py, 2026-05-12)
+
+## File & Data Handling
+- **`Path.resolve()` for DB-stored file paths:** Always call `.resolve()` on file paths read from the database before checking `.exists()` or serving with `FileResponse`. Stored paths may be relative or have inconsistent prefixes. (from: views.py report download fix, 2026-05-12)
+- **`datetime.fromisoformat()` for ISO string columns:** When a model column stores timestamps as ISO strings (not native datetime), always parse with `datetime.fromisoformat()` before calling `.strftime()`. Provide a fallback to `datetime.now(UTC)` for missing/invalid values. (from: views.py `_parse_report_created_at`, 2026-05-12)
+- **FK cascading deletes (manual):** When deleting a Run, explicitly delete child records (Article, Report, RunLog) first before the parent Run to avoid FK constraint errors. SQLite doesn't cascade by default. (from: views.py `run_delete`, 2026-05-12)
+
+## Deployment & Operations
+- **Celery `worker_ready` signal diagnostics:** Connect to `celery.signals.worker_ready` to log critical environment state (API keys, DB path, broker URL) at worker startup. Essential for debugging systemd deployment issues. (from: celery_app.py, 2026-05-12)
+
 - **ContextVar for per-task state:** Use `contextvars.ContextVar` instead of module globals when Celery tasks may run concurrently in the same process. (from: bugfix-critical-high_20260510, archived 2026-05-10)
 - **Cached Settings via `lru_cache`:** Use `@lru_cache(maxsize=1)` on `_get_settings_cached()` to parse `.env` + env vars at most once per process. Expose `clear_settings_cache()` for test isolation. (from: bugfix-critical-high_20260510, 2026-05-10)
 - **After-commit Celery enqueue:** Use `event.listen(session, 'after_commit', ...)` to defer `run_pipeline.delay()` until the DB transaction commits, preventing workers from reading uncommitted rows. Store pending enqueues in `session.info` dict. (from: standalone, 2026-05-10)
 - **Celery Beat tick pattern:** A single `check_schedules` task runs every 60s via Celery Beat, queries enabled `Schedule` rows, evaluates `croniter.match()` per-schedule with timezone-aware `now`, and calls `create_and_enqueue_run()` for matches. (from: standalone, 2026-05-10)
 
 ---
-Last refreshed: 2026-05-10T23:55:00+07:00
+---
+Last refreshed: 2026-05-12T22:51:00+07:00
