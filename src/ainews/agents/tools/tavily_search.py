@@ -79,6 +79,11 @@ class TavilySearchTool:
         self._api_key = api_key
         self._cache = cache
         self._cache_ttl = cache_ttl
+        logger.info(
+            "tavily_tool_init",
+            api_key_length=len(api_key),
+            api_key_prefix=api_key[:8] + "..." if len(api_key) > 8 else "(empty/short)",
+        )
         self._tool: Any = self._build_tool()
 
     def _build_tool(self) -> object:
@@ -147,17 +152,22 @@ class TavilySearchTool:
 
         # Execute search
         logger.info("tavily_search", query=query, max_results=max_results)
+        invoke_args = {
+            "query": query,
+            **({"include_domains": include_domains} if include_domains else {}),
+            **({"time_range": time_range} if time_range else {}),
+            **({"max_results": max_results} if max_results != 10 else {}),
+        }
         try:
-            raw_results = self._tool.invoke(
-                {
-                    "query": query,
-                    **({"include_domains": include_domains} if include_domains else {}),
-                    **({"time_range": time_range} if time_range else {}),
-                    **({"max_results": max_results} if max_results != 10 else {}),
-                }
-            )
+            raw_results = self._tool.invoke(invoke_args)
         except Exception as exc:
-            logger.error("tavily_search_error", query=query, error=str(exc))
+            logger.error(
+                "tavily_search_error",
+                query=query,
+                error=str(exc),
+                error_type=type(exc).__name__,
+                exc_info=True,
+            )
             return []
 
         # Parse results

@@ -24,7 +24,13 @@ def _get_tavily_tool() -> Any:
     from ainews.core.config import get_settings
 
     settings = get_settings()
-    return TavilySearchTool(api_key=settings.tavily_api_key)
+    api_key = settings.tavily_api_key
+    logger.info(
+        "retriever.tavily_init",
+        api_key_length=len(api_key),
+        api_key_set=bool(api_key),
+    )
+    return TavilySearchTool(api_key=api_key)
 
 
 def retrieve_dispatch(state: GraphState) -> list[Any]:

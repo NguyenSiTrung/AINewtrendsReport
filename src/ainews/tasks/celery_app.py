@@ -7,6 +7,8 @@ used in v1 — sub-task routing is planned for v2).
 
 from __future__ import annotations
 
+from typing import Any
+
 from celery import Celery
 
 from ainews.core.config import Settings, get_settings
@@ -56,3 +58,29 @@ def make_celery(settings: Settings | None = None) -> Celery:
 
 # Module-level instance used by `celery -A ainews.tasks.celery_app worker`
 celery_app = make_celery()
+
+
+# ── Worker startup diagnostics ────────────────────────────
+from celery.signals import worker_ready  # noqa: E402
+
+@worker_ready.connect
+def _on_worker_ready(**kwargs: Any) -> None:
+    """Log critical environment diagnostics when worker starts."""
+    import os
+    from ainews.core.config import get_settings
+
+    settings = get_settings()
+    tavily_key = settings.tavily_api_key
+    import structlog
+    log = structlog.get_logger("ainews.worker_diagnostics")
+    log.info(
+        "worker_ready_diagnostics",
+        cwd=os.getcwd(),
+        tavily_api_key_length=len(tavily_key),
+        tavily_api_key_set=bool(tavily_key),
+        tavily_api_key_prefix=tavily_key[:8] + "..." if len(tavily_key) > 8 else "(empty/short)",
+        llm_base_url=settings.llm_base_url,
+        db_path=str(settings.db_path),
+        valkey_url=settings.valkey_url,
+        env_AINEWS_TAVILY_API_KEY=os.environ.get("AINEWS_TAVILY_API_KEY", "(NOT SET)"),
+    )
