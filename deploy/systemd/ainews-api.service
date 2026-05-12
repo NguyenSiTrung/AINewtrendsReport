@@ -14,7 +14,7 @@ ExecStart=/opt/ainews/venv/bin/uvicorn ainews.api.main:app \
     --host 0.0.0.0 \
     --port 8000 \
     --workers 2 \
-    --log-level warning
+    --log-level info
 Restart=on-failure
 RestartSec=5
 

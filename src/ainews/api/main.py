@@ -75,6 +75,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 def create_app() -> FastAPI:
     """Build and configure the FastAPI application."""
+    from ainews.core.logging import setup_logging
+    
+    setup_logging()
+
     app = FastAPI(
         title="AI News & Trends Report API",
         version="0.1.0",

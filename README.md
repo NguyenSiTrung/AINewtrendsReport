@@ -49,7 +49,7 @@ sudo apt-get install -y valkey-server
 sudo systemctl start valkey-server
 
 # Open Terminal 1: Start development server
-uv run uvicorn ainews.api.main:app --reload --port 8000
+uv run uvicorn ainews.api.main:app --host 0.0.0.0 --reload --port 8000
 
 # Open Terminal 2: Start background worker
 uv run celery -A ainews.tasks.celery_app worker --loglevel=info
