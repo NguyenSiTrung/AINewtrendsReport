@@ -170,6 +170,16 @@ class TavilySearchTool:
             )
             return []
 
+        # Diagnostic: log raw response type and preview
+        raw_preview = str(raw_results)[:500]
+        logger.info(
+            "tavily_raw_response",
+            query=query,
+            raw_type=type(raw_results).__name__,
+            raw_preview=raw_preview,
+            raw_length=len(str(raw_results)),
+        )
+
         # Parse results
         results = self._parse_results(raw_results)
 
