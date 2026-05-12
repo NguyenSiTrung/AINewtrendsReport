@@ -36,6 +36,9 @@ uv sync
 uv run alembic upgrade head
 uv run ainews seed
 
+# Create admin user
+uv run ainews seed admin --email admin@example.com --password changeme
+
 # Ensure Valkey is running locally (required for Celery)
 # Valkey is the 100% open-source, commercial-safe fork of Redis.
 sudo apt-get install -y lsb-release curl gpg
