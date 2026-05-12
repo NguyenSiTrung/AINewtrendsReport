@@ -68,6 +68,9 @@ else
     UV_BIN=$(command -v uv || true)
 fi
 
+# System CA bundle for SSL verification in systemd services
+CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 sudo tee /etc/systemd/system/ainews-api.service > /dev/null <<EOF
 [Unit]
 Description=AI News API Server
@@ -77,6 +80,9 @@ After=network.target valkey-server.service
 User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
+Environment=SSL_CERT_FILE=$CA_BUNDLE
+Environment=REQUESTS_CA_BUNDLE=$CA_BUNDLE
+Environment=CURL_CA_BUNDLE=$CA_BUNDLE
 ExecStart=$UV_BIN run uvicorn ainews.api.main:app --host 0.0.0.0 --port 1210
 Restart=always
 RestartSec=5
@@ -94,6 +100,9 @@ After=network.target valkey-server.service
 User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
+Environment=SSL_CERT_FILE=$CA_BUNDLE
+Environment=REQUESTS_CA_BUNDLE=$CA_BUNDLE
+Environment=CURL_CA_BUNDLE=$CA_BUNDLE
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app worker --loglevel=info
 Restart=always
 RestartSec=5
@@ -111,6 +120,9 @@ After=network.target valkey-server.service
 User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
+Environment=SSL_CERT_FILE=$CA_BUNDLE
+Environment=REQUESTS_CA_BUNDLE=$CA_BUNDLE
+Environment=CURL_CA_BUNDLE=$CA_BUNDLE
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app beat --loglevel=info
 Restart=always
 RestartSec=5
