@@ -69,59 +69,30 @@ def _build_summary_sheet(ws: Worksheet, data: dict[str, Any]) -> None:
 def _build_stories_sheet(ws: Worksheet, summaries: list[dict[str, Any]]) -> None:
     """Build the Stories sheet: one row per story."""
     ws.title = "Stories"
-    headers = ["Headline", "Key Points", "Why It Matters", "Source Count"]
+    headers = ["No", "Headline", "Key Points", "Why It Matters", "Sources"]
 
     _write_header_row(ws, headers)
 
     for row_idx, summary in enumerate(summaries, 2):
-        ws.cell(row=row_idx, column=1, value=summary.get("headline", ""))
+        ws.cell(row=row_idx, column=1, value=row_idx - 1)
+        ws.cell(row=row_idx, column=2, value=summary.get("headline", ""))
         ws.cell(
             row=row_idx,
-            column=2,
-            value="; ".join(str(b) for b in summary.get("bullets", [])),
+            column=3,
+            value="\n".join(f"• {b}" for b in summary.get("bullets", [])),
         )
-        ws.cell(row=row_idx, column=3, value=summary.get("why_it_matters", ""))
+        ws.cell(row=row_idx, column=4, value=summary.get("why_it_matters", ""))
         ws.cell(
             row=row_idx,
-            column=4,
-            value=len(summary.get("sources", [])),
+            column=5,
+            value="\n".join(str(s) for s in summary.get("sources", [])),
         )
 
         # Style data cells
-        for col in range(1, 5):
+        for col in range(1, 6):
             cell = ws.cell(row=row_idx, column=col)
             cell.font = STYLES["data_font"]
             cell.alignment = STYLES["data_alignment"]
-
-    _auto_size_columns(ws, max_width=STYLES["max_column_width"])
-
-
-def _build_sources_sheet(ws: Worksheet, summaries: list[dict[str, Any]]) -> None:
-    """Build the Sources sheet: one row per source URL across all stories."""
-    ws.title = "Sources"
-    headers = ["URL", "Title", "Cluster ID"]
-
-    _write_header_row(ws, headers)
-
-    row_idx = 2
-    for summary in summaries:
-        cluster_id = summary.get("cluster_id", "")
-        headline = summary.get("headline", "")
-        for url in summary.get("sources", []):
-            url_cell = ws.cell(row=row_idx, column=1, value=url)
-            url_cell.hyperlink = url
-            url_cell.font = Font(
-                name="Calibri", size=11, color="0563C1", underline="single"
-            )
-            ws.cell(row=row_idx, column=2, value=headline)
-            ws.cell(row=row_idx, column=3, value=str(cluster_id) if cluster_id else "")
-
-            for col in range(2, 4):
-                cell = ws.cell(row=row_idx, column=col)
-                cell.font = STYLES["data_font"]
-                cell.alignment = STYLES["data_alignment"]
-
-            row_idx += 1
 
     _auto_size_columns(ws, max_width=STYLES["max_column_width"])
 
@@ -223,9 +194,6 @@ def export_xlsx(
     stories_ws = wb.create_sheet()
     _build_stories_sheet(stories_ws, data.get("summaries", []))
 
-    sources_ws = wb.create_sheet()
-    _build_sources_sheet(sources_ws, data.get("summaries", []))
-
     trends_ws = wb.create_sheet()
     _build_trends_sheet(trends_ws, data.get("trends", []))
 
@@ -241,7 +209,7 @@ def export_xlsx(
         run_id=run_id,
         path=str(file_path),
         size_bytes=file_path.stat().st_size,
-        sheet_count=4,
+        sheet_count=3,
     )
 
     return file_path

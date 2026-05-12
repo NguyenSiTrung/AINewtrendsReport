@@ -2332,10 +2332,13 @@ def report_download_md(
     if not file_path.exists():
         return JSONResponse({"detail": "File not found on disk"}, status_code=404)
 
+    created_time_str = report.created_at.strftime("%Y%m%d_%H%M")
+    month_str = report.created_at.strftime("%B")
+
     return FileResponse(
         path=str(file_path),
         media_type="text/markdown",
-        filename=f"report_{run_id[:12]}.md",
+        filename=f"AINews_Trends_Report_{month_str}_{created_time_str}.md",
     )
 
 
@@ -2364,10 +2367,13 @@ def report_download_xlsx(
     if not file_path.exists():
         return JSONResponse({"detail": "File not found on disk"}, status_code=404)
 
+    created_time_str = report.created_at.strftime("%Y%m%d_%H%M")
+    month_str = report.created_at.strftime("%B")
+
     return FileResponse(
         path=str(file_path),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        filename=f"report_{run_id[:12]}.xlsx",
+        filename=f"AINews_Trends_Report_{month_str}_{created_time_str}.xlsx",
     )
 
 
