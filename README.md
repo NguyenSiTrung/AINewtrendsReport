@@ -73,7 +73,7 @@ uv run pytest
 ### Install
 
 ```bash
-# One-line idempotent installer
+# One-line idempotent installer (first-time only)
 sudo bash deploy/install.sh
 ```
 
@@ -85,6 +85,16 @@ This will:
 5. Copy environment template to `/etc/ainews/ainews.env`
 6. Run database migrations and seed
 7. Install systemd units, cron schedules, and logrotate config
+
+### Update (after code changes)
+
+```bash
+# 1. Pull latest code manually
+cd /opt/ainews/app && sudo -u ainews git pull
+
+# 2. Run the update script (reinstalls deps, migrates DB, restarts services)
+sudo bash /opt/ainews/app/deploy/update.sh
+```
 
 ### Configure
 

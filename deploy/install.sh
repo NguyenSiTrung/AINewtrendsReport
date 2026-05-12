@@ -145,31 +145,21 @@ done
 
 ok "Directory layout ready"
 
-# ─── Step 5: Clone / update repository ───────────────────
-info "Deploying application code..."
+# ─── Step 5: Deploy application code (fresh install only) ─
+info "Checking application code..."
 
-if [[ -d "$APP_DIR/.git" ]]; then
-    # Update existing installation
-    info "Updating existing installation at $APP_DIR..."
-    cd "$APP_DIR"
-    sudo -u "$APP_USER" git pull --ff-only 2>/dev/null || {
-        warn "git pull failed — copying from local repo instead"
-        rsync -a --exclude='.git' --exclude='__pycache__' --exclude='.venv' \
-            "$REPO_ROOT/" "$APP_DIR/"
-        chown -R "$APP_USER:$APP_USER" "$APP_DIR"
-    }
+if [[ -d "$APP_DIR" ]] && [[ -n "$(ls -A "$APP_DIR" 2>/dev/null)" ]]; then
+    ok "Application code already exists at $APP_DIR — skipping (update code manually)"
 else
     # Fresh install: copy from the repo this script lives in
     info "Copying application from $REPO_ROOT to $APP_DIR..."
     mkdir -p "$APP_DIR"
     rsync -a --exclude='.git' --exclude='__pycache__' --exclude='.venv' \
-        --exclude='node_modules' --exclude='.agents' --exclude='.beads' \
-        --exclude='.claude' --exclude='conductor' \
+        --exclude='.agents' --exclude='.beads' --exclude='conductor' \
         "$REPO_ROOT/" "$APP_DIR/"
     chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+    ok "Application code deployed to $APP_DIR"
 fi
-
-ok "Application code deployed to $APP_DIR"
 
 # ─── Step 6: Create virtualenv and install ────────────────
 info "Setting up Python virtualenv..."
@@ -279,9 +269,9 @@ else
     warn "Some file modes need attention (see above)"
 fi
 
-# ─── Step 13: Restart services if running (upgrade path) ──
+# ─── Step 13: Restart services if running ─────────────────
 if systemctl is-active --quiet ainews-api; then
-    info "Restarting services for upgrade..."
+    info "Restarting services..."
     systemctl restart ainews-api ainews-worker ainews-beat
     ok "Services restarted"
 fi
@@ -298,6 +288,10 @@ echo "  2. Start services:      sudo systemctl start ainews-api ainews-worker ai
 echo "  3. Create admin user:   sudo -u ainews AINEWS_DB_PATH=$DATA_DIR/ainews.db $VENV_DIR/bin/ainews seed admin --email admin@example.com --password changeme"
 echo "  4. Verify health:       curl http://localhost:8000/api/health"
 echo ""
+echo "  For future code updates:"
+echo "    cd $APP_DIR && sudo -u ainews git pull"
+echo "    sudo bash $APP_DIR/deploy/update.sh"
+echo ""
 echo "  Service management:"
 echo "    systemctl status ainews-api"
 echo "    systemctl status ainews-worker"
@@ -308,3 +302,4 @@ echo "  Log files:  $LOG_DIR/"
 echo "  Database:   $DATA_DIR/ainews.db"
 echo "  Backups:    $BACKUP_DIR/"
 echo ""
+
