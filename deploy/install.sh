@@ -56,10 +56,17 @@ ok "Database setup complete"
 
 info "Configuring systemd background services..."
 
-# Get current user and absolute path to the project
-CURRENT_USER=$(whoami)
+# Get the real user (if run via sudo, SUDO_USER is set)
+REAL_USER=${SUDO_USER:-$(whoami)}
+REAL_HOME=$(eval echo ~$REAL_USER)
 APP_DIR=$(pwd)
-UV_BIN=$(command -v uv)
+
+# Find the correct path to uv for the real user
+if [[ -x "$REAL_HOME/.local/bin/uv" ]]; then
+    UV_BIN="$REAL_HOME/.local/bin/uv"
+else
+    UV_BIN=$(command -v uv || true)
+fi
 
 sudo tee /etc/systemd/system/ainews-api.service > /dev/null <<EOF
 [Unit]
@@ -67,7 +74,7 @@ Description=AI News API Server
 After=network.target valkey-server.service
 
 [Service]
-User=$CURRENT_USER
+User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run uvicorn ainews.api.main:app --host 0.0.0.0 --port 1210
@@ -84,7 +91,7 @@ Description=AI News Celery Worker
 After=network.target valkey-server.service
 
 [Service]
-User=$CURRENT_USER
+User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app worker --loglevel=info
@@ -101,7 +108,7 @@ Description=AI News Celery Beat
 After=network.target valkey-server.service
 
 [Service]
-User=$CURRENT_USER
+User=$REAL_USER
 WorkingDirectory=$APP_DIR
 EnvironmentFile=$APP_DIR/.env
 ExecStart=$UV_BIN run celery -A ainews.tasks.celery_app beat --loglevel=info
@@ -113,8 +120,9 @@ WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable ainews-api ainews-worker ainews-beat
-sudo systemctl restart ainews-api ainews-worker ainews-beat
+sudo systemctl enable ainews-api ainews-worker ainews-beat || true
+sudo systemctl restart ainews-api ainews-worker ainews-beat || warn "One or more services failed to restart. Check logs."
+
 ok "Systemd services configured and started"
 
 echo ""
