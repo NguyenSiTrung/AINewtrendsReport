@@ -66,45 +66,50 @@ uv run pytest
 ### Prerequisites
 
 - Ubuntu 22.04 or 24.04 LTS
-- Root access (`sudo`)
-- Valkey or Redis server
-- Local LLM server (vLLM / Ollama / LM Studio)
+- Root access (`sudo`) for systemd setup
+- Valkey server (installed automatically by the script)
 
 ### Install
 
 ```bash
-# One-line idempotent installer (first-time only)
+# One-line idempotent installer (first-time setup)
 sudo bash deploy/install.sh
 ```
 
 This will:
-1. Install system packages (Python 3.12, SQLite, etc.)
-2. Install Valkey (or Redis fallback)
-3. Create `ainews` system user and directory layout
-4. Set up virtualenv and install dependencies
-5. Copy environment template to `/etc/ainews/ainews.env`
-6. Run database migrations and seed
-7. Install systemd units, cron schedules, and logrotate config
+1. Install Valkey (if not already installed)
+2. Set up `uv` and sync Python dependencies
+3. Copy `.env.example` to `.env` (if not present)
+4. Run database migrations and seed starter data
+5. Create default admin user (`admin@example.com` / `changeme`)
+6. Generate and enable systemd service units
 
 ### Update (after code changes)
 
 ```bash
 # 1. Pull latest code manually
-cd /opt/ainews/app && sudo -u ainews git pull
+git pull
 
 # 2. Run the update script (reinstalls deps, migrates DB, restarts services)
-sudo bash /opt/ainews/app/deploy/update.sh
+bash deploy/update.sh
+```
+
+### Stop services
+
+```bash
+bash deploy/stop.sh
 ```
 
 ### Configure
 
 ```bash
 # Edit environment configuration
-sudo nano /etc/ainews/ainews.env
+nano .env
 
 # Required settings:
 #   AINEWS_LLM_BASE_URL  — Your local LLM server endpoint
 #   AINEWS_TAVILY_API_KEY — Tavily API key for news search
+#   AINEWS_JWT_SECRET     — Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
 ```
 
 ### Start Services
@@ -128,25 +133,24 @@ sudo journalctl -u ainews-api -f
 | `systemctl status ainews-worker` | Celery worker status |
 | `systemctl status ainews-beat` | Celery scheduler status |
 | `systemctl restart ainews-api ainews-worker ainews-beat` | Restart services |
+| `bash deploy/stop.sh` | Graceful shutdown with status check |
 | `journalctl -u ainews-api -f` | Follow API logs |
 
 ### Automated Schedules
 
 | Schedule | Trigger | Description |
 |----------|---------|-------------|
-| Weekly | Mon 7:00 AM | AI news digest |
-| Monthly | 1st of month 8:00 AM | AI trends report |
-| Daily | 2:00 AM | SQLite database backup |
+| Weekly | Mon 7:00 AM | AI news digest (seeded by default) |
+| Daily | 2:00 AM | SQLite database backup (manual cron setup) |
 
 ### File Layout
 
 ```
-/opt/ainews/app/         Application code
-/opt/ainews/venv/        Python virtualenv
-/etc/ainews/ainews.env   Configuration (0640, root:ainews)
-/var/lib/ainews/         Data (DB, reports)
-/var/log/ainews/         Log files
-/var/backups/ainews/     Database backups (30-day retention)
+./                           Project root (git clone)
+./var/ainews.db               SQLite database (auto-created)
+./var/reports/                Generated reports
+./.env                       Configuration (from .env.example)
+./.venv/                     Python virtualenv (managed by uv)
 ```
 
 ### Operational Guards
@@ -159,6 +163,18 @@ sudo journalctl -u ainews-api -f
 | Run token cap | 500,000 tokens | `settings_kv` |
 | Run wall time | 30 minutes | `settings_kv` |
 | Run article cap | 200 articles | `settings_kv` |
+
+## Development
+
+| Command | Description |
+|---------|-------------|
+| `make dev` | Install all dependencies (including dev) |
+| `make lint` | Run ruff linter + format check |
+| `make format` | Auto-format code |
+| `make typecheck` | Run mypy type checker |
+| `make test` | Run tests with coverage |
+| `make css` | Build Tailwind CSS (production) |
+| `make css-watch` | Watch and rebuild CSS on changes |
 
 ## Documentation
 

@@ -70,8 +70,8 @@ Changes are stored in `settings_kv` and picked up by `llm_factory()` on the next
 ### Option B: Via environment (persistent, requires restart)
 
 ```bash
-# Edit the environment file
-sudo nano /etc/ainews/ainews.env
+# Edit the environment file (in the project directory)
+nano .env
 
 # Change these values:
 AINEWS_LLM_BASE_URL=http://127.0.0.1:11434/v1   # e.g. Ollama
@@ -85,7 +85,7 @@ sudo systemctl restart ainews-api ainews-worker ainews-beat
 
 ```bash
 # CLI test
-/opt/ainews/venv/bin/ainews llm test
+uv run ainews llm test
 
 # API test
 curl http://localhost:1210/api/health | python3 -m json.tool
@@ -120,7 +120,7 @@ Or view in the Admin UI at `/runs`.
 
 ```bash
 # Via CLI (same code path as the API)
-/opt/ainews/venv/bin/ainews trigger-run --schedule weekly-ai-news
+uv run ainews trigger-run --schedule weekly-ai-news
 
 # Via API
 curl -X POST http://localhost:1210/api/trigger \
@@ -135,7 +135,7 @@ If a run was interrupted mid-pipeline, the LangGraph checkpoint enables resumpti
 ### One-off run with custom parameters
 
 ```bash
-/opt/ainews/venv/bin/ainews trigger-run --topics "AI,ML" --days 7
+uv run ainews trigger-run --topics "AI,ML" --days 7
 ```
 
 ---
@@ -145,7 +145,7 @@ If a run was interrupted mid-pipeline, the LangGraph checkpoint enables resumpti
 ### Step 1: Update the environment file
 
 ```bash
-sudo nano /etc/ainews/ainews.env
+nano .env
 # Update: AINEWS_TAVILY_API_KEY=tvly-new-key-here
 ```
 
@@ -162,7 +162,7 @@ curl http://localhost:1210/api/health | python3 -m json.tool
 # Check that all components show "ok"
 ```
 
-> **Note:** The Tavily key is never stored in the database. It lives only in the env file with `root:ainews 0640` permissions.
+> **Note:** The Tavily key is never stored in the database. It lives only in the `.env` file in the project directory.
 
 ---
 
@@ -170,9 +170,11 @@ curl http://localhost:1210/api/health | python3 -m json.tool
 
 ### Automated backups
 
-Daily backups run at 2:00 AM via cron:
-- Location: `/var/backups/ainews/ainews-YYYY-MM-DD.db`
+If you have installed the cron job from `deploy/cron/ainews-backup`, daily backups run at 2:00 AM:
+- Location: `./var/backups/` (or a custom path in the backup script)
 - Retention: 30 days (auto-rotated)
+
+> **Note:** The backup cron is **not** auto-installed by `install.sh`. See `deploy/cron/` and `deploy/scripts/backup_db.sh` for manual setup.
 
 ### Restore procedure
 
@@ -181,14 +183,13 @@ Daily backups run at 2:00 AM via cron:
 sudo systemctl stop ainews-api ainews-worker ainews-beat
 
 # 2. List available backups
-ls -la /var/backups/ainews/
+ls -la var/backups/
 
 # 3. Copy backup over the live database
-sudo -u ainews cp /var/backups/ainews/ainews-2026-05-07.db \
-                  /var/lib/ainews/ainews.db
+cp var/backups/ainews-2026-05-07.db var/ainews.db
 
 # 4. Verify database integrity
-sudo -u ainews sqlite3 /var/lib/ainews/ainews.db "PRAGMA integrity_check;"
+sqlite3 var/ainews.db "PRAGMA integrity_check;"
 
 # 5. Restart services
 sudo systemctl start ainews-api ainews-worker ainews-beat
@@ -200,8 +201,7 @@ curl http://localhost:1210/api/health
 ### Manual backup (ad-hoc)
 
 ```bash
-sudo -u ainews sqlite3 /var/lib/ainews/ainews.db \
-  ".backup '/var/backups/ainews/ainews-manual-$(date +%F-%H%M).db'"
+sqlite3 var/ainews.db ".backup 'var/backups/ainews-manual-$(date +%F-%H%M).db'"
 ```
 
 ---
@@ -226,14 +226,14 @@ sudo -u ainews sqlite3 /var/lib/ainews/ainews.db \
 | Name | Cron | Window | Description |
 |------|------|--------|-------------|
 | `weekly-ai-news` | `0 7 * * 1` | 7 days | Weekly AI news digest |
-| `monthly-trends` | `0 8 1 * *` | 30 days | Monthly trends report |
 
-### Cron integration
+> Additional schedules (e.g. `monthly-trends`) can be created via the Admin UI at `/schedules`.
 
-The cron entries in `/etc/cron.d/ainews` reference schedules by name:
+### Cron integration (optional)
+
+Cron entries in `deploy/cron/` can be manually installed to `/etc/cron.d/ainews`:
 ```
-0 7 * * 1 ainews /opt/ainews/venv/bin/ainews trigger-run --schedule weekly-ai-news
-0 8 1 * * ainews /opt/ainews/venv/bin/ainews trigger-run --schedule monthly-trends
+0 7 * * 1 <user> cd /path/to/project && uv run ainews trigger-run --schedule weekly-ai-news
 ```
 
 Modifying schedule parameters in the DB/UI takes effect immediately — no cron file edit needed.
@@ -253,13 +253,13 @@ Modifying schedule parameters in the DB/UI takes effect immediately — no cron 
 
 ```bash
 # Named schedule
-/opt/ainews/venv/bin/ainews trigger-run --schedule weekly-ai-news
+uv run ainews trigger-run --schedule weekly-ai-news
 
 # Custom one-off
-/opt/ainews/venv/bin/ainews trigger-run --topics "AI,LLM,Agents" --days 14
+uv run ainews trigger-run --topics "AI,LLM,Agents" --days 14
 
 # Direct pipeline (development, no Celery)
-/opt/ainews/venv/bin/ainews run start --topic AI --topic LLM --days 7
+uv run ainews run start --topic AI --topic LLM --days 7
 ```
 
 ---
@@ -306,11 +306,8 @@ sudo journalctl -u ainews-worker -f
 # Celery scheduler logs
 sudo journalctl -u ainews-beat -f
 
-# Both combined
+# All combined
 sudo journalctl -u 'ainews-*' -f
-
-# Cron logs
-tail -f /var/log/ainews/cron.log
 ```
 
 ### Admin UI log viewer
@@ -319,7 +316,7 @@ Open `http://<server>:1210/logs` — supports filtering by run ID, node, and log
 
 ### Log rotation
 
-Managed by logrotate (`/etc/logrotate.d/ainews`): daily rotation, 14-day retention, compressed.
+Optional: install `deploy/logrotate/ainews` to `/etc/logrotate.d/ainews` for daily rotation, 14-day retention, compressed.
 
 ---
 

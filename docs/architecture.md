@@ -1,6 +1,6 @@
 # Architecture Guide
 
-> AI News & Trends Report — system design reference (v1).
+> AI News & Trends Report — system design reference (v2, updated 2026-05-13).
 >
 > For the full development plan see [`../PLAN.md`](../PLAN.md).
 
@@ -61,24 +61,28 @@ A **multi-agent pipeline** that gathers AI news from configurable sources (Tavil
 
 ```
 ├── pyproject.toml              # Project & tool config
+├── Makefile                    # Dev shortcuts (lint, test, css)
 ├── alembic/                    # Database migrations
 ├── deploy/
-│   ├── install.sh              # Idempotent Ubuntu installer
-│   ├── systemd/                # Service unit files
-│   ├── cron/                   # Cron schedule snippets
-│   ├── logrotate/              # Log rotation config
+│   ├── install.sh              # Idempotent local setup + systemd config
+│   ├── update.sh               # Code upgrade (deps + migrate + restart)
+│   ├── stop.sh                 # Graceful service shutdown
+│   ├── cron/                   # Cron schedule snippets (manual install)
+│   ├── logrotate/              # Log rotation config (manual install)
 │   └── scripts/backup_db.sh   # SQLite backup script
 ├── docs/                       # ← You are here
+├── tools/                      # Vendored binaries (Tailwind CSS CLI)
 ├── src/ainews/
 │   ├── core/                   # Config, logging, database, run_caps
 │   ├── models/                 # SQLAlchemy ORM
 │   ├── schemas/                # Pydantic schemas
-│   ├── llm/                    # Factory, config, connectivity
-│   ├── agents/                 # LangGraph nodes, tools, prompts
-│   ├── services/               # Business logic (pipeline service)
-│   ├── tasks/                  # Celery app + pipeline task
+│   ├── llm/                    # Factory, config, connectivity, concurrency
+│   ├── agents/                 # LangGraph nodes, tools, prompts, resilience
+│   ├── services/               # Business logic (pipeline service, run logger)
+│   ├── tasks/                  # Celery app, beat scheduler, pipeline task
 │   ├── exporters/              # Markdown and Excel exporters
-│   ├── api/                    # FastAPI routes, templates, auth
+│   ├── tools/                  # Rate limiter, Tavily guard
+│   ├── api/                    # FastAPI routes, templates, auth, middleware
 │   └── cli.py                  # Typer CLI
 └── tests/                      # Pytest suite
 ```
@@ -154,7 +158,9 @@ START → Planner → Retriever → Scraper → Filter → Dedup
 
 ---
 
-## 7. LLM Configuration
+## 7. Configuration
+
+### LLM
 
 Single OpenAI-compatible endpoint. Config resolution: `model_override > db_overrides (settings_kv) > env`.
 
@@ -167,6 +173,18 @@ Single OpenAI-compatible endpoint. Config resolution: `model_override > db_overr
 | `AINEWS_LLM_MAX_TOKENS` | `4096` | Max output tokens |
 | `AINEWS_LLM_TIMEOUT` | `120` | Timeout (seconds) |
 
+### Other environment variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `AINEWS_DB_PATH` | `./var/ainews.db` | SQLite database file |
+| `AINEWS_VALKEY_URL` | `redis://127.0.0.1:6379/0` | Valkey broker URL |
+| `AINEWS_TAVILY_API_KEY` | *(empty)* | Tavily search API key |
+| `AINEWS_REPORT_MAX_SOURCES` | `50` | Max sources per report |
+| `AINEWS_TIMEZONE` | *(auto-detected)* | Display timezone via `tzlocal` |
+| `AINEWS_LOG_LEVEL` | `INFO` | Logging level |
+| `AINEWS_JWT_SECRET` | *(empty)* | JWT secret for admin sessions |
+
 ---
 
 ## 8. API Surface
@@ -175,16 +193,24 @@ Single OpenAI-compatible endpoint. Config resolution: `model_override > db_overr
 
 | Method | Route | Purpose |
 |--------|-------|---------|
-| GET | `/api/health` | DB/Valkey/LLM probes |
+| GET | `/api/health` | DB/Valkey/Celery probes |
 | POST | `/api/trigger` | Enqueue pipeline run |
 | GET | `/api/runs` | Paginated run history |
 | GET | `/api/runs/{id}` | Run detail + metrics |
-| GET/POST | `/api/sites` | CRUD target sites |
-| GET/POST | `/api/schedules` | CRUD schedules |
+| GET | `/api/sites` | List all sites |
+| POST | `/api/sites` | Create site |
+| GET | `/api/sites/{id}` | Get site detail |
+| PUT | `/api/sites/{id}` | Update site |
+| DELETE | `/api/sites/{id}` | Delete site |
+| GET | `/api/schedules` | List schedules |
+| POST | `/api/schedules` | Create schedule |
+| GET | `/api/schedules/{id}` | Get schedule detail |
+| PUT | `/api/schedules/{id}` | Update schedule |
+| DELETE | `/api/schedules/{id}` | Delete schedule |
 
 ### Admin UI (server-rendered)
 
-Dashboard, Sites, Schedules, LLM Settings, Runs, Trigger, Logs (SSE), Settings, Health.
+Dashboard, Sites, Schedules, Users, LLM Settings, Runs (list + detail + stepper), Trigger, Logs (SSE), Settings (pipeline guards + purge/clear), Health, Report viewer (Markdown preview + MD/XLSX download).
 
 Auth: JWT in HttpOnly cookie + CSRF tokens.
 
@@ -193,9 +219,11 @@ Auth: JWT in HttpOnly cookie + CSRF tokens.
 ## 9. Deployment
 
 - **Target:** Ubuntu 22.04/24.04 LTS, HTTP-only local network.
-- **Installer:** `sudo bash deploy/install.sh` (idempotent).
-- **File layout:** app in `/opt/ainews/`, data in `/var/lib/ainews/`, config in `/etc/ainews/`, logs in `/var/log/ainews/`, backups in `/var/backups/ainews/`.
-- **Hardening:** systemd `ProtectSystem=strict`, CSP headers, CSRF, log masking, secrets in env file (0640).
+- **Installer:** `sudo bash deploy/install.sh` (idempotent, run from project directory).
+- **File layout:** app runs from the git clone directory; data in `./var/`, config in `.env`, systemd units generated at `/etc/systemd/system/ainews-*.service`.
+- **Update:** `bash deploy/update.sh` — syncs deps via `uv`, runs migrations, restarts services, health check.
+- **Stop:** `bash deploy/stop.sh` — graceful shutdown with status verification.
+- **Security:** CSP headers, CSRF tokens, SSL CA bundle env vars in systemd units, log masking.
 
 ---
 
