@@ -22,6 +22,7 @@
     .stagger-3 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
     .stagger-4 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both; }
     .stagger-5 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+    .stagger-6 { animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s both; }
     
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -37,6 +38,36 @@
       opacity: 0.03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
+
+    /* Team badge animated gradient border */
+    .team-badge {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+    .team-badge::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      background: linear-gradient(135deg, #FF4400 0%, rgba(255,68,0,0.2) 40%, rgba(255,255,255,0.08) 60%, #FF4400 100%);
+      background-size: 300% 300%;
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      animation: borderShift 6s ease-in-out infinite;
+    }
+    @keyframes borderShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Glowing dot pulse */
+    .glow-dot {
+      box-shadow: 0 0 6px 2px rgba(255, 68, 0, 0.4);
+    }
   </style>
 </head>
 
@@ -51,7 +82,7 @@
   </div>
 
   <div class="relative min-h-screen flex w-full z-10">
-    <!-- Left side: Narrative/Branding (70%) -->
+    <!-- Left side: Narrative/Branding (65%) -->
     <div class="hidden lg:flex flex-col justify-between w-[65%] p-12 xl:p-16 border-r border-white/10 relative">
       <div class="stagger-1">
          <div class="w-14 h-14 bg-[#FF4400] flex items-center justify-center rounded-none relative">
@@ -70,6 +101,22 @@
          <p class="text-lg text-neutral-500 max-w-md font-mono mt-8 border-l border-neutral-800 pl-4">
             Authorized access only. Authenticate to enter the data synthesis terminal and monitor industry signals.
          </p>
+      </div>
+
+      <!-- Dev Team Identifier Badge -->
+      <div class="stagger-6">
+        <div class="team-badge inline-flex items-center gap-4 px-5 py-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-1.5 h-1.5 bg-[#FF4400] glow-dot animate-pulse rounded-full flex-shrink-0"></span>
+            <span class="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">Developed by</span>
+          </div>
+          <div class="w-px h-4 bg-neutral-700/50"></div>
+          <div class="flex items-center gap-2">
+            <span class="font-mono text-xs font-bold text-white/80 tracking-wider">SW Platform 2G</span>
+            <span class="text-neutral-600 text-xs">—</span>
+            <span class="font-mono text-xs font-bold text-[#FF4400]/90 tracking-wider">AX Team</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -116,9 +163,13 @@
             </button>
          </form>
          
-         <div class="mt-12 text-center stagger-5">
+         <!-- Footer with version and team identifier -->
+         <div class="mt-12 text-center stagger-5 space-y-2">
            <p class="text-[10px] text-neutral-600 font-mono uppercase tracking-widest">
              V_0.1.0 // AINEWS.SYS
+           </p>
+           <p class="text-[9px] text-neutral-700 font-mono tracking-widest lg:hidden">
+             SW Platform 2G — AX Team
            </p>
          </div>
        </div>
