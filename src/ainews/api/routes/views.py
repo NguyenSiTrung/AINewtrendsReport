@@ -1596,6 +1596,8 @@ def runs_list(
 @router.get("/runs/table", response_class=HTMLResponse)
 def runs_table_partial(
     request: Request,
+    page: int = 1,
+    per_page: int = 25,
     status: str = "",
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
@@ -1606,14 +1608,20 @@ def runs_table_partial(
 
     from datetime import datetime as _dt
 
-    from sqlalchemy import select
+    from sqlalchemy import func, select
 
     from ainews.models.run import Run
 
     q = select(Run).order_by(Run.created_at.desc())
     if status:
         q = q.where(Run.status == status)
-    runs = session.execute(q).scalars().all()
+
+    total = session.scalar(select(func.count()).select_from(q.subquery())) or 0
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * per_page
+
+    runs = session.execute(q.limit(per_page).offset(offset)).scalars().all()
     has_active_runs = any(r.status in ("pending", "running") for r in runs)
 
     run_durations: dict[str, str] = {}
@@ -1630,6 +1638,10 @@ def runs_table_partial(
         else:
             run_durations[run.id] = "—"
 
+    query_params: dict[str, str] = {}
+    if status:
+        query_params["status"] = status
+
     return _render(
         request,
         "partials/runs_table.html",
@@ -1638,6 +1650,11 @@ def runs_table_partial(
             "has_active_runs": has_active_runs,
             "run_durations": run_durations,
             "status_filter": status,
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": total_pages,
+            "query_params": query_params,
         },
     )
 

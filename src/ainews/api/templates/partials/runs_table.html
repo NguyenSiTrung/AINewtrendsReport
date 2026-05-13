@@ -8,7 +8,7 @@
 #}
 <div id="runs-table"
      {% if has_active_runs %}
-       hx-get="/runs/table{% if status_filter %}?status={{ status_filter }}{% endif %}"
+       hx-get="/runs/table?page={{ page|default(1) }}&per_page={{ per_page|default(25) }}{% if status_filter %}&status={{ status_filter }}{% endif %}"
        hx-trigger="every 5s"
        hx-swap="outerHTML"
      {% endif %}>
