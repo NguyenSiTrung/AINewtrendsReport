@@ -55,6 +55,7 @@ def retrieve_dispatch(state: GraphState) -> list[Any]:
                     "query": query,
                     "sites": state["params"].get("sites", []),
                     "timeframe_days": state["params"]["timeframe_days"],
+                    "max_results": state["params"].get("tavily_max_results", 10),
                 },
             )
         )
@@ -72,6 +73,7 @@ def retrieve_one(state: dict[str, Any]) -> dict[str, Any]:
     query: str = state["query"]
     sites: list[str] = state.get("sites", [])
     timeframe_days: int = state.get("timeframe_days", 7)
+    max_results: int = state.get("max_results", 10)
 
     # Map timeframe to Tavily time_range
     time_range = "week" if timeframe_days <= 7 else "month"
@@ -81,6 +83,7 @@ def retrieve_one(state: dict[str, Any]) -> dict[str, Any]:
         query,
         include_domains=sites if sites else None,
         time_range=time_range,
+        max_results=max_results,
     )
 
     # Convert SearchResult to SearchHit TypedDict

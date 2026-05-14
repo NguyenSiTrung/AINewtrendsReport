@@ -1861,6 +1861,9 @@ def settings_page(
         "report_max_sources": pipeline_db.get(
             "report_max_sources", env_settings.report_max_sources
         ),
+        "tavily_max_results": pipeline_db.get(
+            "tavily_max_results", env_settings.tavily_max_results
+        ),
     }
 
     return _render(
@@ -1907,6 +1910,7 @@ def settings_reset_defaults(
 def settings_pipeline_save(
     request: Request,
     report_max_sources: int = Form(50),
+    tavily_max_results: int = Form(10),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Save pipeline configuration settings."""
@@ -1920,6 +1924,7 @@ def settings_pipeline_save(
 
     data: dict[str, object] = {
         "report_max_sources": max(0, min(report_max_sources, 500)),
+        "tavily_max_results": max(1, min(tavily_max_results, 20)),
     }
 
     row = session.get(SettingsKV, "pipeline")

@@ -65,6 +65,7 @@ class Settings(BaseSettings):
 
     # ── Pipeline ──────────────────────────────────────────
     report_max_sources: int = 50
+    tavily_max_results: int = 10
 
     # ── Timezone ──────────────────────────────────────────
     timezone: str = _detect_local_timezone()

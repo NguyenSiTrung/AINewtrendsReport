@@ -24,6 +24,7 @@ class RunParams(TypedDict):
     sites: list[str]
     use_smart_planner: bool
     report_max_sources: NotRequired[int]
+    tavily_max_results: NotRequired[int]
 
 
 class SearchHit(TypedDict):
