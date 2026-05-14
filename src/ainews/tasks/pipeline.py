@@ -101,24 +101,26 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
                 if schedule.site_filter:
                     sites = sites or schedule.site_filter
 
-    # Fallback: if no sites are specified, use all sites from the database
+    # ── Load site priorities for smart ranking in writer ───
+    import urllib.parse
+
+    from sqlalchemy import select
+
+    from ainews.models.site import Site
+
+    site_priorities: dict[str, int] = {}
+    with get_db_session(engine) as session:
+        site_rows = session.execute(
+            select(Site.url, Site.priority).where(Site.enabled == 1)
+        ).all()
+        for site_url, site_prio in site_rows:
+            domain = urllib.parse.urlparse(site_url).netloc.removeprefix("www.")
+            if domain:
+                site_priorities[domain] = site_prio
+
+    # Fallback: if no sites specified, use all enabled sites
     if not sites:
-        import urllib.parse
-
-        from sqlalchemy import select
-
-        from ainews.models.site import Site
-
-        with get_db_session(engine) as session:
-            all_urls = session.execute(
-                select(Site.url).where(Site.enabled == 1)
-            ).scalars().all()
-            # Extract just the domain from the URLs for Tavily
-            parsed_domains = [
-                urllib.parse.urlparse(url).netloc for url in all_urls if url
-            ]
-            # Remove any empty strings and www. prefix for better matching
-            sites = list({d.removeprefix("www.") for d in parsed_domains if d})
+        sites = list(site_priorities.keys())
 
     # ── Build and invoke graph ────────────────────────────
     try:
@@ -148,6 +150,7 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
             use_smart_planner=input_params.get("use_smart_planner", True),
             report_max_sources=report_max_sources,
             tavily_max_results=tavily_max_results,
+            site_priorities=site_priorities,
         )
 
         initial_state: GraphState = {
