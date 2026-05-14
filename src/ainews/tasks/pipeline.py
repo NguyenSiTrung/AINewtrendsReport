@@ -110,7 +110,9 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         from ainews.models.site import Site
 
         with get_db_session(engine) as session:
-            all_urls = session.execute(select(Site.url)).scalars().all()
+            all_urls = session.execute(
+                select(Site.url).where(Site.enabled == 1)
+            ).scalars().all()
             # Extract just the domain from the URLs for Tavily
             parsed_domains = [
                 urllib.parse.urlparse(url).netloc for url in all_urls if url
