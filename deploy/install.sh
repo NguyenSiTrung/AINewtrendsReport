@@ -26,10 +26,17 @@ sudo systemctl start valkey-server 2>/dev/null || true
 ok "Valkey is running"
 
 info "Setting up Python environment with uv..."
-if ! command -v uv &>/dev/null; then
+# Check both system PATH and user's local bin (handles sudo where user's PATH isn't inherited)
+REAL_USER_HOME=$(eval echo ~${SUDO_USER:-$(whoami)})
+if command -v uv &>/dev/null; then
+    ok "uv already available in PATH"
+elif [[ -x "$REAL_USER_HOME/.local/bin/uv" ]]; then
+    ok "uv found at $REAL_USER_HOME/.local/bin/uv"
+    export PATH="$REAL_USER_HOME/.local/bin:$PATH"
+else
     info "Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.local/bin:$PATH"
+    export PATH="$REAL_USER_HOME/.local/bin:$PATH"
 fi
 
 uv sync
