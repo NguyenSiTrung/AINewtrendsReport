@@ -75,14 +75,17 @@ class TavilySearchTool:
         api_key: str,
         cache: CacheBackend | None = None,
         cache_ttl: int = _CACHE_TTL_SECONDS,
+        max_results: int = 10,
     ) -> None:
         self._api_key = api_key
         self._cache = cache
         self._cache_ttl = cache_ttl
+        self._max_results = max_results
         logger.info(
             "tavily_tool_init",
             api_key_length=len(api_key),
             api_key_prefix=api_key[:8] + "..." if len(api_key) > 8 else "(empty/short)",
+            max_results=max_results,
         )
         self._tool: Any = self._build_tool()
 
@@ -92,7 +95,7 @@ class TavilySearchTool:
         from langchain_tavily._utilities import TavilySearchAPIWrapper
 
         return TavilySearch(
-            max_results=10,
+            max_results=self._max_results,
             topic="news",
             include_raw_content=True,
             api_wrapper=TavilySearchAPIWrapper(tavily_api_key=self._api_key),
@@ -121,7 +124,6 @@ class TavilySearchTool:
         *,
         include_domains: list[str] | None = None,
         time_range: str | None = None,
-        max_results: int = 10,
     ) -> list[SearchResult]:
         """Run a Tavily search with caching.
 
@@ -133,15 +135,13 @@ class TavilySearchTool:
             Optional list of domains to restrict search to.
         time_range
             Optional time range filter (e.g. ``"day"``, ``"week"``).
-        max_results
-            Maximum number of results (default 10).
 
         Returns
         -------
         list[SearchResult]
             Structured search results.
         """
-        cache_key = self._cache_key(query, include_domains, time_range, max_results)
+        cache_key = self._cache_key(query, include_domains, time_range, self._max_results)
 
         # Check cache
         if self._cache is not None:
@@ -151,12 +151,11 @@ class TavilySearchTool:
                 return [SearchResult.model_validate(r) for r in json.loads(cached)]
 
         # Execute search
-        logger.info("tavily_search", query=query, max_results=max_results)
+        logger.info("tavily_search", query=query, max_results=self._max_results)
         invoke_args = {
             "query": query,
             **({"include_domains": include_domains} if include_domains else {}),
             **({"time_range": time_range} if time_range else {}),
-            **({"max_results": max_results} if max_results != 10 else {}),
         }
         try:
             raw_results = self._tool.invoke(invoke_args)

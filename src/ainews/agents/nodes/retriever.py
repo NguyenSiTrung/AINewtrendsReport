@@ -18,7 +18,7 @@ from ainews.agents.state import GraphState, SearchHit
 logger = structlog.get_logger(__name__)
 
 
-def _get_tavily_tool() -> Any:
+def _get_tavily_tool(max_results: int = 10) -> Any:
     """Lazy-load Tavily search tool."""
     from ainews.agents.tools.tavily_search import TavilySearchTool
     from ainews.core.config import get_settings
@@ -30,7 +30,7 @@ def _get_tavily_tool() -> Any:
         api_key_length=len(api_key),
         api_key_set=bool(api_key),
     )
-    return TavilySearchTool(api_key=api_key)
+    return TavilySearchTool(api_key=api_key, max_results=max_results)
 
 
 def retrieve_dispatch(state: GraphState) -> list[Any]:
@@ -78,12 +78,11 @@ def retrieve_one(state: dict[str, Any]) -> dict[str, Any]:
     # Map timeframe to Tavily time_range
     time_range = "week" if timeframe_days <= 7 else "month"
 
-    tool = _get_tavily_tool()
+    tool = _get_tavily_tool(max_results=max_results)
     results = tool.search(
         query,
         include_domains=sites if sites else None,
         time_range=time_range,
-        max_results=max_results,
     )
 
     # Convert SearchResult to SearchHit TypedDict
