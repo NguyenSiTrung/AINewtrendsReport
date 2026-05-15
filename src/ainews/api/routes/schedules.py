@@ -5,11 +5,12 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ainews.api.deps import get_db, require_api_auth
+from ainews.models.run import Run
 from ainews.models.schedule import Schedule
 from ainews.schemas.schedule import ScheduleCreate, ScheduleResponse, ScheduleUpdate
 
@@ -121,4 +122,9 @@ def delete_schedule(
     sched = session.get(Schedule, schedule_id)
     if sched is None:
         raise HTTPException(status_code=404, detail="Schedule not found")
+
+    # Nullify FK on associated runs to avoid FOREIGN KEY constraint failure
+    session.execute(
+        update(Run).where(Run.schedule_id == schedule_id).values(schedule_id=None)
+    )
     session.delete(sched)
