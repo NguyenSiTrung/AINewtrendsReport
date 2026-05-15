@@ -127,7 +127,7 @@
     <div class="w-full lg:w-[35%] flex flex-col justify-center bg-[#0a0a0a] relative shadow-[-20px_0_50px_rgba(0,0,0,0.5)]">
        <div class="w-full max-w-md mx-auto px-8 sm:px-12">
          <div class="stagger-3 mb-12">
-           <h3 class="text-3xl font-bold uppercase tracking-tighter mb-2">Terminal Login</h3>
+           <h3 class="text-3xl font-bold uppercase tracking-tighter mb-2">Login</h3>
            <p class="text-neutral-500 font-mono text-sm">Enter your credentials below.</p>
          </div>
 
@@ -141,7 +141,7 @@
             <input type="hidden" name="csrf_token" value="{{ request.state.csrf_token }}">
 
             <div class="stagger-4 relative group">
-              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Identification (Email)</label>
+              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Email</label>
               <input type="email" name="email" required autofocus
                      class="w-full bg-[#111] border border-neutral-800 px-4 py-4 text-white focus:border-[#FF4400] focus:ring-1 focus:ring-[#FF4400] outline-none rounded-none placeholder-neutral-700 transition-all text-sm"
                      value="{{ email or '' }}"
@@ -149,7 +149,7 @@
             </div>
 
             <div class="stagger-4 relative group">
-              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Access Key (Password)</label>
+              <label class="block text-[10px] uppercase tracking-widest text-neutral-500 mb-2 group-focus-within:text-[#FF4400] transition-colors">Password</label>
               <input type="password" name="password" required
                      class="w-full bg-[#111] border border-neutral-800 px-4 py-4 text-white focus:border-[#FF4400] focus:ring-1 focus:ring-[#FF4400] outline-none rounded-none placeholder-neutral-700 transition-all text-sm"
                      placeholder="••••••••">
@@ -158,7 +158,7 @@
             <button type="submit"
                     class="w-full bg-white text-black font-bold uppercase tracking-widest py-4 mt-4 hover:bg-[#FF4400] hover:text-white transition-all flex justify-center items-center gap-3 group stagger-5 disabled:opacity-50 disabled:cursor-wait"
                     :disabled="loading">
-               <span x-show="!loading" class="text-sm">Initiate Handshake</span>
+               <span x-show="!loading" class="text-sm">Login</span>
                <svg x-show="!loading" class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                </svg>
