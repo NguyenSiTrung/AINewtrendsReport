@@ -28,5 +28,7 @@ class Report(Base):
     trends: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     token_usage: Mapped[Any | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    wiki_url: Mapped[str | None] = mapped_column(String, nullable=True)
+    wiki_pushed_at: Mapped[str | None] = mapped_column(String, nullable=True)
 
     __table_args__ = (Index("ix_reports_run_id", "run_id"),)

@@ -42,4 +42,10 @@ class Schedule(Base):
     enabled: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
 
+    # ── Wiki Push ─────────────────────────────────────────
+    wiki_enabled: Mapped[int] = mapped_column(Integer, default=0)
+    wiki_space_key: Mapped[str | None] = mapped_column(String, nullable=True)
+    wiki_ancestor_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    wiki_title_prefix: Mapped[str | None] = mapped_column(String, nullable=True)
+
     __table_args__ = (Index("ix_schedules_enabled", "enabled"),)

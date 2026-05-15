@@ -31,6 +31,10 @@ class ScheduleCreate(BaseModel):
     timezone: str | None = Field(default=None, description="IANA timezone for this schedule. Uses app default if null.")
     use_smart_planner: bool = Field(default=False)
     enabled: bool = Field(default=True)
+    wiki_enabled: bool = Field(default=False)
+    wiki_space_key: str | None = None
+    wiki_ancestor_id: str | None = None
+    wiki_title_prefix: str | None = Field(default="AI News, Trends")
 
     @field_validator("cron_expr")
     @classmethod
@@ -50,6 +54,10 @@ class ScheduleUpdate(BaseModel):
     timezone: str | None = None
     use_smart_planner: bool | None = None
     enabled: bool | None = None
+    wiki_enabled: bool | None = None
+    wiki_space_key: str | None = None
+    wiki_ancestor_id: str | None = None
+    wiki_title_prefix: str | None = None
 
     @field_validator("cron_expr")
     @classmethod
@@ -73,3 +81,7 @@ class ScheduleResponse(BaseModel):
     use_smart_planner: bool
     enabled: bool
     created_at: str | None = None
+    wiki_enabled: bool = False
+    wiki_space_key: str | None = None
+    wiki_ancestor_id: str | None = None
+    wiki_title_prefix: str | None = None

@@ -133,12 +133,14 @@ def create_app() -> FastAPI:
     from ainews.api.routes.schedules import router as schedules_router
     from ainews.api.routes.sites import router as sites_router
     from ainews.api.routes.trigger import router as trigger_router
+    from ainews.api.routes.wiki import router as wiki_router
 
     app.include_router(health_router, prefix="/api")
     app.include_router(trigger_router, prefix="/api")
     app.include_router(runs_router, prefix="/api")
     app.include_router(sites_router, prefix="/api")
     app.include_router(schedules_router, prefix="/api")
+    app.include_router(wiki_router, prefix="/api")
 
     # ── View Routers (HTML pages) ─────────────────────────
     from ainews.api.routes.views import router as views_router

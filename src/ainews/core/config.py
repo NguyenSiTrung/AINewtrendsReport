@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Any
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -67,6 +68,12 @@ class Settings(BaseSettings):
     report_max_sources: int = 50
     tavily_max_results: int = 10
 
+    # ── Confluence Wiki ───────────────────────────────────
+    wiki_base_url: str = ""
+    wiki_username: str = ""
+    wiki_password: str = ""
+    wiki_verify_ssl: bool = True
+
     # ── Timezone ──────────────────────────────────────────
     timezone: str = _detect_local_timezone()
 
@@ -102,3 +109,52 @@ def clear_settings_cache() -> None:
 @lru_cache(maxsize=1)
 def _get_settings_cached() -> Settings:
     return Settings()
+
+
+def get_wiki_settings(session: Any = None) -> dict[str, Any]:
+    """Return effective wiki settings.
+
+    Only ``base_url`` can be overridden from the admin UI (stored in
+    ``SettingsKV("wiki")``).  Security-sensitive settings (``username``,
+    ``password``, ``verify_ssl``) are **always** read from environment
+    variables — they are never stored in the database.
+
+    Parameters
+    ----------
+    session
+        An optional SQLAlchemy session.  When provided the function reads
+        the ``SettingsKV("wiki")`` row for ``base_url`` and falls back to
+        env vars.  When *None* only env vars are used.
+
+    Returns
+    -------
+    dict with keys: ``base_url``, ``username``, ``password``, ``verify_ssl``.
+    """
+    env = get_settings()
+    defaults: dict[str, Any] = {
+        "base_url": env.wiki_base_url,
+        "username": env.wiki_username,      # always from env
+        "password": env.wiki_password,      # always from env
+        "verify_ssl": env.wiki_verify_ssl,  # always from env
+    }
+
+    if session is None:
+        return defaults
+
+    try:
+        from ainews.models.settings_kv import SettingsKV
+
+        row = session.get(SettingsKV, "wiki")
+        if row and isinstance(row.value, dict):
+            db_vals = row.value
+            return {
+                "base_url": db_vals.get("base_url") or defaults["base_url"],
+                "username": defaults["username"],       # env only
+                "password": defaults["password"],       # env only
+                "verify_ssl": defaults["verify_ssl"],   # env only
+            }
+    except Exception:
+        pass
+
+    return defaults
+

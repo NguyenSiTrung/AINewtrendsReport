@@ -1087,6 +1087,10 @@ def schedule_create(
     use_smart_planner: str | None = Form(None),
     model_override: str = Form(""),
     timezone: str = Form(""),
+    wiki_enabled: str | None = Form(None),
+    wiki_space_key: str = Form(""),
+    wiki_ancestor_id: str = Form(""),
+    wiki_title_prefix: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Create a new schedule."""
@@ -1111,6 +1115,10 @@ def schedule_create(
         use_smart_planner=1 if use_smart_planner else 0,
         model_override=model_override.strip() or None,
         timezone=timezone.strip() or None,
+        wiki_enabled=1 if wiki_enabled else 0,
+        wiki_space_key=wiki_space_key.strip() or None,
+        wiki_ancestor_id=wiki_ancestor_id.strip() or None,
+        wiki_title_prefix=wiki_title_prefix.strip() or None,
         created_at=datetime.now(tz=UTC).isoformat(),
     )
     session.add(sched)
@@ -1174,6 +1182,10 @@ def schedule_update(
     use_smart_planner: str | None = Form(None),
     model_override: str = Form(""),
     timezone: str = Form(""),
+    wiki_enabled: str | None = Form(None),
+    wiki_space_key: str = Form(""),
+    wiki_ancestor_id: str = Form(""),
+    wiki_title_prefix: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Update an existing schedule."""
@@ -1198,6 +1210,10 @@ def schedule_update(
         sched.use_smart_planner = 1 if use_smart_planner else 0
         sched.model_override = model_override.strip() or None
         sched.timezone = timezone.strip() or None
+        sched.wiki_enabled = 1 if wiki_enabled else 0
+        sched.wiki_space_key = wiki_space_key.strip() or None
+        sched.wiki_ancestor_id = wiki_ancestor_id.strip() or None
+        sched.wiki_title_prefix = wiki_title_prefix.strip() or None
         session.flush()
 
     resp = RedirectResponse(url="/schedules", status_code=303)
@@ -1303,6 +1319,10 @@ def trigger_submit(
     topics: str = Form(""),
     days: int = Form(7),
     use_smart_planner: bool = Form(False),
+    wiki_enabled: bool = Form(False),
+    wiki_space_key: str = Form(""),
+    wiki_ancestor_id: str = Form(""),
+    wiki_title_prefix: str = Form(""),
     session: Session = Depends(get_db),  # noqa: B008
 ) -> Any:
     """Enqueue a pipeline run and redirect to runs."""
@@ -1317,6 +1337,12 @@ def trigger_submit(
         params["topics"] = [t.strip() for t in topics.split(",")]
     params["timeframe_days"] = days
     params["use_smart_planner"] = use_smart_planner
+    
+    if wiki_enabled:
+        params["wiki_enabled"] = True
+        params["wiki_space_key"] = wiki_space_key.strip()
+        params["wiki_ancestor_id"] = wiki_ancestor_id.strip()
+        params["wiki_title_prefix"] = wiki_title_prefix.strip()
 
     try:
         run_id = create_and_enqueue_run(
@@ -1866,6 +1892,12 @@ def settings_page(
         ),
     }
 
+    # Wiki integration settings: DB overrides → env fallback
+    from ainews.core.config import get_wiki_settings
+
+    wiki = get_wiki_settings(session)
+    wiki_configured = bool(wiki["base_url"] and wiki["username"] and wiki["password"])
+
     return _render(
         request,
         "settings.html",
@@ -1878,6 +1910,8 @@ def settings_page(
                 "last_run_at": last_run_row,
             },
             "pipeline_settings": pipeline_settings,
+            "wiki_configured": wiki_configured,
+            "wiki_settings": wiki,
         },
     )
 
@@ -1949,6 +1983,53 @@ def settings_pipeline_save(
 
     resp = RedirectResponse(url="/settings", status_code=303)
     flash(resp, "Pipeline configuration saved", "success")
+    return resp
+
+
+@router.post("/settings/wiki")
+def settings_wiki_save(
+    request: Request,
+    wiki_base_url: str = Form(""),
+    session: Session = Depends(get_db),  # noqa: B008
+) -> Any:
+    """Save Confluence Wiki settings to database.
+
+    Only ``base_url`` is editable from the admin UI.
+    Credentials and SSL verification are read from ``.env`` only.
+    """
+    redirect = _require_auth(request, session)
+    if redirect:
+        return redirect
+
+    from datetime import UTC, datetime
+
+    from ainews.models.settings_kv import SettingsKV
+
+    data: dict[str, object] = {
+        "base_url": wiki_base_url.strip(),
+    }
+
+    row = session.get(SettingsKV, "wiki")
+    if row:
+        from sqlalchemy.orm.attributes import flag_modified
+
+        merged = dict(row.value or {})
+        merged.update(data)
+        row.value = merged
+        row.updated_at = datetime.now(tz=UTC).isoformat()
+        flag_modified(row, "value")
+    else:
+        session.add(
+            SettingsKV(
+                key="wiki",
+                value=data,
+                updated_at=datetime.now(tz=UTC).isoformat(),
+            )
+        )
+    session.flush()
+
+    resp = RedirectResponse(url="/settings", status_code=303)
+    flash(resp, "Wiki configuration saved", "success")
     return resp
 
 

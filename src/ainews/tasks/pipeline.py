@@ -179,6 +179,9 @@ def run_pipeline(self: Any, run_id: str) -> dict[str, Any]:
         reports_dir = settings.db_path.parent / "reports"
         _persist_report(engine, run_id, result, reports_dir, log)
 
+        # ── Push to Confluence wiki (if configured) ───────
+        _push_to_wiki(engine, run_id, result, schedule_id, log)
+
         # ── Determine final status ────────────────────────
         node_errors = result.get("errors", [])
         if node_errors:
@@ -326,3 +329,139 @@ def _extract_summary(report_md: str, max_chars: int = 500) -> str:
 
     summary = " ".join(paragraphs)
     return summary[:max_chars] if summary else report_md[:max_chars]
+
+
+def _push_to_wiki(
+    engine: Any,
+    run_id: str,
+    result: dict[str, Any],
+    schedule_id: int | None,
+    log: Any,
+) -> None:
+    """Push report to Confluence wiki if enabled for this schedule.
+
+    This is a **non-blocking** operation: failures are logged as warnings
+    and the pipeline continues as ``completed``.  Wiki push is considered
+    a best-effort post-processing step.
+    """
+    from ainews.models.schedule import Schedule
+    from ainews.models.run import Run
+
+    with get_db_session(engine) as session:
+        run = session.get(Run, run_id)
+        if not run:
+            return
+
+        wiki_enabled = False
+        space_key = ""
+        ancestor_id = ""
+        title_prefix = "AI News, Trends"
+
+        if run.input_params and run.input_params.get("wiki_enabled"):
+            wiki_enabled = True
+            space_key = run.input_params.get("wiki_space_key", "")
+            ancestor_id = run.input_params.get("wiki_ancestor_id", "")
+            title_prefix = run.input_params.get("wiki_title_prefix", title_prefix)
+        elif schedule_id is not None:
+            schedule = session.get(Schedule, schedule_id)
+            if schedule and schedule.wiki_enabled:
+                wiki_enabled = True
+                space_key = schedule.wiki_space_key
+                ancestor_id = schedule.wiki_ancestor_id
+                title_prefix = schedule.wiki_title_prefix or title_prefix
+
+        if not wiki_enabled:
+            return
+
+        # Read effective wiki settings (DB → env fallback)
+        from ainews.core.config import get_wiki_settings
+
+        wiki = get_wiki_settings(session)
+
+    if not wiki["base_url"] or not wiki["username"]:
+        return  # Wiki not configured globally — skip
+
+    if not space_key or not ancestor_id:
+        log.warning(
+            "wiki_push.missing_config",
+            run_id=run_id,
+            schedule_id=schedule_id,
+            detail="wiki_space_key or wiki_ancestor_id not set",
+        )
+        return
+
+    report_md: str = result.get("report_md", "")
+    if not report_md.strip():
+        log.warning("wiki_push.empty_report", run_id=run_id)
+        return
+
+    from ainews.services.run_logger import log_to_db
+
+    log_to_db(engine, run_id, "wiki", "INFO", "Publishing report to Confluence wiki…")
+
+    try:
+        from ainews.services.wiki_publisher import WikiPublisher
+
+        publisher = WikiPublisher(
+            base_url=wiki["base_url"],
+            username=wiki["username"],
+            password=wiki["password"],
+            verify_ssl=wiki["verify_ssl"],
+        )
+        pub_result = publisher.publish(
+            markdown_content=report_md,
+            space_key=space_key,
+            ancestor_id=ancestor_id,
+            title_prefix=title_prefix,
+        )
+
+        if pub_result.success:
+            # Update Report row with wiki URL
+            with get_db_session(engine) as session:
+                report = (
+                    session.query(Report)
+                    .filter_by(run_id=run_id)
+                    .first()
+                )
+                if report:
+                    report.wiki_url = pub_result.url
+                    report.wiki_pushed_at = datetime.now(tz=UTC).isoformat()
+
+            log.info(
+                "wiki_push.success",
+                run_id=run_id,
+                url=pub_result.url,
+                page_id=pub_result.page_id,
+            )
+            log_to_db(
+                engine,
+                run_id,
+                "wiki",
+                "INFO",
+                f"Wiki page created: {pub_result.url}",
+            )
+        else:
+            log.warning(
+                "wiki_push.publish_failed",
+                run_id=run_id,
+                error=pub_result.error,
+            )
+            log_to_db(
+                engine,
+                run_id,
+                "wiki",
+                "WARNING",
+                f"Wiki push failed: {pub_result.error}",
+            )
+
+    except Exception as exc:
+        # Wiki push failure should NOT fail the pipeline
+        log.warning("wiki_push.error", run_id=run_id, error=str(exc))
+        log_to_db(
+            engine,
+            run_id,
+            "wiki",
+            "WARNING",
+            f"Wiki push error: {exc}",
+        )
+
